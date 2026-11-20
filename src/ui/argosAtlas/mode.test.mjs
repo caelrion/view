@@ -183,7 +183,23 @@ function fakeDocument() {
           const count = documentRef.createElement('span');
           count.setAttribute('data-argos-aircraft-count', '');
           count.textContent = '0';
-          node.children = [mapHost, detail, control, coords, toast, count];
+          const banner = documentRef.createElement('div');
+          banner.setAttribute('data-argos-basemap-banner', '');
+          banner.hidden = true;
+          const aircraftToggle = documentRef.createElement('button');
+          aircraftToggle.setAttribute('data-argos-action', 'toggle-aircraft');
+          aircraftToggle.classList = { toggle() {}, contains() { return false; } };
+          aircraftToggle.setAttribute = () => {};
+          node.children = [
+            mapHost,
+            detail,
+            control,
+            banner,
+            coords,
+            toast,
+            count,
+            aircraftToggle,
+          ];
           node.querySelector = (sel) => {
             if (sel === '#argos-map-host') return mapHost;
             if (sel === '#argos-detail-panel') return detail;
@@ -191,6 +207,8 @@ function fakeDocument() {
             if (sel === '[data-argos-coords]') return coords;
             if (sel === '[data-argos-toast]') return toast;
             if (sel === '[data-argos-aircraft-count]') return count;
+            if (sel === '[data-argos-basemap-banner]') return banner;
+            if (sel === '[data-argos-action="toggle-aircraft"]') return aircraftToggle;
             if (sel.startsWith('[data-argos-detail')) {
               return { textContent: '', dataset: {} };
             }
@@ -210,27 +228,37 @@ function fakeDocument() {
 }
 
 class FakePresenter {
-  constructor(container, { onSelect } = {}) {
+  constructor(container, { onSelect, onBasemapState } = {}) {
     this.container = container;
     this.onSelect = onSelect;
+    this.onBasemapState = onBasemapState;
     this.mounted = 0;
     this.destroyed = 0;
     this.aircraft = null;
     this.selectedId = null;
+    this.aircraftVisible = true;
     this.map = {
       getCenter: () => ({ lat: DEMO_AIRCRAFT_FIXTURE.lat, lng: DEMO_AIRCRAFT_FIXTURE.lon }),
     };
   }
   async mount() {
     this.mounted += 1;
+    this.onBasemapState?.('ready');
     return this.map;
   }
   setAircraft(record) {
     this.aircraft = record;
   }
+  setAircraftVisible(visible) {
+    this.aircraftVisible = Boolean(visible);
+  }
   select(id) {
     this.selectedId = id;
     this.onSelect?.(id);
+  }
+  async retryBasemap() {
+    this.onBasemapState?.('ready');
+    return true;
   }
   destroy() {
     this.destroyed += 1;

@@ -16,6 +16,7 @@ import {
   bindArgosShellActions,
   renderAircraftDetail,
   formatUtcCoords,
+  setBasemapBanner,
 } from './shell.js';
 
 async function ensureMapLibreCss() {
@@ -68,6 +69,8 @@ export class ArgosAtlasMode {
       'toggle-filters': () => this._toggleFilters(),
       'toggle-3d': () => void this.setMode('cesium-3d'),
       'close-detail': () => this._clearSelection(),
+      'toggle-aircraft': () => this._toggleAircraftLayer(),
+      'retry-basemap': () => void this._retryBasemap(),
     });
 
     if (autoAttach) this._injectModeToggle();
@@ -78,6 +81,8 @@ export class ArgosAtlasMode {
       this._shell.root.dataset.mode = 'argos-2d';
       this._showCesium(false);
       this._pauseCesium(true);
+      // Desktop: open slim rail; mobile: keep collapsed so map stays reachable.
+      this._applyInitialFilterState();
       void this.setMode('argos-2d').finally(() => {
         this._document.body.classList.remove('argos-atlas-booting');
       });
@@ -145,15 +150,23 @@ export class ArgosAtlasMode {
     this._document.documentElement?.classList?.add?.('argos-default-2d');
     this._document.body.classList.add('argos-atlas-active');
     this._showCesium(false);
-    this._modeToggle?.classList.add('is-active');
-    this._modeToggle && (this._modeToggle.textContent = '3D Globe');
+    if (this._modeToggle) {
+      this._modeToggle.classList.add('is-active');
+      this._modeToggle.textContent = '3D Globe';
+      this._modeToggle.hidden = true;
+    }
 
     if (!this._presenter) {
       this._presenter = new this._Presenter(this._shell.mapHost, {
         onSelect: (id) => this._onSelect(id),
         onError: (err) => {
           this._error = err;
-          this._toast(String(err.message || err));
+          const msg = String(err.message || err);
+          if (msg.startsWith('MAP_TILE_OR_GLYPH:')) return;
+          this._toast(msg);
+        },
+        onBasemapState: (state) => {
+          setBasemapBanner(this._shell, state === 'offline');
         },
       });
       // Presenter lifecycle only — not a feed subscription owner.
@@ -198,9 +211,13 @@ export class ArgosAtlasMode {
       'argos-atlas-booting',
     );
     this._showCesium(true);
-    this._modeToggle?.classList.remove('is-active');
-    this._modeToggle && (this._modeToggle.textContent = '2D Map');
+    if (this._modeToggle) {
+      this._modeToggle.classList.remove('is-active');
+      this._modeToggle.textContent = '2D Map';
+      this._modeToggle.hidden = false;
+    }
     this._stopCoords();
+    setBasemapBanner(this._shell, false);
     // Tear down MapLibre handlers; do not create/destroy feed owners.
     if (this._presenter) {
       this._presenter.destroy();
@@ -240,16 +257,47 @@ export class ArgosAtlasMode {
   _clearSelection() {
     this._presenter?.select(null);
     renderAircraftDetail(this._shell, null);
+    this._shell.mapHost?.focus?.();
   }
 
-  _toggleFilters() {
-    this._shell.controlPanel.classList.toggle('is-collapsed');
-    const expanded = !this._shell.controlPanel.classList.contains(
-      'is-collapsed',
-    );
+  _applyInitialFilterState() {
+    const narrow =
+      typeof globalThis.matchMedia === 'function' &&
+      globalThis.matchMedia('(max-width: 720px)').matches;
+    this._setFiltersExpanded(!narrow);
+  }
+
+  _setFiltersExpanded(expanded) {
+    this._shell.controlPanel.classList.toggle('is-collapsed', !expanded);
     this._shell.root
       .querySelectorAll('[data-argos-action="toggle-filters"]')
       .forEach((btn) => btn.setAttribute('aria-expanded', String(expanded)));
+  }
+
+  _toggleFilters() {
+    const expanded = this._shell.controlPanel.classList.contains('is-collapsed');
+    this._setFiltersExpanded(expanded);
+  }
+
+  _toggleAircraftLayer() {
+    const next = !(this._presenter?.aircraftVisible ?? true);
+    this._presenter?.setAircraftVisible(next);
+    const btn = this._shell.aircraftToggle;
+    if (btn) {
+      btn.classList.toggle('is-active', next);
+      btn.setAttribute('aria-pressed', String(next));
+    }
+    this._shell.aircraftCountEl.textContent = next && this._record ? '1' : '0';
+    if (!next) renderAircraftDetail(this._shell, null);
+    else if (this._record) {
+      this._presenter?.select(this._record.id);
+      renderAircraftDetail(this._shell, this._record);
+    }
+  }
+
+  async _retryBasemap() {
+    const ok = await this._presenter?.retryBasemap?.();
+    if (ok) this._toast('Basemap restored');
   }
 
   _showCesium(visible) {
@@ -285,6 +333,8 @@ export class ArgosAtlasMode {
   }
 
   _injectModeToggle() {
+    // Floating return control for Cesium 3D only — hidden in 2D to avoid
+    // duplicating the header 3D button and covering attribution.
     const btn = this._document.createElement('button');
     btn.type = 'button';
     btn.id = 'argos-mode-toggle';
@@ -292,6 +342,7 @@ export class ArgosAtlasMode {
     const start2d = this._preferArgos2D;
     btn.textContent = start2d ? '3D Globe' : '2D Map';
     btn.classList.toggle('is-active', start2d);
+    btn.hidden = start2d;
     btn.title = 'Toggle Argos-style dark 2D map / Cesium 3D';
     btn.addEventListener('click', () => {
       void this.setMode(
