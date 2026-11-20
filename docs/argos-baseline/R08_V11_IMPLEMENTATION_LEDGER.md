@@ -36,3 +36,17 @@ Enhanced mini-globe, conversational dock, extra scene density.
 ## Preview
 
 Local nonprod: `http://127.0.0.1:4174/?welcome=0` (vite preview; not production).
+
+## R09 publication (feature only)
+
+| Field | Value |
+|-------|-------|
+| Outcome | **A — V11_PUBLISHED_AND_PREVIEW_ACCESSIBLE** |
+| Published commit | `ee2145d2e46e550b07a82c46492b9932ba833ea9` |
+| Published tree | `f58cbad922faffac29c2b851984e51f8a4d3fc99` |
+| Remote | `origin/feature/view-argos-v11-r08-r01` |
+| Production | **HOLD** — awaiting Mario visual accept + release auth |
+| Preview | SSH `-L 4174:127.0.0.1:4174` → `http://127.0.0.1:4174/?welcome=0` |
+| Evidence | `/var/lib/caelrion-host-config-custody/evidence/view-argos-v11-r08-r01/r09/` |
+| Compare C | MISSING (Argos reference not deposited) |
+
