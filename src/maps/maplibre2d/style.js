@@ -1,17 +1,22 @@
 /**
- * Licensed dark vector style endpoints for the Argos-matched 2D map.
+ * MapLibre styles for the Argos-matched 2D map.
  *
- * V1 used OpenFreeMap `dark` (near-black CARTO Dark Matter family) which
- * under-contrasted land/water vs the Argos reference. V1.1 switches to the
- * OpenFreeMap-hosted OpenMapTiles **Fiord** style (blue-grey / slate midtones)
- * with bounded paint overrides for roads and labels — same OpenMapTiles
- * schema / OSM ODbL data plane. Not Argos proprietary assets.
+ * V1.2 primary: Esri World Imagery (incumbent keyless ArcGIS Online service
+ * already used by Cesium `createEsriImagery`) + OpenFreeMap/OpenMapTiles
+ * road/label overlay. Fiord remains the satellite-unavailable fallback.
+ * Offline slate stub is last resort when no remote style can load.
  *
- * Terms must be re-verified if providers change; missing rights => HOLD and
- * fall back to the offline style stub below.
+ * Terms: DATA_SOURCES.md — Esri World Imagery public endpoint with required
+ * attribution; OpenMapTiles/OSM ODbL for vector overlay. Not Argos assets.
  */
 
-/** V1.1 primary — OpenMapTiles Fiord via OpenFreeMap (readable dark slate). */
+import { ESRI_ATTRIBUTION_HTML } from '../imagery.js';
+
+/** Los Angeles default camera (MapLibre [lon, lat]). */
+export const DEFAULT_MAP_CENTER = Object.freeze([-118.2437, 34.0522]);
+export const DEFAULT_MAP_ZOOM = 10.5;
+
+/** OpenFreeMap Fiord — V1.1 / satellite-unavailable fallback. */
 export const OPENFREEMAP_FIORD_STYLE_URL =
   'https://tiles.openfreemap.org/styles/fiord';
 
@@ -19,17 +24,215 @@ export const OPENFREEMAP_FIORD_STYLE_URL =
 export const OPENFREEMAP_DARK_STYLE_URL =
   'https://tiles.openfreemap.org/styles/dark';
 
-/** Active production style for the Argos 2D presenter. */
+/** Fiord fallback URL (alias kept for V1.1 call sites). */
 export const OPENFREEMAP_STYLE_URL = OPENFREEMAP_FIORD_STYLE_URL;
 
-export const MAP_ATTRIBUTION_HTML =
+export const OPENFREEMAP_PLANET_URL = 'https://tiles.openfreemap.org/planet';
+
+/** ArcGIS Online World Imagery XYZ tiles (same service as Cesium Esri stack). */
+export const ESRI_WORLD_IMAGERY_TILE_URL =
+  'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+
+export const ESRI_IMAGERY_ATTRIBUTION_TEXT =
+  'Powered by Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
+
+export const MAP_ATTRIBUTION_HTML_SATELLITE =
+  `${ESRI_ATTRIBUTION_HTML} · ${ESRI_IMAGERY_ATTRIBUTION_TEXT} · ` +
+  'Labels © <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · ' +
+  '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
+
+export const MAP_ATTRIBUTION_HTML_FIORD =
   '© <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Fiord · ' +
   'Tiles <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> · ' +
   'Data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL)';
 
+/** Active attribution for the primary satellite-hybrid presentation. */
+export const MAP_ATTRIBUTION_HTML = MAP_ATTRIBUTION_HTML_SATELLITE;
+
 /**
- * Bounded paint overrides applied after Fiord style load.
- * Improves road hierarchy and label halos without inventing geography.
+ * Build the V1.2 satellite-hybrid MapLibre style (Esri raster + OFM labels/roads).
+ * @returns {object}
+ */
+export function createSatelliteHybridStyle() {
+  return {
+    version: 8,
+    name: 'caelrion-esri-satellite-hybrid',
+    sources: {
+      'esri-world-imagery': {
+        type: 'raster',
+        tiles: [ESRI_WORLD_IMAGERY_TILE_URL],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: ESRI_IMAGERY_ATTRIBUTION_TEXT,
+      },
+      openmaptiles: {
+        type: 'vector',
+        url: OPENFREEMAP_PLANET_URL,
+        attribution: '© OpenMapTiles · © OpenStreetMap contributors',
+      },
+    },
+    glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+    layers: [
+      {
+        id: 'background',
+        type: 'background',
+        paint: { 'background-color': '#1a1c18' },
+      },
+      {
+        id: 'satellite',
+        type: 'raster',
+        source: 'esri-world-imagery',
+        paint: {
+          'raster-opacity': 1,
+          'raster-fade-duration': 0,
+        },
+      },
+      {
+        id: 'highway_minor',
+        type: 'line',
+        source: 'openmaptiles',
+        'source-layer': 'transportation',
+        minzoom: 11,
+        filter: [
+          'all',
+          ['!=', 'class', 'rail'],
+          [
+            'in',
+            'class',
+            'minor',
+            'service',
+            'path',
+            'track',
+            'tertiary',
+            'secondary',
+          ],
+        ],
+        paint: {
+          'line-color': 'rgba(255, 255, 255, 0.28)',
+          'line-width': ['interpolate', ['linear'], ['zoom'], 11, 0.4, 16, 2.2],
+        },
+      },
+      {
+        id: 'highway_major',
+        type: 'line',
+        source: 'openmaptiles',
+        'source-layer': 'transportation',
+        minzoom: 8,
+        filter: [
+          'all',
+          ['!=', 'class', 'rail'],
+          ['in', 'class', 'primary', 'trunk', 'motorway'],
+        ],
+        paint: {
+          'line-color': 'rgba(255, 245, 220, 0.55)',
+          'line-width': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            8,
+            0.8,
+            14,
+            2.8,
+            17,
+            5,
+          ],
+        },
+      },
+      {
+        id: 'place_suburb',
+        type: 'symbol',
+        source: 'openmaptiles',
+        'source-layer': 'place',
+        minzoom: 11,
+        filter: ['==', 'class', 'suburb'],
+        layout: {
+          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name']],
+          'text-font': ['Open Sans Regular', 'Noto Sans Regular'],
+          'text-size': 11,
+          'text-transform': 'uppercase',
+          'text-letter-spacing': 0.04,
+        },
+        paint: {
+          'text-color': '#f4f1e8',
+          'text-halo-color': 'rgba(20, 18, 12, 0.85)',
+          'text-halo-width': 1.4,
+        },
+      },
+      {
+        id: 'place_city',
+        type: 'symbol',
+        source: 'openmaptiles',
+        'source-layer': 'place',
+        filter: ['in', 'class', 'city', 'town'],
+        layout: {
+          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name']],
+          'text-font': ['Open Sans Bold', 'Noto Sans Bold'],
+          'text-size': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            5,
+            11,
+            10,
+            14,
+            14,
+            18,
+          ],
+          'text-transform': 'uppercase',
+          'text-letter-spacing': 0.06,
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': 'rgba(12, 12, 10, 0.9)',
+          'text-halo-width': 1.6,
+        },
+      },
+      {
+        id: 'place_state',
+        type: 'symbol',
+        source: 'openmaptiles',
+        'source-layer': 'place',
+        maxzoom: 8,
+        filter: ['==', 'class', 'state'],
+        layout: {
+          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name']],
+          'text-font': ['Open Sans Semibold', 'Noto Sans Regular'],
+          'text-size': 13,
+          'text-transform': 'uppercase',
+          'text-letter-spacing': 0.1,
+        },
+        paint: {
+          'text-color': 'rgba(255, 255, 255, 0.88)',
+          'text-halo-color': 'rgba(12, 12, 10, 0.85)',
+          'text-halo-width': 1.5,
+        },
+      },
+      {
+        id: 'place_country',
+        type: 'symbol',
+        source: 'openmaptiles',
+        'source-layer': 'place',
+        maxzoom: 6,
+        filter: ['==', 'class', 'country'],
+        layout: {
+          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name']],
+          'text-font': ['Open Sans Bold', 'Noto Sans Bold'],
+          'text-size': 14,
+          'text-transform': 'uppercase',
+          'text-letter-spacing': 0.12,
+        },
+        paint: {
+          'text-color': '#ffffff',
+          'text-halo-color': 'rgba(10, 10, 8, 0.9)',
+          'text-halo-width': 1.7,
+        },
+      },
+    ],
+  };
+}
+
+/**
+ * Fiord paint overrides retained for satellite-unavailable fallback.
  */
 export const READABLE_DARK_PAINT_OVERRIDES = Object.freeze([
   { id: 'background', paint: { 'background-color': '#3a455c' } },
@@ -132,9 +335,6 @@ export const READABLE_DARK_PAINT_OVERRIDES = Object.freeze([
 
 /**
  * Apply known layer paint overrides. Missing layers are skipped (style drift safe).
- * @param {{ getLayer: (id: string) => unknown, setPaintProperty: (id: string, name: string, value: unknown) => void }} map
- * @param {typeof READABLE_DARK_PAINT_OVERRIDES} [overrides]
- * @returns {number} count of paint properties applied
  */
 export function applyReadableDarkPaint(
   map,
@@ -155,13 +355,24 @@ export function applyReadableDarkPaint(
   return applied;
 }
 
-/** Classify MapLibre error events for fail-soft tile vs fatal style. */
+/** Classify MapLibre error events for fail-soft tile vs fatal style / imagery. */
 export function classifyMapError(event) {
   const raw = event?.error ?? event;
   const message = String(raw?.message || raw || '');
   const status = Number(raw?.status || raw?.statusCode || 0);
   const sourceId = String(event?.sourceId || raw?.url || '');
   const lower = message.toLowerCase();
+  const isImagery =
+    /esri-world-imagery|world_imagery|arcgisonline\.com/i.test(sourceId) ||
+    /esri-world-imagery|world_imagery|arcgisonline\.com/i.test(lower);
+  // Transient MapLibre transition noise — never treat as basemap death.
+  if (
+    /style is not done loading|style not ready|not fully loaded|cancel/i.test(
+      lower,
+    )
+  ) {
+    return { kind: 'unknown', message, isImagery };
+  }
   const isTileOrGlyph =
     /tile|glyph|font|\.pbf|sprite|404|503|failed to fetch|networkerror|load failed/i.test(
       lower,
@@ -169,11 +380,18 @@ export function classifyMapError(event) {
     /\/\d+\/\d+\/\d+/.test(sourceId) ||
     (status >= 400 && status < 600 && !/style/i.test(lower));
   const isStyleFatal =
-    /style|stylesheet|parse|json|unsupported|corrupt/i.test(lower) &&
-    !isTileOrGlyph;
-  if (isStyleFatal) return { kind: 'style-fatal', message };
-  if (isTileOrGlyph) return { kind: 'tile-or-glyph', message };
-  return { kind: 'unknown', message };
+    /stylesheet|style parse|failed to load style|unsupported|corrupt/i.test(
+      lower,
+    ) && !isTileOrGlyph;
+  if (isStyleFatal) return { kind: 'style-fatal', message, isImagery };
+  if (isTileOrGlyph) {
+    return {
+      kind: isImagery ? 'imagery-tile' : 'tile-or-glyph',
+      message,
+      isImagery,
+    };
+  }
+  return { kind: 'unknown', message, isImagery };
 }
 
 /** Offline/fallback style when remote tiles are unavailable — slate, not pure black. */
@@ -195,19 +413,26 @@ export function createOfflineDarkStyleStub() {
 
 export const MAP_LICENSE_MANIFEST = Object.freeze({
   style_design: {
-    claim: 'OpenMapTiles Fiord visual family (V1.1)',
+    claim: 'Esri World Imagery + OpenMapTiles/OpenFreeMap label hybrid (V1.2)',
     license:
-      'OpenMapTiles / OpenFreeMap provider terms; CC-compatible design heritage',
-    url: 'https://openmaptiles.org/',
-    predecessor_v1:
-      'CARTO Dark Matter via OpenFreeMap dark (retained as OPENFREEMAP_DARK_STYLE_URL)',
+      'Esri Master Agreement for public World Imagery; OpenMapTiles / OSM ODbL for labels',
+    url: 'https://www.esri.com/en-us/legal/terms/full-master-agreement',
+    predecessor_v1_1:
+      'OpenMapTiles Fiord via OpenFreeMap (retained as fallback)',
+  },
+  imagery: {
+    provider: 'Esri',
+    service:
+      'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
+    attribution: ESRI_IMAGERY_ATTRIBUTION_TEXT,
+    note: 'Same keyless ArcGIS Online endpoint already used by Cesium createEsriImagery()',
   },
   tiles: {
     provider: 'OpenFreeMap',
     url: 'https://openfreemap.org/',
     schema: 'OpenMapTiles',
     schema_url: 'https://openmaptiles.org/',
-    style_url: OPENFREEMAP_STYLE_URL,
+    style_url_fallback: OPENFREEMAP_FIORD_STYLE_URL,
   },
   data: {
     provider: 'OpenStreetMap contributors',
@@ -227,5 +452,7 @@ export const MAP_LICENSE_MANIFEST = Object.freeze({
     'Argos branded marks/assets',
     'Hotlinked Argos runtime tile URLs',
     'Global CSS brightness filter as map substitute',
+    'MapTiler Hybrid (requires API key — not configured on this host)',
+    'ArcGIS Location Platform basemaps-api style (token required)',
   ],
 });

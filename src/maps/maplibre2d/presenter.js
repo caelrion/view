@@ -1,10 +1,18 @@
 /**
  * Bounded MapLibre 2D presenter. Owns map lifecycle only — not feeds.
+ *
+ * V1.2: Esri World Imagery hybrid primary; OpenFreeMap Fiord on satellite
+ * failure; offline slate stub only when no remote style can load.
+ * Loading DEMO aircraft must not move the camera.
  */
 import maplibregl from 'maplibre-gl';
 import {
   OPENFREEMAP_STYLE_URL,
-  MAP_ATTRIBUTION_HTML,
+  MAP_ATTRIBUTION_HTML_SATELLITE,
+  MAP_ATTRIBUTION_HTML_FIORD,
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ZOOM,
+  createSatelliteHybridStyle,
   createOfflineDarkStyleStub,
   applyReadableDarkPaint,
   classifyMapError,
@@ -56,8 +64,11 @@ export class MapLibre2DPresenter {
     this._onWindowResize = null;
     this._basemapRetries = 0;
     this._tileFailCount = 0;
+    this._imageryFailCount = 0;
     this._attributionUserTouched = false;
     this._collapseAttribution = null;
+    this._attributionControl = null;
+    this._fiordFallbackAttempted = false;
   }
 
   get map() {
@@ -81,8 +92,8 @@ export class MapLibre2DPresenter {
   }
 
   async mount({
-    center = [-3.7038, 40.4168],
-    zoom = 5.2,
+    center = DEFAULT_MAP_CENTER,
+    zoom = DEFAULT_MAP_ZOOM,
     bearing = 0,
     pitch = 0,
   } = {}) {
@@ -92,7 +103,7 @@ export class MapLibre2DPresenter {
     this._setBasemapState('loading');
     const map = new maplibregl.Map({
       container: this._container,
-      style: OPENFREEMAP_STYLE_URL,
+      style: createSatelliteHybridStyle(),
       center,
       zoom,
       bearing,
@@ -104,27 +115,19 @@ export class MapLibre2DPresenter {
     });
     this._map = map;
 
-    map.addControl(
-      new maplibregl.AttributionControl({
-        compact: true,
-        customAttribution: MAP_ATTRIBUTION_HTML,
-      }),
-      'bottom-right',
-    );
+    this._installAttribution(MAP_ATTRIBUTION_HTML_SATELLITE);
     map.addControl(
       new maplibregl.NavigationControl({ visualizePitch: true }),
       'bottom-right',
     );
     // MapLibre with compact:true starts with `maplibregl-compact-show` (expanded
     // white strip). Collapse to the info chip until the operator opens it.
-    // Re-assert on early sourcedata/idle; stop once the operator has interacted.
     this._collapseAttribution = () => {
       if (this._attributionUserTouched) return;
       const el = this._container.querySelector?.('.maplibregl-ctrl-attrib');
       if (!el) return;
       el.classList.add('maplibregl-compact');
       el.classList.remove('maplibregl-compact-show');
-      // MapLibre collapsed compact state uses the `open` attribute (details quirk).
       el.setAttribute('open', '');
     };
     this._onAttributionUserToggle = () => {
@@ -142,39 +145,51 @@ export class MapLibre2DPresenter {
     map.on('sourcedata', this._collapseAttribution);
     map.once('idle', () => {
       this._collapseAttribution();
-      // After first idle, stop fighting MapLibre unless still untouched.
       if (!this._attributionUserTouched) {
         map.off('sourcedata', this._collapseAttribution);
+      }
+      // Clear stale error banners once hybrid is painting.
+      if (
+        this._styleMode === 'satellite-hybrid' &&
+        map.getLayer?.('satellite')
+      ) {
+        this._setBasemapState('ready');
       }
     });
 
     this._errorHandler = (event) => this._onMapError(event);
     map.on('error', this._errorHandler);
 
-    await new Promise((resolve, reject) => {
-      const onLoad = () => {
+    await new Promise((resolve) => {
+      let settled = false;
+      const finish = () => {
+        if (settled) return;
+        settled = true;
         cleanup();
-        try {
-          applyReadableDarkPaint(map);
-        } catch {
-          /* non-fatal */
-        }
-        this._styleMode = 'remote';
-        this._setBasemapState('ready');
         resolve();
+      };
+      const onLoad = () => {
+        this._styleMode = 'satellite-hybrid';
+        this._imageryFailCount = 0;
+        this._setBasemapState('ready');
+        finish();
       };
       const onError = (event) => {
         const classified = classifyMapError(event);
-        // During first style load, never wipe the map for transient tile/glyph
-        // or ambiguous errors — wait for `load` or an explicit style-fatal.
+        if (classified.kind === 'imagery-tile') {
+          this._imageryFailCount += 1;
+          this._onError?.(new Error(`MAP_IMAGERY_TILE:${classified.message}`));
+          return;
+        }
         if (classified.kind !== 'style-fatal') {
           this._tileFailCount += 1;
           this._onError?.(new Error(`MAP_TILE_OR_GLYPH:${classified.message}`));
           return;
         }
-        cleanup();
-        this._enterOfflineBasemap(classified.message);
-        resolve();
+        // Hybrid style document failed — try Fiord before offline stub.
+        void this._enterFiordFallback(classified.message).finally(() =>
+          finish(),
+        );
       };
       const cleanup = () => {
         map.off('load', onLoad);
@@ -197,7 +212,6 @@ export class MapLibre2DPresenter {
         this.select(null);
         return;
       }
-      // Expand hit area slightly for touch / small markers.
       const pad = 14;
       const bbox = [
         [event.point.x - pad, event.point.y - pad],
@@ -230,7 +244,9 @@ export class MapLibre2DPresenter {
     return map;
   }
 
-  /** Bounded retry after BASEMAP OFFLINE — restores remote Fiord style. */
+  /**
+   * Bounded retry — restores satellite hybrid first; Fiord only if hybrid fails.
+   */
   async retryBasemap() {
     if (this._destroyed || !this._map) return false;
     if (this._basemapRetries >= MAX_BASEMAP_RETRIES) {
@@ -239,31 +255,15 @@ export class MapLibre2DPresenter {
     }
     this._basemapRetries += 1;
     this._setBasemapState('loading');
+    this._fiordFallbackAttempted = false;
+    this._imageryFailCount = 0;
     const map = this._map;
     const aircraft = this._aircraft;
     const selected = this._selectedId;
     try {
-      await new Promise((resolve, reject) => {
-        const onLoad = () => {
-          cleanup();
-          resolve();
-        };
-        const onError = (event) => {
-          const classified = classifyMapError(event);
-          if (classified.kind === 'tile-or-glyph') return;
-          cleanup();
-          reject(new Error(classified.message));
-        };
-        const cleanup = () => {
-          map.off('load', onLoad);
-          map.off('error', onError);
-        };
-        map.once('load', onLoad);
-        map.once('error', onError);
-        map.setStyle(OPENFREEMAP_STYLE_URL);
-      });
-      applyReadableDarkPaint(map);
-      this._styleMode = 'remote';
+      await this._setStyleAwaitLoad(createSatelliteHybridStyle());
+      this._styleMode = 'satellite-hybrid';
+      this._installAttribution(MAP_ATTRIBUTION_HTML_SATELLITE);
       this._setBasemapState('ready');
       this._ensureAircraftLayers();
       if (aircraft) this.setAircraft(aircraft);
@@ -271,12 +271,23 @@ export class MapLibre2DPresenter {
       this.setAircraftVisible(this._aircraftVisible);
       return true;
     } catch (err) {
-      this._enterOfflineBasemap(String(err?.message || err));
-      return false;
+      const ok = await this._enterFiordFallback(String(err?.message || err));
+      if (ok) {
+        if (aircraft) this.setAircraft(aircraft);
+        if (selected) this.select(selected);
+        this.setAircraftVisible(this._aircraftVisible);
+      }
+      return ok;
     }
   }
 
-  setAircraft(record) {
+  /**
+   * Place or clear the DEMO aircraft marker.
+   * Camera movement is opt-in — fixture load must not easeTo away from LA.
+   * @param {object|null} record
+   * @param {{ moveCamera?: boolean }} [options]
+   */
+  setAircraft(record, { moveCamera = false } = {}) {
     if (this._destroyed || !this._map) return;
     this._aircraft = record;
     this._ensureAircraftLayers();
@@ -284,7 +295,7 @@ export class MapLibre2DPresenter {
     if (source && typeof source.setData === 'function') {
       source.setData(this._featureCollection());
     }
-    if (record) {
+    if (record && moveCamera) {
       this._map.easeTo({
         center: [record.lon, record.lat],
         zoom: Math.max(this._map.getZoom(), 5.5),
@@ -362,6 +373,7 @@ export class MapLibre2DPresenter {
     this._moveHandlers = [];
     this._aircraft = null;
     this._selectedId = null;
+    this._attributionControl = null;
   }
 
   _setBasemapState(state) {
@@ -369,29 +381,134 @@ export class MapLibre2DPresenter {
     this._onBasemapState?.(state);
   }
 
+  _installAttribution(html) {
+    const map = this._map;
+    if (!map) return;
+    if (this._attributionControl) {
+      try {
+        map.removeControl(this._attributionControl);
+      } catch {
+        /* already removed */
+      }
+      this._attributionControl = null;
+    }
+    this._attributionControl = new maplibregl.AttributionControl({
+      compact: true,
+      customAttribution: html,
+    });
+    map.addControl(this._attributionControl, 'bottom-right');
+    this._collapseAttribution?.();
+  }
+
+  async _setStyleAwaitLoad(style) {
+    const map = this._map;
+    if (!map) throw new Error('MAPLIBRE_NO_MAP');
+    await new Promise((resolve, reject) => {
+      const onLoad = () => {
+        cleanup();
+        resolve();
+      };
+      const onError = (event) => {
+        const classified = classifyMapError(event);
+        if (
+          classified.kind === 'tile-or-glyph' ||
+          classified.kind === 'imagery-tile' ||
+          classified.kind === 'unknown'
+        ) {
+          return;
+        }
+        cleanup();
+        reject(new Error(classified.message));
+      };
+      const cleanup = () => {
+        map.off('load', onLoad);
+        map.off('error', onError);
+      };
+      map.once('load', onLoad);
+      map.once('error', onError);
+      map.setStyle(style);
+    });
+  }
+
+  /**
+   * Satellite imagery unavailable — keep a usable Fiord vector map and
+   * report satellite-unavailable (not basemap-offline).
+   * @returns {Promise<boolean>}
+   */
+  async _enterFiordFallback(message) {
+    const map = this._map;
+    if (!map || this._destroyed) return false;
+    if (this._fiordFallbackAttempted && this._styleMode === 'fiord-fallback') {
+      return true;
+    }
+    this._fiordFallbackAttempted = true;
+    try {
+      await this._setStyleAwaitLoad(OPENFREEMAP_STYLE_URL);
+      try {
+        applyReadableDarkPaint(map);
+      } catch {
+        /* non-fatal */
+      }
+      this._styleMode = 'fiord-fallback';
+      this._installAttribution(MAP_ATTRIBUTION_HTML_FIORD);
+      this._setBasemapState('satellite-unavailable');
+      this._ensureAircraftLayers();
+      this._onError?.(new Error(`MAP_SATELLITE_UNAVAILABLE:${message}`));
+      return true;
+    } catch (err) {
+      this._enterOfflineBasemap(String(err?.message || message));
+      return false;
+    }
+  }
+
   _enterOfflineBasemap(message) {
     const map = this._map;
     if (!map) return;
-    this._styleMode = 'offline-stub';
-    this._setBasemapState('offline');
+    // Only claim offline after the stub style loads. Never show
+    // BASEMAP OFFLINE while hybrid/Fiord tiles are still painted.
     try {
+      map.once('load', () => {
+        if (this._destroyed) return;
+        this._styleMode = 'offline-stub';
+        this._installAttribution(MAP_ATTRIBUTION_HTML_FIORD);
+        this._setBasemapState('offline');
+        this._onError?.(new Error(`MAP_BASEMAP_OFFLINE:${message}`));
+      });
       map.setStyle(createOfflineDarkStyleStub());
     } catch (err) {
       this._onError?.(err instanceof Error ? err : new Error(String(err)));
     }
-    this._onError?.(new Error(`MAP_BASEMAP_OFFLINE:${message}`));
   }
 
   _onMapError(event) {
-    if (this._destroyed || this._styleMode !== 'remote') return;
+    if (this._destroyed) return;
+    if (
+      this._styleMode !== 'satellite-hybrid' &&
+      this._styleMode !== 'remote' &&
+      this._styleMode !== 'fiord-fallback'
+    ) {
+      return;
+    }
     const classified = classifyMapError(event);
-    if (classified.kind === 'tile-or-glyph' || classified.kind === 'unknown') {
-      this._tileFailCount += 1;
-      // Isolated failures stay soft — never replace a live style with black.
+    // Soft tile/glyph/imagery failures never flip the whole basemap offline.
+    if (
+      classified.kind === 'imagery-tile' ||
+      classified.kind === 'tile-or-glyph' ||
+      classified.kind === 'unknown'
+    ) {
+      if (classified.kind === 'imagery-tile') this._imageryFailCount += 1;
+      else this._tileFailCount += 1;
       return;
     }
     if (classified.kind === 'style-fatal') {
-      this._enterOfflineBasemap(classified.message);
+      if (
+        this._styleMode === 'satellite-hybrid' ||
+        this._styleMode === 'remote'
+      ) {
+        void this._enterFiordFallback(classified.message);
+      } else if (this._styleMode === 'fiord-fallback') {
+        this._enterOfflineBasemap(classified.message);
+      }
     }
   }
 
@@ -424,7 +541,6 @@ export class MapLibre2DPresenter {
         data: this._featureCollection(),
       });
     }
-    // Invisible oversized hit target for touch / keyboard discoverability.
     if (!map.getLayer(HIT_LAYER_ID)) {
       map.addLayer({
         id: HIT_LAYER_ID,
@@ -445,7 +561,7 @@ export class MapLibre2DPresenter {
         source: SOURCE_ID,
         paint: {
           'circle-radius': ['case', ['==', ['get', 'selected'], 1], 9, 7],
-          'circle-color': '#3de7ff',
+          'circle-color': '#11ACA9',
           'circle-stroke-width': [
             'case',
             ['==', ['get', 'selected'], 1],
@@ -465,9 +581,9 @@ export class MapLibre2DPresenter {
         filter: ['==', ['get', 'selected'], 1],
         paint: {
           'circle-radius': 18,
-          'circle-color': 'rgba(61, 231, 255, 0.2)',
+          'circle-color': 'rgba(17, 172, 169, 0.22)',
           'circle-stroke-width': 1.5,
-          'circle-stroke-color': '#3de7ff',
+          'circle-stroke-color': '#11ACA9',
         },
       });
     }
@@ -485,8 +601,8 @@ export class MapLibre2DPresenter {
           'text-allow-overlap': false,
         },
         paint: {
-          'text-color': '#e8f7ff',
-          'text-halo-color': '#1a2230',
+          'text-color': '#f4f1e8',
+          'text-halo-color': '#1F201C',
           'text-halo-width': 1.4,
         },
       });
@@ -506,8 +622,8 @@ export class MapLibre2DPresenter {
           'text-font': ['Open Sans Bold', 'Noto Sans Bold'],
         },
         paint: {
-          'text-color': '#3de7ff',
-          'text-halo-color': '#1a2230',
+          'text-color': '#11ACA9',
+          'text-halo-color': '#1F201C',
           'text-halo-width': 1.2,
         },
       });

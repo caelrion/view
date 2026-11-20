@@ -4,8 +4,12 @@ import {
   ArgosAtlasMode,
   preferArgos2DFromLocation,
 } from './mode.js';
-import { formatUtcCoords } from './shell.js';
+import { formatUtcCoords, setBasemapBanner } from './shell.js';
 import { DEMO_AIRCRAFT_FIXTURE } from '../../presentation/demoAircraftFixture.js';
+import {
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ZOOM,
+} from '../../maps/maplibre2d/style.js';
 
 test('preferArgos2DFromLocation defaults to 2D; 3D is opt-in', () => {
   assert.equal(preferArgos2DFromLocation({ search: '', hash: '' }), true);
@@ -187,6 +191,17 @@ function fakeDocument() {
           const banner = documentRef.createElement('div');
           banner.setAttribute('data-argos-basemap-banner', '');
           banner.hidden = true;
+          banner.dataset = { state: 'ready' };
+          const bannerLabel = documentRef.createElement('span');
+          bannerLabel.setAttribute('data-argos-basemap-label', '');
+          bannerLabel.textContent = 'BASEMAP OFFLINE';
+          banner.children = [bannerLabel];
+          banner.querySelector = (sel) => {
+            if (sel === '[data-argos-basemap-label]' || sel === 'span') {
+              return bannerLabel;
+            }
+            return null;
+          };
           const aircraftToggle = documentRef.createElement('button');
           aircraftToggle.setAttribute('data-argos-action', 'toggle-aircraft');
           aircraftToggle.classList = { toggle() {}, contains() { return false; } };
@@ -266,17 +281,24 @@ class FakePresenter {
     this.aircraft = null;
     this.selectedId = null;
     this.aircraftVisible = true;
+    this.mountOpts = null;
+    this.cameraMoves = 0;
     this.map = {
-      getCenter: () => ({ lat: DEMO_AIRCRAFT_FIXTURE.lat, lng: DEMO_AIRCRAFT_FIXTURE.lon }),
+      getCenter: () => ({
+        lat: this.mountOpts?.center?.[1] ?? DEFAULT_MAP_CENTER[1],
+        lng: this.mountOpts?.center?.[0] ?? DEFAULT_MAP_CENTER[0],
+      }),
     };
   }
-  async mount() {
+  async mount(opts = {}) {
+    this.mountOpts = opts;
     this.mounted += 1;
     this.onBasemapState?.('ready');
     return this.map;
   }
-  setAircraft(record) {
+  setAircraft(record, { moveCamera = false } = {}) {
     this.aircraft = record;
+    if (record && moveCamera) this.cameraMoves += 1;
   }
   setAircraftVisible(visible) {
     this.aircraftVisible = Boolean(visible);
@@ -357,4 +379,51 @@ test('R08 startup: filters collapsed and aircraft not auto-selected', async () =
   assert.ok(mode._presenter.aircraft);
   assert.equal(mode._presenter.aircraft.id, 'ae07f6');
   mode.destroy();
+});
+
+test('R11: mount opens over Los Angeles; fixture load does not move camera', async () => {
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+  });
+  await mode.setMode('argos-2d');
+  assert.deepEqual(mode._presenter.mountOpts.center, [...DEFAULT_MAP_CENTER]);
+  assert.equal(mode._presenter.mountOpts.zoom, DEFAULT_MAP_ZOOM);
+  assert.equal(mode._presenter.mountOpts.bearing, 0);
+  assert.equal(mode._presenter.mountOpts.pitch, 0);
+  assert.equal(mode._presenter.cameraMoves, 0);
+  assert.equal(mode._presenter.aircraft.id, DEMO_AIRCRAFT_FIXTURE.id);
+  assert.equal(mode._presenter.aircraft.lat, DEMO_AIRCRAFT_FIXTURE.lat);
+  assert.equal(mode._presenter.aircraft.lon, DEMO_AIRCRAFT_FIXTURE.lon);
+  mode.destroy();
+});
+
+test('R11: basemap banner distinguishes offline vs satellite-unavailable', () => {
+  const label = { textContent: '' };
+  const banner = {
+    hidden: true,
+    dataset: {},
+    querySelector: (sel) =>
+      sel === '[data-argos-basemap-label]' || sel === 'span' ? label : null,
+  };
+  const shell = { basemapBanner: banner };
+
+  setBasemapBanner(shell, 'ready');
+  assert.equal(banner.hidden, true);
+
+  setBasemapBanner(shell, 'satellite-unavailable');
+  assert.equal(banner.hidden, false);
+  assert.equal(banner.dataset.state, 'satellite-unavailable');
+  assert.match(label.textContent, /SATELLITE UNAVAILABLE/);
+
+  setBasemapBanner(shell, 'offline');
+  assert.equal(banner.hidden, false);
+  assert.equal(banner.dataset.state, 'offline');
+  assert.equal(label.textContent, 'BASEMAP OFFLINE');
+
+  setBasemapBanner(shell, false);
+  assert.equal(banner.hidden, true);
 });

@@ -1,0 +1,18 @@
+{
+  "base": "http://127.0.0.1:4174",
+  "startup": {
+    "text": "UTC 20:40:07Z · 34.0522°N 118.2437°W",
+    "lon": -118.2437,
+    "lat": 34.0522,
+    "bannerHidden": true,
+    "bannerState": "ready",
+    "bannerText": "\n      BASEMAP OFFLINE\n      Retry\n    ",
+    "attrib": "© OpenMapTiles · © OpenStreetMap contributors | Powered by Esri · Powered by Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community · Labels © OpenMapTiles · © OpenStreetMap",
+    "cyan": "#11aca9",
+    "charcoal": "#1f201c",
+    "gold": "#e8bc3b",
+    "railW": "168px"
+  },
+  "generatedAt": "2026-11-20T20:40:29.081Z",
+  "exitCode": 0
+}
