@@ -19,13 +19,31 @@ export {
   OWNED_BASEMAP_LICENSE,
   SOCAL_DETAIL_BOUNDS,
   OWNED_GLOBAL_MAX_ZOOM,
+  createArgosDarkFlavor,
 } from './ownedBasemap.js';
+
+export {
+  createOwnedAerialStyle,
+  aerialCoverageState,
+  isInAerialCoverage,
+  MAP_ATTRIBUTION_HTML_AERIAL,
+  OWNED_AERIAL_ARTIFACT,
+  OWNED_AERIAL_PMTILES_PATH,
+  OWNED_AERIAL_LICENSE,
+  AERIAL_COVERAGE_BOUNDS,
+  BASEMAP_MODE_DARK,
+  BASEMAP_MODE_SATELLITE,
+  BASEMAP_MODE_STORAGE_KEY,
+  selectAerialOverlayLayers,
+  createAerialOverlayFlavor,
+} from './ownedAerial.js';
 
 import { ESRI_ATTRIBUTION_HTML } from '../imagery.js';
 import {
   MAP_ATTRIBUTION_HTML_OWNED,
   OWNED_BASEMAP_LICENSE,
 } from './ownedBasemap.js';
+import { OWNED_AERIAL_LICENSE } from './ownedAerial.js';
 
 /** OpenFreeMap Fiord — optional recovery when owned archive fails. */
 export const OPENFREEMAP_FIORD_STYLE_URL =
@@ -232,7 +250,7 @@ export function createOfflineDarkStyleStub() {
       {
         id: 'background',
         type: 'background',
-        paint: { 'background-color': '#2E2C22' },
+        paint: { 'background-color': '#171D23' },
       },
     ],
     glyphs: '/assets/basemaps/fonts/{fontstack}/{range}.pbf',
@@ -249,10 +267,17 @@ export const MAP_LICENSE_MANIFEST = Object.freeze({
     predecessor_v1_1: 'OpenMapTiles Fiord via OpenFreeMap (optional recovery)',
   },
   owned_basemap: OWNED_BASEMAP_LICENSE.artifact,
+  owned_aerial: OWNED_AERIAL_LICENSE.artifact,
   tiles: {
     provider: 'Caelrion-hosted Protomaps extract',
     runtime: 'pmtiles',
     path_pattern: '/assets/maps/caelrion-basemap-r01-*.pmtiles',
+  },
+  aerial_tiles: {
+    provider: 'Caelrion-hosted USDA NAIP',
+    runtime: 'pmtiles',
+    path_pattern: '/assets/maps/caelrion-la-aerial-r01-*.pmtiles',
+    user_facing_name: 'Satellite',
   },
   data: {
     provider: 'OpenStreetMap contributors',
@@ -267,5 +292,8 @@ export const MAP_LICENSE_MANIFEST = Object.freeze({
     package: 'maplibre-gl',
     license: 'BSD-3-Clause',
   },
-  not_used: OWNED_BASEMAP_LICENSE.not_used,
+  not_used: [
+    ...OWNED_BASEMAP_LICENSE.not_used,
+    ...OWNED_AERIAL_LICENSE.not_used,
+  ],
 });

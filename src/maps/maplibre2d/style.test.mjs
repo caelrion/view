@@ -20,7 +20,7 @@ import {
   ownedCoverageState,
 } from './style.js';
 
-test('P0: R15 primary style is owned Protomaps/PMTiles (no Esri default)', () => {
+test('P0: R15/R16 primary dark style is owned Protomaps/PMTiles (no Esri default)', () => {
   const style = createOwnedBasemapStyle();
   assert.equal(style.version, 8);
   assert.equal(style.name, 'caelrion-owned-protomaps-dark');
@@ -37,6 +37,11 @@ test('P0: R15 primary style is owned Protomaps/PMTiles (no Esri default)', () =>
     `/assets/maps/${OWNED_BASEMAP_ARTIFACT.filename}`,
   );
   assert.match(OWNED_BASEMAP_ARTIFACT.sha256, /^[a-f0-9]{64}$/);
+  // R16: style JSON must not hard-code gold city labels into layer paint via flavor.
+  const city = style.layers.find((l) => l.id === 'places_locality');
+  if (city?.paint?.['text-color']) {
+    assert.notEqual(city.paint['text-color'], '#E8BC3B');
+  }
 });
 
 test('P0: default camera is Los Angeles (lon, lat) at zoom 10.5', () => {

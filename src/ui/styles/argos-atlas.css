@@ -369,6 +369,31 @@ body.argos-atlas-booting .argos-atlas-root {
   display: flex;
   gap: 8px;
   justify-content: flex-end;
+  align-items: center;
+}
+
+.argos-basemap-toggle {
+  display: inline-flex;
+  border: 1px solid var(--argos-border-dim);
+  border-radius: var(--argos-radius);
+  overflow: hidden;
+  background: rgba(46, 44, 34, 0.88);
+}
+
+.argos-basemap-toggle .argos-basemap-btn {
+  border: 0;
+  border-radius: 0;
+  min-width: 64px;
+  background: transparent;
+}
+
+.argos-basemap-toggle .argos-basemap-btn + .argos-basemap-btn {
+  border-left: 1px solid var(--argos-border-dim);
+}
+
+.argos-basemap-toggle .argos-basemap-btn.is-active {
+  background: rgba(17, 172, 169, 0.22);
+  color: var(--argos-cyan);
 }
 
 .argos-hud-btn,

@@ -1,0 +1,33 @@
+{
+  "infoSat": {
+    "name": "caelrion-owned-naip-aerial",
+    "sources": [
+      "caelrion-aerial",
+      "protomaps",
+      "caelrion-aircraft-demo"
+    ],
+    "center": {
+      "lng": -118.2437,
+      "lat": 34.0522
+    },
+    "zoom": 10.5,
+    "satActive": true,
+    "darkActive": false
+  },
+  "infoDark": {
+    "name": "caelrion-owned-protomaps-dark",
+    "center": {
+      "lng": -118.2437,
+      "lat": 34.0522
+    },
+    "zoom": 10.5,
+    "cityColor": "#E5EBEF",
+    "satActive": false,
+    "darkActive": true
+  },
+  "external": [
+    "services.arcgisonline.com"
+  ],
+  "aerialHits": 79,
+  "vectorHits": 23
+}
