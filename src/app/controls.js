@@ -2,6 +2,10 @@ import { catalogControlServices } from './catalog.js';
 import { StyleManager } from '../ui/composition.js';
 import { flyToAustin } from '../camera.js';
 import { initCockpitCloudEffects } from '../cockpitCloudEffects.js';
+import {
+  ArgosAtlasMode,
+  preferArgos2DFromLocation,
+} from '../ui/argosAtlas/mode.js';
 
 /** Construct the existing controls and camera presentation. */
 export function createApplicationControls({
@@ -39,6 +43,16 @@ export function createApplicationControls({
   });
   defer(() => cockpitCloudEffects?.destroy());
 
+  // Argos-standard 2D map mode (V01/V02). Optional via ?view=argos-2d; toggle
+  // always available. Uses DEMO aircraft until a backend projection exists.
+  // Does not register a new feed poller.
+  const argosAtlasMode = new ArgosAtlasMode({
+    viewer,
+    preferArgos2D: preferArgos2DFromLocation(),
+    aircraftProjection: null,
+  });
+  defer(() => argosAtlasMode.destroy());
+
   // If no share link state, do default fly-to Austin
   if (!styleManager.hasShareState) {
     loaderStatus.textContent = 'Flying to Austin, TX...';
@@ -47,5 +61,5 @@ export function createApplicationControls({
     loaderStatus.textContent = 'Restoring shared view...';
   }
 
-  return { styleManager, weatherEffects, cockpitCloudEffects };
+  return { styleManager, weatherEffects, cockpitCloudEffects, argosAtlasMode };
 }

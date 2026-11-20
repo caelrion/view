@@ -1,0 +1,252 @@
+import assert from 'node:assert/strict';
+import { test } from 'node:test';
+import {
+  ArgosAtlasMode,
+  preferArgos2DFromLocation,
+} from './mode.js';
+import { formatUtcCoords } from './shell.js';
+import { DEMO_AIRCRAFT_FIXTURE } from '../../presentation/demoAircraftFixture.js';
+
+test('preferArgos2DFromLocation reads query and hash', () => {
+  assert.equal(
+    preferArgos2DFromLocation({ search: '?view=argos-2d', hash: '' }),
+    true,
+  );
+  assert.equal(
+    preferArgos2DFromLocation({ search: '?map=2d', hash: '' }),
+    true,
+  );
+  assert.equal(
+    preferArgos2DFromLocation({ search: '', hash: '#view=argos-2d' }),
+    true,
+  );
+  assert.equal(preferArgos2DFromLocation({ search: '', hash: '' }), false);
+});
+
+test('formatUtcCoords is presentation-only', () => {
+  const text = formatUtcCoords(40.4, -3.7, new Date('2026-11-20T12:00:00Z'));
+  assert.match(text, /UTC 12:00:00Z/);
+  assert.match(text, /40\.4000°N/);
+  assert.match(text, /3\.7000°W/);
+});
+
+function fakeDocument() {
+  const bodyChildren = [];
+  const body = {
+    children: bodyChildren,
+    classList: {
+      _v: new Set(),
+      add(v) {
+        this._v.add(v);
+      },
+      remove(v) {
+        this._v.delete(v);
+      },
+      contains(v) {
+        return this._v.has(v);
+      },
+    },
+    appendChild(node) {
+      bodyChildren.push(node);
+      node.parent = body;
+      return node;
+    },
+  };
+  const documentRef = {
+    body,
+    getElementById() {
+      return {
+        style: {},
+      };
+    },
+    createElement(tag) {
+      const node = {
+        tagName: String(tag).toUpperCase(),
+        children: [],
+        classList: {
+          _v: new Set(),
+          add(v) {
+            this._v.add(v);
+          },
+          remove(v) {
+            this._v.delete(v);
+          },
+          toggle(v) {
+            if (this._v.has(v)) this._v.delete(v);
+            else this._v.add(v);
+            return this._v.has(v);
+          },
+          contains(v) {
+            return this._v.has(v);
+          },
+        },
+        style: {},
+        dataset: {},
+        attributes: new Map(),
+        hidden: false,
+        textContent: '',
+        innerHTML: '',
+        setAttribute(k, v) {
+          this.attributes.set(k, String(v));
+        },
+        getAttribute(k) {
+          return this.attributes.get(k) ?? null;
+        },
+        appendChild(child) {
+          this.children.push(child);
+          child.parent = this;
+          return child;
+        },
+        querySelector(sel) {
+          if (sel.startsWith('#')) {
+            const id = sel.slice(1);
+            const walk = (n) => {
+              if (n.id === id) return n;
+              for (const c of n.children || []) {
+                const hit = walk(c);
+                if (hit) return hit;
+              }
+              return null;
+            };
+            return walk(this);
+          }
+          if (sel.startsWith('[data-argos-')) {
+            const walk = (n) => {
+              const key = sel.slice(1, -1);
+              if (n.attributes?.has(key) || n.dataset?.[key.replace('data-', '').replace(/-([a-z])/g, (_, c) => c.toUpperCase())] != null)
+                return n;
+              // Fallback: create stub nodes for required data hooks after innerHTML assign.
+              return null;
+            };
+            return walk(this);
+          }
+          return null;
+        },
+        querySelectorAll() {
+          return [];
+        },
+        addEventListener() {},
+        remove() {
+          if (!this.parent) return;
+          const list = this.parent.children || bodyChildren;
+          const i = list.indexOf(this);
+          if (i >= 0) list.splice(i, 1);
+          this.parent = null;
+        },
+      };
+      // When shell sets innerHTML, synthesize required nodes.
+      Object.defineProperty(node, 'innerHTML', {
+        set() {
+          const mapHost = documentRef.createElement('div');
+          mapHost.id = 'argos-map-host';
+          const detail = documentRef.createElement('aside');
+          detail.id = 'argos-detail-panel';
+          detail.hidden = true;
+          detail.querySelector = () => ({ textContent: '', dataset: {} });
+          const control = documentRef.createElement('aside');
+          control.id = 'argos-control-panel';
+          control.classList = node.classList;
+          const coords = documentRef.createElement('div');
+          coords.setAttribute('data-argos-coords', '');
+          coords.textContent = '';
+          const toast = documentRef.createElement('div');
+          toast.setAttribute('data-argos-toast', '');
+          toast.hidden = true;
+          const count = documentRef.createElement('span');
+          count.setAttribute('data-argos-aircraft-count', '');
+          count.textContent = '0';
+          node.children = [mapHost, detail, control, coords, toast, count];
+          node.querySelector = (sel) => {
+            if (sel === '#argos-map-host') return mapHost;
+            if (sel === '#argos-detail-panel') return detail;
+            if (sel === '#argos-control-panel') return control;
+            if (sel === '[data-argos-coords]') return coords;
+            if (sel === '[data-argos-toast]') return toast;
+            if (sel === '[data-argos-aircraft-count]') return count;
+            if (sel.startsWith('[data-argos-detail')) {
+              return { textContent: '', dataset: {} };
+            }
+            if (sel.startsWith('[data-argos-action')) return null;
+            return null;
+          };
+          node.querySelectorAll = () => [];
+        },
+        get() {
+          return '';
+        },
+      });
+      return node;
+    },
+  };
+  return documentRef;
+}
+
+class FakePresenter {
+  constructor(container, { onSelect } = {}) {
+    this.container = container;
+    this.onSelect = onSelect;
+    this.mounted = 0;
+    this.destroyed = 0;
+    this.aircraft = null;
+    this.selectedId = null;
+    this.map = {
+      getCenter: () => ({ lat: DEMO_AIRCRAFT_FIXTURE.lat, lng: DEMO_AIRCRAFT_FIXTURE.lon }),
+    };
+  }
+  async mount() {
+    this.mounted += 1;
+    return this.map;
+  }
+  setAircraft(record) {
+    this.aircraft = record;
+  }
+  select(id) {
+    this.selectedId = id;
+    this.onSelect?.(id);
+  }
+  destroy() {
+    this.destroyed += 1;
+  }
+}
+
+test('P4: 2D→3D→2D does not multiply poll owners; presenter remounts cleanly', async () => {
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+  });
+  assert.equal(mode.pollOwners, 0);
+  await mode.setMode('argos-2d');
+  assert.equal(mode.mode, 'argos-2d');
+  assert.equal(mode.pollOwners, 0);
+  assert.equal(mode.subscriptionOwners, 1);
+  const first = mode._presenter;
+  assert.equal(first.mounted, 1);
+  await mode.setMode('cesium-3d');
+  assert.equal(first.destroyed, 1);
+  assert.equal(mode.subscriptionOwners, 0);
+  await mode.setMode('argos-2d');
+  assert.equal(mode.subscriptionOwners, 1);
+  assert.equal(mode.pollOwners, 0);
+  assert.notEqual(mode._presenter, first);
+  assert.equal(mode._presenter.mounted, 1);
+  mode.destroy();
+  assert.equal(mode.pollOwners, 0);
+  assert.equal(mode.subscriptionOwners, 0);
+});
+
+test('P2/H3: showDemoAircraft labels DEMO and never LIVE', async () => {
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+  });
+  const record = await mode.showDemoAircraft();
+  assert.equal(record.status, 'DEMO');
+  assert.equal(record.provenance, 'DEMO');
+  assert.equal(mode._presenter.selectedId, 'ae07f6');
+  mode.destroy();
+});

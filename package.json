@@ -56,6 +56,7 @@
     "cesium": "^1.124.0",
     "egm96-universal": "^1.1.1",
     "hls.js": "^1.7.3",
+    "maplibre-gl": "^5.24.1",
     "mgrs": "^2.1.0",
     "pbf": "^5.1.2",
     "satellite.js": "^6.0.2"
