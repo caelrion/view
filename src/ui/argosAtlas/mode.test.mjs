@@ -7,7 +7,8 @@ import {
 import { formatUtcCoords } from './shell.js';
 import { DEMO_AIRCRAFT_FIXTURE } from '../../presentation/demoAircraftFixture.js';
 
-test('preferArgos2DFromLocation reads query and hash', () => {
+test('preferArgos2DFromLocation defaults to 2D; 3D is opt-in', () => {
+  assert.equal(preferArgos2DFromLocation({ search: '', hash: '' }), true);
   assert.equal(
     preferArgos2DFromLocation({ search: '?view=argos-2d', hash: '' }),
     true,
@@ -20,7 +21,18 @@ test('preferArgos2DFromLocation reads query and hash', () => {
     preferArgos2DFromLocation({ search: '', hash: '#view=argos-2d' }),
     true,
   );
-  assert.equal(preferArgos2DFromLocation({ search: '', hash: '' }), false);
+  assert.equal(
+    preferArgos2DFromLocation({ search: '?view=3d', hash: '' }),
+    false,
+  );
+  assert.equal(
+    preferArgos2DFromLocation({ search: '?map=3d', hash: '' }),
+    false,
+  );
+  assert.equal(
+    preferArgos2DFromLocation({ search: '?view=cesium', hash: '' }),
+    false,
+  );
 });
 
 test('formatUtcCoords is presentation-only', () => {
@@ -52,11 +64,27 @@ function fakeDocument() {
       return node;
     },
   };
+  const documentElement = {
+    classList: {
+      _v: new Set(),
+      add(v) {
+        this._v.add(v);
+      },
+      remove(v) {
+        this._v.delete(v);
+      },
+      contains(v) {
+        return this._v.has(v);
+      },
+    },
+  };
   const documentRef = {
     body,
+    documentElement,
     getElementById() {
       return {
         style: {},
+        setAttribute() {},
       };
     },
     createElement(tag) {

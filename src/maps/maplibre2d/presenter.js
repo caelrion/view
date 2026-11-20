@@ -66,6 +66,9 @@ export class MapLibre2DPresenter {
       pitch,
       attributionControl: false,
       failIfMajorPerformanceCaveat: false,
+      // Full-bleed flat map — no globe silhouette / letterboxed canvas.
+      projection: { type: 'mercator' },
+      fadeDuration: 0,
     });
     this._map = map;
 

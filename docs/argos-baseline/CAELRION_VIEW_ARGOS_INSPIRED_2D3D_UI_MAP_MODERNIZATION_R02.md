@@ -169,3 +169,14 @@ A successful source build does not establish that the public website has changed
 - **Backend:** `BACKEND_CONTRACT_PENDING` — DEMO fixture only on 2D path
 - **Evidence root:** `/var/lib/caelrion-host-config-custody/evidence/view-argos-baseline-v00-v02-r01/`
 - **Outcome class:** `C_PARTIAL_WITH_EVIDENCE` (first-slice source E1 with environmental holds; not production; not full Argos parity)
+
+### 2026-11-20 — R02 full-bleed 2D correction
+
+- **Branch:** `feature/view-argos-baseline-v00-v02-r01` (continued; V00–V02 not restarted)
+- **Prior tip:** `4def7e3fcff8ec64e7f70af76697c1d91c925811`
+- **Done:** Flat MapLibre 2D is default at `/` (legacy `?view=argos-2d` / `?map=2d` still work; Cesium opt-in via `?view=3d` / `?map=3d` / `?view=cesium`); early `html.argos-default-2d` antiflash; Cesium paused/hidden under 2D; full-viewport mercator canvas (host/canvas match viewport at 1920/1440/390); DEMO aircraft + `BACKEND_CONTRACT_PENDING` preserved; Chrome for Testing installed via `npx puppeteer browsers install chrome`; browser verify exit 0; unit slice 12/12; build 0; boundaries 0
+- **QA:** `qa:map-source-tray` no longer blocked by missing Chrome. Reran under `QA_BASE_URL=http://127.0.0.1:4173/?view=3d` (tray is Cesium-chrome). Exit **1** — assertion failures + Puppeteer `ProtocolError` timeout on this host/swiftshader; not a missing-binary blocker
+- **Screenshots:** `evidence/.../screenshots/r02-fullbleed/` (`root-*`, `view-argos-2d-*`, `map-2d-*`, `manual-3d-*`, tile-fail)
+- **Preview:** `npx vite preview --host 127.0.0.1 --port 4173` → http://127.0.0.1:4173/
+- **Not started:** V03–V08; no merge/deploy
+- **Outcome class:** `C_PARTIAL_WITH_EVIDENCE` (full-bleed default 2D verified; map-source-tray suite not fully green on this host)

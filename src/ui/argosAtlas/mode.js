@@ -54,13 +54,14 @@ export class ArgosAtlasMode {
     this._Presenter = Presenter;
     this._shell = createArgosAtlasShell(documentRef);
     this._presenter = null;
-    this._mode = 'cesium-3d';
+    this._mode = preferArgos2D ? 'argos-2d' : 'cesium-3d';
     this._record = null;
     this._coordsTimer = null;
     this._destroyed = false;
     this._subscriptionOwners = 0;
     this._pollOwners = 0;
     this._error = null;
+    this._preferArgos2D = preferArgos2D;
 
     if (autoAttach) documentRef.body.appendChild(this._shell.root);
     bindArgosShellActions(this._shell.root, {
@@ -70,7 +71,17 @@ export class ArgosAtlasMode {
     });
 
     if (autoAttach) this._injectModeToggle();
-    if (preferArgos2D) void this.setMode('argos-2d');
+    // Hide Cesium immediately when 2D is default so the globe never flashes.
+    if (preferArgos2D) {
+      this._document.body.classList.add('argos-atlas-active', 'argos-atlas-booting');
+      this._shell.root.hidden = false;
+      this._shell.root.dataset.mode = 'argos-2d';
+      this._showCesium(false);
+      this._pauseCesium(true);
+      void this.setMode('argos-2d').finally(() => {
+        this._document.body.classList.remove('argos-atlas-booting');
+      });
+    }
   }
 
   get mode() {
@@ -131,6 +142,7 @@ export class ArgosAtlasMode {
     this._mode = 'argos-2d';
     this._shell.root.hidden = false;
     this._shell.root.dataset.mode = 'argos-2d';
+    this._document.documentElement?.classList?.add?.('argos-default-2d');
     this._document.body.classList.add('argos-atlas-active');
     this._showCesium(false);
     this._modeToggle?.classList.add('is-active');
@@ -173,20 +185,18 @@ export class ArgosAtlasMode {
       this._toast(BACKEND_CONTRACT_PENDING.message);
     }
     this._startCoords();
-    // Ensure no incidental Cesium render loop thrash while hidden.
-    try {
-      this._viewer?.scene?.requestRenderMode !== undefined &&
-        (this._viewer.scene.requestRenderMode = true);
-    } catch {
-      /* ignore */
-    }
+    this._presenter.resize?.();
   }
 
   _enter3D() {
     this._mode = 'cesium-3d';
     this._shell.root.hidden = true;
     this._shell.root.dataset.mode = 'cesium-3d';
-    this._document.body.classList.remove('argos-atlas-active');
+    this._document.documentElement?.classList?.remove?.('argos-default-2d');
+    this._document.body.classList.remove(
+      'argos-atlas-active',
+      'argos-atlas-booting',
+    );
     this._showCesium(true);
     this._modeToggle?.classList.remove('is-active');
     this._modeToggle && (this._modeToggle.textContent = '2D Map');
@@ -196,12 +206,6 @@ export class ArgosAtlasMode {
       this._presenter.destroy();
       this._presenter = null;
       this._subscriptionOwners = 0;
-    }
-    try {
-      this._viewer?.resize?.();
-      this._viewer?.scene?.requestRender?.();
-    } catch {
-      /* ignore */
     }
   }
 
@@ -250,8 +254,34 @@ export class ArgosAtlasMode {
 
   _showCesium(visible) {
     if (!this._cesiumContainer) return;
-    this._cesiumContainer.style.visibility = visible ? '' : 'hidden';
+    this._cesiumContainer.style.visibility = visible ? 'visible' : 'hidden';
+    this._cesiumContainer.style.opacity = visible ? '1' : '0';
     this._cesiumContainer.style.pointerEvents = visible ? '' : 'none';
+    this._cesiumContainer.setAttribute(
+      'aria-hidden',
+      visible ? 'false' : 'true',
+    );
+    this._pauseCesium(!visible);
+  }
+
+  _pauseCesium(paused) {
+    const viewer = this._viewer;
+    if (!viewer?.scene) return;
+    try {
+      if (paused) {
+        viewer.scene.requestRenderMode = true;
+        if (typeof viewer.useDefaultRenderLoop === 'boolean') {
+          viewer.useDefaultRenderLoop = false;
+        }
+      } else if (typeof viewer.useDefaultRenderLoop === 'boolean') {
+        viewer.useDefaultRenderLoop = true;
+        viewer.scene.requestRenderMode = false;
+        viewer.resize?.();
+        viewer.scene.requestRender?.();
+      }
+    } catch {
+      /* ignore */
+    }
   }
 
   _injectModeToggle() {
@@ -259,7 +289,9 @@ export class ArgosAtlasMode {
     btn.type = 'button';
     btn.id = 'argos-mode-toggle';
     btn.className = 'argos-mode-toggle';
-    btn.textContent = '2D Map';
+    const start2d = this._preferArgos2D;
+    btn.textContent = start2d ? '3D Globe' : '2D Map';
+    btn.classList.toggle('is-active', start2d);
     btn.title = 'Toggle Argos-style dark 2D map / Cesium 3D';
     btn.addEventListener('click', () => {
       void this.setMode(
@@ -299,14 +331,30 @@ export class ArgosAtlasMode {
   }
 }
 
+/**
+ * Flat MapLibre 2D is the product default at `/`.
+ * Opt into Cesium 3D only via explicit query/hash: view=3d | map=3d | view=cesium.
+ * Legacy ?view=argos-2d / ?map=2d / #view=argos-2d remain valid and select 2D.
+ */
 export function preferArgos2DFromLocation(locationRef = window.location) {
   try {
     const params = new URLSearchParams(locationRef.search || '');
-    if (params.get('view') === 'argos-2d' || params.get('map') === '2d')
-      return true;
-    if ((locationRef.hash || '').includes('view=argos-2d')) return true;
+    const view = (params.get('view') || '').toLowerCase();
+    const map = (params.get('map') || '').toLowerCase();
+    const hash = locationRef.hash || '';
+    if (
+      view === '3d' ||
+      view === 'cesium' ||
+      map === '3d' ||
+      hash.includes('view=3d') ||
+      hash.includes('view=cesium') ||
+      hash.includes('map=3d')
+    ) {
+      return false;
+    }
+    // Default 2D, including bare `/` and legacy Argos-2d deep links.
+    return true;
   } catch {
-    /* ignore */
+    return true;
   }
-  return false;
 }
