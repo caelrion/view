@@ -17,11 +17,15 @@ import {
   renderAircraftDetail,
   formatUtcCoords,
   setBasemapBanner,
+  setBasemapToggle,
 } from './shell.js';
 import { searchLocal } from './localSearch.js';
 import {
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
+  BASEMAP_MODE_DARK,
+  BASEMAP_MODE_SATELLITE,
+  BASEMAP_MODE_STORAGE_KEY,
 } from '../../maps/maplibre2d/style.js';
 
 async function ensureMapLibreCss() {
@@ -81,6 +85,9 @@ export class ArgosAtlasMode {
       'close-detail': () => this._clearSelection(),
       'toggle-aircraft': () => this._toggleAircraftLayer(),
       'retry-basemap': () => void this._retryBasemap(),
+      'basemap-dark': () => void this._setBasemapMode(BASEMAP_MODE_DARK),
+      'basemap-satellite': () =>
+        void this._setBasemapMode(BASEMAP_MODE_SATELLITE),
     });
     this._bindSearch();
     this._shell.root.addEventListener('keydown', this._onShellKeyDown);
@@ -183,6 +190,7 @@ export class ArgosAtlasMode {
             msg.startsWith('MAP_TILE_OR_GLYPH:') ||
             msg.startsWith('MAP_IMAGERY_TILE:') ||
             msg.startsWith('MAP_OWNED_BASEMAP_UNAVAILABLE:') ||
+            msg.startsWith('MAP_AERIAL_UNAVAILABLE:') ||
             msg.startsWith('MAP_SATELLITE_UNAVAILABLE:')
           ) {
             return;
@@ -199,12 +207,16 @@ export class ArgosAtlasMode {
 
     this._applyInitialFilterState();
     try {
+      const basemapMode = this._readStoredBasemapMode();
+      setBasemapToggle(this._shell, basemapMode);
       // Fresh visit opens over Los Angeles — not the DEMO aircraft corridor.
+      // Prefer Satellite once LA photographic coverage is available.
       await this._presenter.mount({
         center: [...DEFAULT_MAP_CENTER],
         zoom: DEFAULT_MAP_ZOOM,
         bearing: 0,
         pitch: 0,
+        basemapMode,
       });
       this._presenter.resize?.();
       // QA / diagnostics only — not a feed owner.
@@ -548,6 +560,40 @@ export class ArgosAtlasMode {
       this._setFiltersExpanded(false);
       event.preventDefault();
     }
+  }
+
+  _readStoredBasemapMode() {
+    try {
+      const raw = this._document?.defaultView?.localStorage?.getItem?.(
+        BASEMAP_MODE_STORAGE_KEY,
+      );
+      if (raw === BASEMAP_MODE_DARK) return BASEMAP_MODE_DARK;
+      if (raw === BASEMAP_MODE_SATELLITE) return BASEMAP_MODE_SATELLITE;
+    } catch {
+      /* private mode */
+    }
+    return BASEMAP_MODE_SATELLITE;
+  }
+
+  _storeBasemapMode(mode) {
+    try {
+      this._document?.defaultView?.localStorage?.setItem?.(
+        BASEMAP_MODE_STORAGE_KEY,
+        mode,
+      );
+    } catch {
+      /* private mode */
+    }
+  }
+
+  async _setBasemapMode(mode) {
+    const next =
+      mode === BASEMAP_MODE_DARK ? BASEMAP_MODE_DARK : BASEMAP_MODE_SATELLITE;
+    setBasemapToggle(this._shell, next);
+    this._storeBasemapMode(next);
+    if (!this._presenter) return;
+    const ok = await this._presenter.setBasemapMode(next);
+    if (!ok) this._toast('Basemap switch failed');
   }
 
   async _retryBasemap() {

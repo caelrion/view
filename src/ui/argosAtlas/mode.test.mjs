@@ -428,6 +428,11 @@ test('R15: basemap banner distinguishes offline vs limited-coverage', () => {
   setBasemapBanner(shell, 'limited-coverage');
   assert.equal(banner.hidden, false);
   assert.equal(banner.dataset.state, 'limited-coverage');
+  assert.match(label.textContent, /PHOTOGRAPHIC COVERAGE UNAVAILABLE/);
+
+  setBasemapBanner(shell, 'limited-detail');
+  assert.equal(banner.hidden, false);
+  assert.equal(banner.dataset.state, 'limited-coverage');
   assert.match(label.textContent, /LIMITED DETAIL/);
 
   setBasemapBanner(shell, 'offline');

@@ -10,14 +10,19 @@ import {
   OPENFREEMAP_STYLE_URL,
   MAP_ATTRIBUTION_HTML_OWNED,
   MAP_ATTRIBUTION_HTML_FIORD,
+  MAP_ATTRIBUTION_HTML_AERIAL,
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
   createOwnedBasemapStyle,
+  createOwnedAerialStyle,
   createOfflineDarkStyleStub,
   applyReadableDarkPaint,
   classifyMapError,
   ensurePmtilesProtocol,
   ownedCoverageState,
+  aerialCoverageState,
+  BASEMAP_MODE_DARK,
+  BASEMAP_MODE_SATELLITE,
 } from './style.js';
 
 const SOURCE_ID = 'caelrion-aircraft-demo';
@@ -72,6 +77,8 @@ export class MapLibre2DPresenter {
     this._attributionControl = null;
     this._fiordFallbackAttempted = false;
     this._coverageHandler = null;
+    /** @type {'dark-vector'|'owned-aerial'} */
+    this._basemapMode = BASEMAP_MODE_SATELLITE;
   }
 
   get map() {
@@ -80,6 +87,11 @@ export class MapLibre2DPresenter {
 
   get styleMode() {
     return this._styleMode;
+  }
+
+  /** @returns {'dark-vector'|'owned-aerial'} */
+  get basemapMode() {
+    return this._basemapMode;
   }
 
   get selectedId() {
@@ -99,15 +111,24 @@ export class MapLibre2DPresenter {
     zoom = DEFAULT_MAP_ZOOM,
     bearing = 0,
     pitch = 0,
+    basemapMode = BASEMAP_MODE_SATELLITE,
   } = {}) {
     if (this._destroyed) throw new Error('MAPLIBRE_PRESENTER_DESTROYED');
     if (this._map) return this._map;
 
+    this._basemapMode =
+      basemapMode === BASEMAP_MODE_DARK
+        ? BASEMAP_MODE_DARK
+        : BASEMAP_MODE_SATELLITE;
     this._setBasemapState('loading');
     ensurePmtilesProtocol();
+    const initialStyle =
+      this._basemapMode === BASEMAP_MODE_SATELLITE
+        ? createOwnedAerialStyle()
+        : createOwnedBasemapStyle();
     const map = new maplibregl.Map({
       container: this._container,
-      style: createOwnedBasemapStyle(),
+      style: initialStyle,
       center,
       zoom,
       bearing,
@@ -119,7 +140,11 @@ export class MapLibre2DPresenter {
     });
     this._map = map;
 
-    this._installAttribution(MAP_ATTRIBUTION_HTML_OWNED);
+    this._installAttribution(
+      this._basemapMode === BASEMAP_MODE_SATELLITE
+        ? MAP_ATTRIBUTION_HTML_AERIAL
+        : MAP_ATTRIBUTION_HTML_OWNED,
+    );
     map.addControl(
       new maplibregl.NavigationControl({ visualizePitch: true }),
       'bottom-right',
@@ -152,7 +177,11 @@ export class MapLibre2DPresenter {
       if (!this._attributionUserTouched) {
         map.off('sourcedata', this._collapseAttribution);
       }
-      if (this._styleMode === 'owned-pmtiles') {
+      if (
+        this._styleMode === 'owned-pmtiles' ||
+        this._styleMode === 'owned-aerial' ||
+        this._styleMode === 'vector-fallback'
+      ) {
         this._refreshCoverageState();
       }
     });
@@ -172,7 +201,10 @@ export class MapLibre2DPresenter {
         resolve();
       };
       const onLoad = () => {
-        this._styleMode = 'owned-pmtiles';
+        this._styleMode =
+          this._basemapMode === BASEMAP_MODE_SATELLITE
+            ? 'owned-aerial'
+            : 'owned-pmtiles';
         this._imageryFailCount = 0;
         this._refreshCoverageState();
         finish();
@@ -184,7 +216,14 @@ export class MapLibre2DPresenter {
           this._onError?.(new Error(`MAP_TILE_OR_GLYPH:${classified.message}`));
           return;
         }
-        // Owned archive style failed — optional Fiord, then offline.
+        if (this._basemapMode === BASEMAP_MODE_SATELLITE) {
+          // Aerial archive unavailable — fall back to dark vector (not Esri).
+          void this._enterVectorFallback(classified.message).finally(() =>
+            finish(),
+          );
+          return;
+        }
+        // Owned vector archive failed — optional Fiord, then offline.
         void this._enterFiordFallback(classified.message).finally(() =>
           finish(),
         );
@@ -243,7 +282,66 @@ export class MapLibre2DPresenter {
   }
 
   /**
-   * Bounded retry — restores owned PMTiles first; Fiord only if owned fails.
+   * Switch Dark (vector) ↔ Satellite (owned NAIP aerial) without moving camera.
+   * @param {'dark-vector'|'owned-aerial'} mode
+   */
+  async setBasemapMode(mode) {
+    if (this._destroyed || !this._map) return false;
+    const next =
+      mode === BASEMAP_MODE_SATELLITE
+        ? BASEMAP_MODE_SATELLITE
+        : BASEMAP_MODE_DARK;
+    if (next === this._basemapMode && this._styleMode !== 'vector-fallback') {
+      if (
+        (next === BASEMAP_MODE_DARK && this._styleMode === 'owned-pmtiles') ||
+        (next === BASEMAP_MODE_SATELLITE && this._styleMode === 'owned-aerial')
+      ) {
+        return true;
+      }
+    }
+    const aircraft = this._aircraft;
+    const selected = this._selectedId;
+    const center = this._map.getCenter?.();
+    const zoom = this._map.getZoom?.();
+    const bearing = this._map.getBearing?.() ?? 0;
+    const pitch = this._map.getPitch?.() ?? 0;
+    this._basemapMode = next;
+    this._setBasemapState('loading');
+    try {
+      ensurePmtilesProtocol();
+      if (next === BASEMAP_MODE_SATELLITE) {
+        await this._setStyleAwaitLoad(createOwnedAerialStyle());
+        this._styleMode = 'owned-aerial';
+        this._installAttribution(MAP_ATTRIBUTION_HTML_AERIAL);
+      } else {
+        await this._setStyleAwaitLoad(createOwnedBasemapStyle());
+        this._styleMode = 'owned-pmtiles';
+        this._installAttribution(MAP_ATTRIBUTION_HTML_OWNED);
+      }
+      if (center && Number.isFinite(zoom)) {
+        this._map.jumpTo({
+          center: [center.lng, center.lat],
+          zoom,
+          bearing,
+          pitch,
+        });
+      }
+      this._refreshCoverageState();
+      this._ensureAircraftLayers();
+      if (aircraft) this.setAircraft(aircraft);
+      if (selected) this.select(selected);
+      this.setAircraftVisible(this._aircraftVisible);
+      return true;
+    } catch (err) {
+      if (next === BASEMAP_MODE_SATELLITE) {
+        return this._enterVectorFallback(String(err?.message || err));
+      }
+      return this._enterFiordFallback(String(err?.message || err));
+    }
+  }
+
+  /**
+   * Bounded retry — restores owned primary for the active mode.
    * Never restores Esri/MapTiler as a silent default.
    */
   async retryBasemap() {
@@ -256,28 +354,7 @@ export class MapLibre2DPresenter {
     this._setBasemapState('loading');
     this._fiordFallbackAttempted = false;
     this._imageryFailCount = 0;
-    const aircraft = this._aircraft;
-    const selected = this._selectedId;
-    try {
-      ensurePmtilesProtocol();
-      await this._setStyleAwaitLoad(createOwnedBasemapStyle());
-      this._styleMode = 'owned-pmtiles';
-      this._installAttribution(MAP_ATTRIBUTION_HTML_OWNED);
-      this._refreshCoverageState();
-      this._ensureAircraftLayers();
-      if (aircraft) this.setAircraft(aircraft);
-      if (selected) this.select(selected);
-      this.setAircraftVisible(this._aircraftVisible);
-      return true;
-    } catch (err) {
-      const ok = await this._enterFiordFallback(String(err?.message || err));
-      if (ok) {
-        if (aircraft) this.setAircraft(aircraft);
-        if (selected) this.select(selected);
-        this.setAircraftVisible(this._aircraftVisible);
-      }
-      return ok;
-    }
+    return this.setBasemapMode(this._basemapMode);
   }
 
   /**
@@ -434,19 +511,70 @@ export class MapLibre2DPresenter {
   }
 
   _refreshCoverageState() {
-    if (this._destroyed || this._styleMode !== 'owned-pmtiles') return;
+    if (this._destroyed) return;
     const map = this._map;
     if (!map?.getCenter || !map?.getZoom) {
       this._setBasemapState('ready');
       return;
     }
     const c = map.getCenter();
-    const next = ownedCoverageState({
-      lon: c.lng,
-      lat: c.lat,
-      zoom: map.getZoom(),
-    });
-    this._setBasemapState(next);
+    const zoom = map.getZoom();
+    if (this._styleMode === 'owned-aerial') {
+      const aerialState = aerialCoverageState({
+        lon: c.lng,
+        lat: c.lat,
+        zoom,
+      });
+      if (aerialState === 'limited-coverage') {
+        void this._enterVectorFallback('OUTSIDE_AERIAL_COVERAGE');
+        return;
+      }
+      this._setBasemapState('ready');
+      return;
+    }
+    if (this._styleMode === 'owned-pmtiles') {
+      const vectorState = ownedCoverageState({
+        lon: c.lng,
+        lat: c.lat,
+        zoom,
+      });
+      this._setBasemapState(
+        vectorState === 'limited-coverage' ? 'limited-detail' : vectorState,
+      );
+      return;
+    }
+    if (this._styleMode === 'vector-fallback') {
+      // Restore photographic tiles when the camera returns to coverage.
+      if (
+        this._basemapMode === BASEMAP_MODE_SATELLITE &&
+        aerialCoverageState({ lon: c.lng, lat: c.lat, zoom }) === 'ready'
+      ) {
+        void this.setBasemapMode(BASEMAP_MODE_SATELLITE);
+        return;
+      }
+      this._setBasemapState('limited-coverage');
+      return;
+    }
+  }
+
+  /**
+   * Aerial archive unavailable or out of coverage — keep usable dark vector.
+   * Never Esri/MapTiler.
+   */
+  async _enterVectorFallback(message) {
+    const map = this._map;
+    if (!map || this._destroyed) return false;
+    try {
+      await this._setStyleAwaitLoad(createOwnedBasemapStyle());
+      this._styleMode = 'vector-fallback';
+      this._installAttribution(MAP_ATTRIBUTION_HTML_OWNED);
+      this._setBasemapState('limited-coverage');
+      this._ensureAircraftLayers();
+      this._onError?.(new Error(`MAP_AERIAL_UNAVAILABLE:${message}`));
+      return true;
+    } catch (err) {
+      return this._enterFiordFallback(String(err?.message || message));
+    }
   }
 
   /**
@@ -502,6 +630,8 @@ export class MapLibre2DPresenter {
     if (this._destroyed) return;
     if (
       this._styleMode !== 'owned-pmtiles' &&
+      this._styleMode !== 'owned-aerial' &&
+      this._styleMode !== 'vector-fallback' &&
       this._styleMode !== 'remote' &&
       this._styleMode !== 'fiord-fallback'
     ) {
@@ -515,11 +645,23 @@ export class MapLibre2DPresenter {
       classified.kind === 'unknown'
     ) {
       this._tileFailCount += 1;
-      if (this._styleMode === 'owned-pmtiles') this._refreshCoverageState();
+      if (
+        this._styleMode === 'owned-pmtiles' ||
+        this._styleMode === 'owned-aerial' ||
+        this._styleMode === 'vector-fallback'
+      ) {
+        this._refreshCoverageState();
+      }
       return;
     }
     if (classified.kind === 'style-fatal') {
-      if (this._styleMode === 'owned-pmtiles' || this._styleMode === 'remote') {
+      if (this._styleMode === 'owned-aerial') {
+        void this._enterVectorFallback(classified.message);
+      } else if (
+        this._styleMode === 'owned-pmtiles' ||
+        this._styleMode === 'vector-fallback' ||
+        this._styleMode === 'remote'
+      ) {
         void this._enterFiordFallback(classified.message);
       } else if (this._styleMode === 'fiord-fallback') {
         this._enterOfflineBasemap(classified.message);
