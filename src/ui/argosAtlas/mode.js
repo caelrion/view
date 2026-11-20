@@ -537,14 +537,22 @@ export class ArgosAtlasMode {
   }
 
   _showCesium(visible) {
-    if (!this._cesiumContainer) return;
-    this._cesiumContainer.style.visibility = visible ? 'visible' : 'hidden';
-    this._cesiumContainer.style.opacity = visible ? '1' : '0';
-    this._cesiumContainer.style.pointerEvents = visible ? '' : 'none';
-    this._cesiumContainer.setAttribute(
-      'aria-hidden',
-      visible ? 'false' : 'true',
-    );
+    if (this._cesiumContainer) {
+      this._cesiumContainer.style.visibility = visible ? 'visible' : 'hidden';
+      this._cesiumContainer.style.opacity = visible ? '1' : '0';
+      this._cesiumContainer.style.pointerEvents = visible ? '' : 'none';
+      this._cesiumContainer.setAttribute(
+        'aria-hidden',
+        visible ? 'false' : 'true',
+      );
+    }
+    // JS-only: never CSS-hide #cesium-credits (creditAttribution gate).
+    // MapLibre attribution covers 2D; restore Cesium credits in 3D.
+    const credits = this._document.getElementById?.('cesium-credits');
+    if (credits) {
+      credits.hidden = !visible;
+      credits.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    }
     this._pauseCesium(!visible);
   }
 

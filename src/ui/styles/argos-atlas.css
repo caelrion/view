@@ -637,7 +637,6 @@ body.argos-atlas-booting .argos-atlas-root {
 }
 
 body.argos-atlas-active #cesiumContainer,
-body.argos-atlas-active #cesium-credits,
 body.argos-atlas-active .cesium-viewer-bottom,
 body.argos-atlas-active #title-bar,
 body.argos-atlas-active #style-indicator,
