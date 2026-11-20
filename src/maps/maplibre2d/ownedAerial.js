@@ -10,10 +10,7 @@
  * Does not download, mosaic, or host a worldwide imagery archive on the droplet.
  */
 import { layers } from '@protomaps/basemaps';
-import {
-  OWNED_PMTILES_PATH,
-  createArgosDarkFlavor,
-} from './ownedBasemap.js';
+import { OWNED_PMTILES_PATH, createArgosDarkFlavor } from './ownedBasemap.js';
 
 /** EOxCloudless 2016 — Web Mercator WMTS (TileMatrix/TileRow/TileCol = z/y/x). */
 export const EOX_CLOUDLESS_2016_TILE_URL =
@@ -34,8 +31,7 @@ export const GIBS_MAX_ZOOM = 8;
 export const OWNED_AERIAL_ARTIFACT = Object.freeze({
   id: 'caelrion-la-aerial-r01',
   filename: 'caelrion-la-aerial-r01-cc7ee43c04ab.pmtiles',
-  sha256:
-    'cc7ee43c04abd98fc6ffe11af50789beed23cc89963cca9701887e8184b83dff',
+  sha256: 'cc7ee43c04abd98fc6ffe11af50789beed23cc89963cca9701887e8184b83dff',
   bytes: 65411958,
   status: 'superseded-as-default-by-r17-streamed-eox',
   note: 'Retained deploy artifact; not the R17 Satellite primary source',
@@ -133,8 +129,7 @@ export function createOwnedAerialStyle({
         tiles: [GIBS_BLUE_MARBLE_TILE_URL],
         tileSize: 256,
         maxzoom: GIBS_MAX_ZOOM,
-        attribution:
-          'NASA Blue Marble Next Generation (GIBS)',
+        attribution: 'NASA Blue Marble Next Generation (GIBS)',
       },
       'eox-cloudless-2016': {
         type: 'raster',
@@ -142,8 +137,7 @@ export function createOwnedAerialStyle({
         tileSize: 256,
         minzoom: EOX_MIN_ZOOM,
         maxzoom: EOX_MAX_ZOOM,
-        attribution:
-          'Sentinel-2 cloudless by EOX IT Services GmbH (CC BY 4.0)',
+        attribution: 'Sentinel-2 cloudless by EOX IT Services GmbH (CC BY 4.0)',
       },
       protomaps: {
         type: 'vector',
