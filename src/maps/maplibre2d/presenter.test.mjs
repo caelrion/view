@@ -23,8 +23,8 @@ test('P0: R15 owned basemap style and LA defaults are declared', () => {
   assert.ok(
     MAP_LICENSE_MANIFEST.not_used.some((s) => /Esri World Imagery/i.test(s)),
   );
-  assert.deepEqual([...DEFAULT_MAP_CENTER], [-118.2437, 34.0522]);
-  assert.equal(DEFAULT_MAP_ZOOM, 10.5);
+  assert.deepEqual([...DEFAULT_MAP_CENTER], [-117.99833, 33.66028]);
+  assert.equal(DEFAULT_MAP_ZOOM, 11.5);
   assert.equal(OWNED_BASEMAP_ARTIFACT.bytes, 790349026);
 });
 

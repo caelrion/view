@@ -44,9 +44,9 @@ test('P0: R15/R16 primary dark style is owned Protomaps/PMTiles (no Esri default
   }
 });
 
-test('P0: default camera is Los Angeles (lon, lat) at zoom 10.5', () => {
-  assert.deepEqual([...DEFAULT_MAP_CENTER], [-118.2437, 34.0522]);
-  assert.equal(DEFAULT_MAP_ZOOM, 10.5);
+test('P0: default camera is Huntington Beach (lon, lat) at zoom 11.5', () => {
+  assert.deepEqual([...DEFAULT_MAP_CENTER], [-117.99833, 33.66028]);
+  assert.equal(DEFAULT_MAP_ZOOM, 11.5);
 });
 
 test('P0: owned attribution names Protomaps/OSM; Fiord retained for recovery', () => {

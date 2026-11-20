@@ -9,9 +9,9 @@ import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 import { layers, namedFlavor } from '@protomaps/basemaps';
 
-/** Los Angeles default camera (MapLibre [lon, lat]). */
-export const DEFAULT_MAP_CENTER = Object.freeze([-118.2437, 34.0522]);
-export const DEFAULT_MAP_ZOOM = 10.5;
+/** Huntington Beach, California default camera (MapLibre [lon, lat]). */
+export const DEFAULT_MAP_CENTER = Object.freeze([-117.99833, 33.66028]);
+export const DEFAULT_MAP_ZOOM = 11.5;
 
 /** Southern California high-detail coverage (z8–z15). */
 export const SOCAL_DETAIL_BOUNDS = Object.freeze({

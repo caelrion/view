@@ -46,14 +46,14 @@ export function createArgosAtlasShell(documentRef = document) {
         ></ul>
       </div>
       <div class="argos-hud-right">
-        <div class="argos-basemap-toggle" role="group" aria-label="2D basemap">
+        <div class="argos-basemap-toggle" role="group" aria-label="Map presentation">
           <button type="button" class="argos-hud-btn argos-basemap-btn" data-argos-action="basemap-dark" data-basemap="dark-vector" aria-pressed="false" title="Dark vector basemap">Dark</button>
-          <button type="button" class="argos-hud-btn argos-basemap-btn is-active" data-argos-action="basemap-satellite" data-basemap="owned-aerial" aria-pressed="true" title="Self-hosted NAIP aerial imagery">Satellite</button>
+          <button type="button" class="argos-hud-btn argos-basemap-btn is-active" data-argos-action="basemap-satellite" data-basemap="owned-aerial" aria-pressed="true" title="Worldwide streamed Sentinel-2 cloudless imagery">Satellite</button>
+          <button type="button" class="argos-hud-btn argos-basemap-btn" data-argos-action="toggle-3d" data-basemap="cesium-3d" aria-pressed="false" title="Switch to Cesium 3D globe">3D</button>
         </div>
         <button type="button" class="argos-hud-btn" data-argos-action="toggle-filters" aria-expanded="false" aria-controls="argos-control-panel" title="Layers">
           <span aria-hidden="true">☰</span><span class="argos-hud-btn-label">Layers</span>
         </button>
-        <button type="button" class="argos-hud-btn" data-argos-action="toggle-3d" title="Switch to Cesium 3D globe">3D</button>
       </div>
     </header>
 
@@ -153,19 +153,23 @@ export function createArgosAtlasShell(documentRef = document) {
 }
 
 /**
- * Sync Dark | Satellite pressed state in the HUD.
+ * Sync Dark | Satellite | 3D pressed state in the HUD.
  * @param {ReturnType<typeof createArgosAtlasShell>} shell
- * @param {'dark-vector'|'owned-aerial'} mode
+ * @param {'dark-vector'|'owned-aerial'|'cesium-3d'} mode
  */
 export function setBasemapToggle(shell, mode) {
   const dark = shell.basemapDarkBtn;
   const sat = shell.basemapSatelliteBtn;
+  const three = shell.root?.querySelector?.('[data-argos-action="toggle-3d"]');
   if (!dark || !sat) return;
   const aerial = mode === 'owned-aerial';
-  dark.classList.toggle('is-active', !aerial);
+  const cesium = mode === 'cesium-3d';
+  dark.classList.toggle('is-active', mode === 'dark-vector');
   sat.classList.toggle('is-active', aerial);
-  dark.setAttribute('aria-pressed', aerial ? 'false' : 'true');
+  three?.classList.toggle('is-active', cesium);
+  dark.setAttribute('aria-pressed', mode === 'dark-vector' ? 'true' : 'false');
   sat.setAttribute('aria-pressed', aerial ? 'true' : 'false');
+  three?.setAttribute('aria-pressed', cesium ? 'true' : 'false');
 }
 
 export function bindArgosShellActions(root, handlers) {
@@ -246,7 +250,7 @@ export function setBasemapBanner(shell, state) {
     shell.basemapBanner.dataset.state = 'limited-coverage';
     if (label) {
       label.textContent =
-        'PHOTOGRAPHIC COVERAGE UNAVAILABLE HERE — SHOWING DARK VECTOR';
+        'PHOTOGRAPHIC DETAIL LIMITED AT THIS ZOOM — STREAMED OVERVIEW';
     }
     return;
   }
@@ -255,7 +259,7 @@ export function setBasemapBanner(shell, state) {
     shell.basemapBanner.dataset.state = 'limited-coverage';
     if (label) {
       label.textContent =
-        'LIMITED DETAIL — ZOOM OUT OR PAN TO SOUTHERN CALIFORNIA';
+        'STREAMED STREET DETAIL — OWNED HIGH-DETAIL ARCHIVE IS SOUTHERN CALIFORNIA';
     }
     return;
   }

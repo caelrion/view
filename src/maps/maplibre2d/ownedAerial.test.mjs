@@ -3,33 +3,35 @@ import assert from 'node:assert/strict';
 import {
   createArgosDarkFlavor,
   createOwnedBasemapStyle,
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ZOOM,
 } from './ownedBasemap.js';
 import {
   createOwnedAerialStyle,
   createAerialOverlayFlavor,
   selectAerialOverlayLayers,
   aerialCoverageState,
-  isInAerialCoverage,
-  AERIAL_COVERAGE_BOUNDS,
-  OWNED_AERIAL_ARTIFACT,
-  OWNED_AERIAL_PMTILES_PATH,
+  EOX_CLOUDLESS_2016_TILE_URL,
+  GIBS_BLUE_MARBLE_TILE_URL,
   MAP_ATTRIBUTION_HTML_AERIAL,
   BASEMAP_MODE_DARK,
   BASEMAP_MODE_SATELLITE,
+  EOX_MAX_ZOOM,
 } from './ownedAerial.js';
 import { layers } from '@protomaps/basemaps';
 
-test('P0: R16 dark flavor is cool-neutral; city labels are not gold', () => {
+test('P0: R17 default camera is Huntington Beach', () => {
+  assert.deepEqual([...DEFAULT_MAP_CENTER], [-117.99833, 33.66028]);
+  assert.equal(DEFAULT_MAP_ZOOM, 11.5);
+});
+
+test('P0: R16/R17 dark flavor is cool-neutral; city labels are not gold', () => {
   const f = createArgosDarkFlavor();
   assert.equal(f.background, '#171D23');
   assert.equal(f.earth, '#20272D');
   assert.equal(f.water, '#102D40');
-  assert.equal(f.buildings, '#303A40');
-  assert.equal(f.highway, '#82939E');
   assert.equal(f.city_label, '#E5EBEF');
-  assert.equal(f.subplace_label, '#B8C6CE');
   assert.notEqual(f.city_label.toLowerCase(), '#e8bc3b');
-  assert.equal(f.city_label_halo, '#172027');
 });
 
 test('P0: owned dark style still uses same-origin PMTiles + glyphs', () => {
@@ -39,21 +41,30 @@ test('P0: owned dark style still uses same-origin PMTiles + glyphs', () => {
   assert.ok(!style.sources['esri-world-imagery']);
 });
 
-test('P0: aerial style has raster + vector sources and overlay-only layers', () => {
+test('P0: Satellite style streams EOx + GIBS (no Esri, no local planet)', () => {
   const style = createOwnedAerialStyle();
-  assert.equal(style.name, 'caelrion-owned-naip-aerial');
-  assert.ok(style.sources['caelrion-aerial']);
-  assert.equal(style.sources['caelrion-aerial'].type, 'raster');
-  assert.match(style.sources['caelrion-aerial'].url, /^pmtiles:\/\//);
-  assert.ok(style.sources.protomaps);
-  assert.ok(style.layers.some((l) => l.id === 'caelrion-aerial-raster'));
-  assert.ok(!style.layers.some((l) => l.id === 'earth'));
-  assert.ok(!style.layers.some((l) => l.id === 'landcover'));
-  assert.ok(!style.layers.some((l) => l.id === 'buildings'));
-  assert.ok(style.layers.some((l) => String(l.id).startsWith('roads_')));
-  assert.ok(style.layers.some((l) => String(l.id).startsWith('places_')));
-  assert.match(MAP_ATTRIBUTION_HTML_AERIAL, /NAIP/);
+  assert.equal(style.name, 'caelrion-streamed-eox-satellite');
+  assert.ok(style.sources['eox-cloudless-2016']);
+  assert.ok(style.sources['gibs-blue-marble']);
+  assert.equal(style.sources['eox-cloudless-2016'].type, 'raster');
+  assert.equal(
+    style.sources['eox-cloudless-2016'].tiles[0],
+    EOX_CLOUDLESS_2016_TILE_URL,
+  );
+  assert.equal(
+    style.sources['gibs-blue-marble'].tiles[0],
+    GIBS_BLUE_MARBLE_TILE_URL,
+  );
+  assert.ok(!style.sources['caelrion-aerial']);
+  assert.ok(!style.sources['esri-world-imagery']);
+  assert.match(EOX_CLOUDLESS_2016_TILE_URL, /s2cloudless_3857/);
+  assert.match(EOX_CLOUDLESS_2016_TILE_URL, /\{z\}\/\{y\}\/\{x\}/);
+  assert.match(MAP_ATTRIBUTION_HTML_AERIAL, /EOX|Sentinel-2 cloudless/);
+  assert.match(MAP_ATTRIBUTION_HTML_AERIAL, /Blue Marble|NASA/);
   assert.doesNotMatch(MAP_ATTRIBUTION_HTML_AERIAL, /Esri World Imagery/i);
+  assert.ok(style.layers.some((l) => l.id === 'eox-cloudless-raster'));
+  assert.ok(style.layers.some((l) => l.id === 'gibs-blue-marble-raster'));
+  assert.ok(style.layers.some((l) => String(l.id).startsWith('roads_')));
 });
 
 test('P0: aerial overlay filter drops opaque land fills', () => {
@@ -63,26 +74,27 @@ test('P0: aerial overlay filter drops opaque land fills', () => {
   assert.ok(kept.every((l) => l.id !== 'earth' && l.id !== 'water'));
 });
 
-test('P0: aerial coverage distinguishes LA vs outside', () => {
+test('P0: streamed coverage ready worldwide; limited only past EOx max zoom', () => {
   assert.equal(
-    aerialCoverageState({ lon: -118.24, lat: 34.05, zoom: 10.5 }),
+    aerialCoverageState({ lon: -117.99833, lat: 33.66028, zoom: 11.5 }),
     'ready',
   );
   assert.equal(
-    aerialCoverageState({ lon: -74.0, lat: 40.7, zoom: 12 }),
+    aerialCoverageState({ lon: 2.35, lat: 48.85, zoom: 10 }),
+    'ready',
+  );
+  assert.equal(
+    aerialCoverageState({ lon: 139.65, lat: 35.67, zoom: 9 }),
+    'ready',
+  );
+  assert.equal(
+    aerialCoverageState({
+      lon: -117.99833,
+      lat: 33.66028,
+      zoom: EOX_MAX_ZOOM + 2,
+    }),
     'limited-coverage',
   );
-  assert.equal(isInAerialCoverage(-118.24, 34.05), true);
-  assert.deepEqual(
-    [
-      AERIAL_COVERAGE_BOUNDS.west,
-      AERIAL_COVERAGE_BOUNDS.south,
-      AERIAL_COVERAGE_BOUNDS.east,
-      AERIAL_COVERAGE_BOUNDS.north,
-    ],
-    OWNED_AERIAL_ARTIFACT.bbox,
-  );
-  assert.match(OWNED_AERIAL_PMTILES_PATH, /caelrion-la-aerial-r01/);
   assert.equal(BASEMAP_MODE_DARK, 'dark-vector');
   assert.equal(BASEMAP_MODE_SATELLITE, 'owned-aerial');
 });

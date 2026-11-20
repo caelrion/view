@@ -1,0 +1,38 @@
+{
+  "hb": {
+    "name": "caelrion-streamed-eox-satellite",
+    "center": {
+      "lng": -117.99833,
+      "lat": 33.66028
+    },
+    "zoom": 11.5,
+    "sources": [
+      "gibs-blue-marble",
+      "eox-cloudless-2016",
+      "protomaps",
+      "caelrion-aircraft-demo"
+    ],
+    "sat": true,
+    "has3dInGroup": true
+  },
+  "dark": {
+    "name": "caelrion-owned-protomaps-dark",
+    "cityColor": "#E5EBEF",
+    "center": {
+      "lng": -117.99833,
+      "lat": 33.66028
+    },
+    "zoom": 11.5
+  },
+  "eoxRequests": 316,
+  "gibsRequests": 0,
+  "esriImagery": 4,
+  "eoxSample": [
+    "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/13/3281/1410.jpg",
+    "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/13/3281/1411.jpg",
+    "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/13/3282/1410.jpg",
+    "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/13/3282/1411.jpg",
+    "https://tiles.maps.eox.at/wmts/1.0.0/s2cloudless_3857/default/g/13/3280/1410.jpg"
+  ],
+  "diskNote": "no planet download in this session"
+}
