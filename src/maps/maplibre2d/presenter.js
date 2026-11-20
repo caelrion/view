@@ -8,6 +8,7 @@
 import maplibregl from 'maplibre-gl';
 import {
   OPENFREEMAP_STYLE_URL,
+  OPENFREEMAP_DARK_STYLE_URL,
   MAP_ATTRIBUTION_HTML_OWNED,
   MAP_ATTRIBUTION_HTML_FIORD,
   MAP_ATTRIBUTION_HTML_AERIAL,
@@ -520,16 +521,9 @@ export class MapLibre2DPresenter {
     const c = map.getCenter();
     const zoom = map.getZoom();
     if (this._styleMode === 'owned-aerial') {
-      const aerialState = aerialCoverageState({
-        lon: c.lng,
-        lat: c.lat,
-        zoom,
-      });
-      if (aerialState === 'limited-coverage') {
-        void this._enterVectorFallback('OUTSIDE_AERIAL_COVERAGE');
-        return;
-      }
-      this._setBasemapState('ready');
+      this._setBasemapState(
+        aerialCoverageState({ lon: c.lng, lat: c.lat, zoom }),
+      );
       return;
     }
     if (this._styleMode === 'owned-pmtiles') {
@@ -538,13 +532,26 @@ export class MapLibre2DPresenter {
         lat: c.lat,
         zoom,
       });
-      this._setBasemapState(
-        vectorState === 'limited-coverage' ? 'limited-detail' : vectorState,
-      );
+      if (vectorState === 'limited-coverage') {
+        void this._enterStreamedDarkDetail('OUTSIDE_OWNED_HIGH_DETAIL');
+        return;
+      }
+      this._setBasemapState(vectorState);
+      return;
+    }
+    if (this._styleMode === 'ofm-streamed') {
+      // Restore owned archive when overview / SoCal detail is enough again.
+      if (
+        this._basemapMode === BASEMAP_MODE_DARK &&
+        ownedCoverageState({ lon: c.lng, lat: c.lat, zoom }) === 'ready'
+      ) {
+        void this.setBasemapMode(BASEMAP_MODE_DARK);
+        return;
+      }
+      this._setBasemapState('limited-detail');
       return;
     }
     if (this._styleMode === 'vector-fallback') {
-      // Restore photographic tiles when the camera returns to coverage.
       if (
         this._basemapMode === BASEMAP_MODE_SATELLITE &&
         aerialCoverageState({ lon: c.lng, lat: c.lat, zoom }) === 'ready'
@@ -554,6 +561,47 @@ export class MapLibre2DPresenter {
       }
       this._setBasemapState('limited-coverage');
       return;
+    }
+  }
+
+  /**
+   * Outside owned high-detail footprint — stream OpenFreeMap dark streets.
+   * Not self-hosted; attribution remains OpenFreeMap / OSM.
+   */
+  async _enterStreamedDarkDetail(message) {
+    const map = this._map;
+    if (!map || this._destroyed) return false;
+    if (this._styleMode === 'ofm-streamed') {
+      this._setBasemapState('limited-detail');
+      return true;
+    }
+    const aircraft = this._aircraft;
+    const selected = this._selectedId;
+    try {
+      await this._setStyleAwaitLoad(OPENFREEMAP_DARK_STYLE_URL);
+      try {
+        applyReadableDarkPaint(map);
+      } catch {
+        /* non-fatal */
+      }
+      this._styleMode = 'ofm-streamed';
+      this._installAttribution(
+        '© <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> · ' +
+          '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> · streamed street detail',
+      );
+      this._setBasemapState('limited-detail');
+      this._ensureAircraftLayers();
+      if (aircraft) this.setAircraft(aircraft);
+      if (selected) this.select(selected);
+      this.setAircraftVisible(this._aircraftVisible);
+      this._onError?.(new Error(`MAP_STREAMED_DARK_DETAIL:${message}`));
+      return true;
+    } catch (err) {
+      this._setBasemapState('limited-detail');
+      this._onError?.(
+        new Error(`MAP_STREAMED_DARK_UNAVAILABLE:${err?.message || err}`),
+      );
+      return false;
     }
   }
 
@@ -632,6 +680,7 @@ export class MapLibre2DPresenter {
       this._styleMode !== 'owned-pmtiles' &&
       this._styleMode !== 'owned-aerial' &&
       this._styleMode !== 'vector-fallback' &&
+      this._styleMode !== 'ofm-streamed' &&
       this._styleMode !== 'remote' &&
       this._styleMode !== 'fiord-fallback'
     ) {

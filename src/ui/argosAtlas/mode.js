@@ -171,6 +171,10 @@ export class ArgosAtlasMode {
     this._mode = 'argos-2d';
     this._shell.root.hidden = false;
     this._shell.root.dataset.mode = 'argos-2d';
+    setBasemapToggle(
+      this._shell,
+      this._presenter?.basemapMode || this._readStoredBasemapMode(),
+    );
     this._document.documentElement?.classList?.add?.('argos-default-2d');
     this._document.body.classList.add('argos-atlas-active');
     this._showCesium(false);
@@ -191,6 +195,8 @@ export class ArgosAtlasMode {
             msg.startsWith('MAP_IMAGERY_TILE:') ||
             msg.startsWith('MAP_OWNED_BASEMAP_UNAVAILABLE:') ||
             msg.startsWith('MAP_AERIAL_UNAVAILABLE:') ||
+            msg.startsWith('MAP_STREAMED_DARK_DETAIL:') ||
+            msg.startsWith('MAP_STREAMED_DARK_UNAVAILABLE:') ||
             msg.startsWith('MAP_SATELLITE_UNAVAILABLE:')
           ) {
             return;
@@ -209,8 +215,8 @@ export class ArgosAtlasMode {
     try {
       const basemapMode = this._readStoredBasemapMode();
       setBasemapToggle(this._shell, basemapMode);
-      // Fresh visit opens over Los Angeles — not the DEMO aircraft corridor.
-      // Prefer Satellite once LA photographic coverage is available.
+      // Fresh visit opens over Huntington Beach — not the DEMO aircraft corridor.
+      // Prefer Satellite when streamed EOx imagery is available.
       await this._presenter.mount({
         center: [...DEFAULT_MAP_CENTER],
         zoom: DEFAULT_MAP_ZOOM,
@@ -247,6 +253,7 @@ export class ArgosAtlasMode {
 
   _enter3D() {
     this._mode = 'cesium-3d';
+    setBasemapToggle(this._shell, 'cesium-3d');
     this._shell.root.hidden = true;
     this._shell.root.dataset.mode = 'cesium-3d';
     this._document.documentElement?.classList?.remove?.('argos-default-2d');

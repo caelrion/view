@@ -24,6 +24,7 @@ export {
 
 export {
   createOwnedAerialStyle,
+  createStreamedSatelliteStyle,
   aerialCoverageState,
   isInAerialCoverage,
   MAP_ATTRIBUTION_HTML_AERIAL,
@@ -36,6 +37,10 @@ export {
   BASEMAP_MODE_STORAGE_KEY,
   selectAerialOverlayLayers,
   createAerialOverlayFlavor,
+  EOX_CLOUDLESS_2016_TILE_URL,
+  GIBS_BLUE_MARBLE_TILE_URL,
+  EOX_MIN_ZOOM,
+  EOX_MAX_ZOOM,
 } from './ownedAerial.js';
 
 import { ESRI_ATTRIBUTION_HTML } from '../imagery.js';
@@ -274,10 +279,12 @@ export const MAP_LICENSE_MANIFEST = Object.freeze({
     path_pattern: '/assets/maps/caelrion-basemap-r01-*.pmtiles',
   },
   aerial_tiles: {
-    provider: 'Caelrion-hosted USDA NAIP',
-    runtime: 'pmtiles',
-    path_pattern: '/assets/maps/caelrion-la-aerial-r01-*.pmtiles',
+    provider: 'EOxCloudless 2016 (streamed) + NASA GIBS Blue Marble',
+    runtime: 'HTTPS WMTS/XYZ on demand',
+    eox_layer: 's2cloudless_3857',
+    license: 'CC BY 4.0 (2016 vintage only)',
     user_facing_name: 'Satellite',
+    not_self_hosted: true,
   },
   data: {
     provider: 'OpenStreetMap contributors',

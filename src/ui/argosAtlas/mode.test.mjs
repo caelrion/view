@@ -392,7 +392,7 @@ test('R08 startup: filters collapsed and aircraft not auto-selected', async () =
   mode.destroy();
 });
 
-test('R11: mount opens over Los Angeles; fixture load does not move camera', async () => {
+test('R17: mount opens over Huntington Beach; fixture load does not move camera', async () => {
   const documentRef = fakeDocument();
   const mode = new ArgosAtlasMode({
     documentRef,
@@ -428,12 +428,12 @@ test('R15: basemap banner distinguishes offline vs limited-coverage', () => {
   setBasemapBanner(shell, 'limited-coverage');
   assert.equal(banner.hidden, false);
   assert.equal(banner.dataset.state, 'limited-coverage');
-  assert.match(label.textContent, /PHOTOGRAPHIC COVERAGE UNAVAILABLE/);
+  assert.match(label.textContent, /PHOTOGRAPHIC DETAIL LIMITED/);
 
   setBasemapBanner(shell, 'limited-detail');
   assert.equal(banner.hidden, false);
   assert.equal(banner.dataset.state, 'limited-coverage');
-  assert.match(label.textContent, /LIMITED DETAIL/);
+  assert.match(label.textContent, /STREAMED STREET DETAIL/);
 
   setBasemapBanner(shell, 'offline');
   assert.equal(banner.hidden, false);
