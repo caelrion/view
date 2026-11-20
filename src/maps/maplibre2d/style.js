@@ -1,17 +1,33 @@
 /**
- * Licensed dark vector style endpoints for the Argos-matched 2D map.
+ * MapLibre styles for the Argos-matched 2D map.
  *
- * V1 used OpenFreeMap `dark` (near-black CARTO Dark Matter family) which
- * under-contrasted land/water vs the Argos reference. V1.1 switches to the
- * OpenFreeMap-hosted OpenMapTiles **Fiord** style (blue-grey / slate midtones)
- * with bounded paint overrides for roads and labels — same OpenMapTiles
- * schema / OSM ODbL data plane. Not Argos proprietary assets.
- *
- * Terms must be re-verified if providers change; missing rights => HOLD and
- * fall back to the offline style stub below.
+ * R15 primary: Caelrion-hosted Protomaps/PMTiles vector basemap (owned archive).
+ * Fiord remains an optional recovery path when the owned archive cannot load.
+ * Offline slate stub is last resort. Esri satellite hybrid is retained only as
+ * a non-default legacy builder — never the default 2D presentation.
  */
 
-/** V1.1 primary — OpenMapTiles Fiord via OpenFreeMap (readable dark slate). */
+export { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from './ownedBasemap.js';
+
+export {
+  createOwnedBasemapStyle,
+  ensurePmtilesProtocol,
+  ownedCoverageState,
+  MAP_ATTRIBUTION_HTML_OWNED,
+  OWNED_BASEMAP_ARTIFACT,
+  OWNED_PMTILES_PATH,
+  OWNED_BASEMAP_LICENSE,
+  SOCAL_DETAIL_BOUNDS,
+  OWNED_GLOBAL_MAX_ZOOM,
+} from './ownedBasemap.js';
+
+import { ESRI_ATTRIBUTION_HTML } from '../imagery.js';
+import {
+  MAP_ATTRIBUTION_HTML_OWNED,
+  OWNED_BASEMAP_LICENSE,
+} from './ownedBasemap.js';
+
+/** OpenFreeMap Fiord — optional recovery when owned archive fails. */
 export const OPENFREEMAP_FIORD_STYLE_URL =
   'https://tiles.openfreemap.org/styles/fiord';
 
@@ -19,17 +35,72 @@ export const OPENFREEMAP_FIORD_STYLE_URL =
 export const OPENFREEMAP_DARK_STYLE_URL =
   'https://tiles.openfreemap.org/styles/dark';
 
-/** Active production style for the Argos 2D presenter. */
+/** Fiord fallback URL (alias kept for V1.1 call sites). */
 export const OPENFREEMAP_STYLE_URL = OPENFREEMAP_FIORD_STYLE_URL;
 
-export const MAP_ATTRIBUTION_HTML =
+export const OPENFREEMAP_PLANET_URL = 'https://tiles.openfreemap.org/planet';
+
+/** Legacy Esri XYZ — not used as default 2D after R15. */
+export const ESRI_WORLD_IMAGERY_TILE_URL =
+  'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
+
+export const ESRI_IMAGERY_ATTRIBUTION_TEXT =
+  'Powered by Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
+
+export const MAP_ATTRIBUTION_HTML_SATELLITE =
+  `${ESRI_ATTRIBUTION_HTML} · ${ESRI_IMAGERY_ATTRIBUTION_TEXT} · ` +
+  'Labels © <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · ' +
+  '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
+
+export const MAP_ATTRIBUTION_HTML_FIORD =
   '© <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> Fiord · ' +
   'Tiles <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> · ' +
   'Data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL)';
 
+/** Active attribution for the primary owned-vector presentation. */
+export const MAP_ATTRIBUTION_HTML = MAP_ATTRIBUTION_HTML_OWNED;
+
 /**
- * Bounded paint overrides applied after Fiord style load.
- * Improves road hierarchy and label halos without inventing geography.
+ * @deprecated R15 — not the default 2D style. Kept for hostile/legacy tests only.
+ * @returns {object}
+ */
+export function createSatelliteHybridStyle() {
+  return {
+    version: 8,
+    name: 'caelrion-esri-satellite-hybrid-legacy',
+    sources: {
+      'esri-world-imagery': {
+        type: 'raster',
+        tiles: [ESRI_WORLD_IMAGERY_TILE_URL],
+        tileSize: 256,
+        maxzoom: 19,
+        attribution: ESRI_IMAGERY_ATTRIBUTION_TEXT,
+      },
+      openmaptiles: {
+        type: 'vector',
+        url: OPENFREEMAP_PLANET_URL,
+        attribution: '© OpenMapTiles · © OpenStreetMap contributors',
+      },
+    },
+    glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+    layers: [
+      {
+        id: 'background',
+        type: 'background',
+        paint: { 'background-color': '#1a1c18' },
+      },
+      {
+        id: 'satellite',
+        type: 'raster',
+        source: 'esri-world-imagery',
+        paint: { 'raster-opacity': 1, 'raster-fade-duration': 0 },
+      },
+    ],
+  };
+}
+
+/**
+ * Fiord paint overrides retained for optional Fiord recovery.
  */
 export const READABLE_DARK_PAINT_OVERRIDES = Object.freeze([
   { id: 'background', paint: { 'background-color': '#3a455c' } },
@@ -78,13 +149,6 @@ export const READABLE_DARK_PAINT_OVERRIDES = Object.freeze([
     },
   },
   {
-    id: 'highway_name_motorway',
-    paint: {
-      'text-color': 'hsl(210, 25%, 88%)',
-      'text-halo-color': 'hsla(228, 40%, 16%, 0.9)',
-    },
-  },
-  {
     id: 'place_city',
     paint: {
       'text-color': 'hsl(195, 35%, 88%)',
@@ -92,49 +156,10 @@ export const READABLE_DARK_PAINT_OVERRIDES = Object.freeze([
       'text-halo-width': 1.5,
     },
   },
-  {
-    id: 'place_city_large',
-    paint: {
-      'text-color': 'hsl(195, 40%, 90%)',
-      'text-halo-color': 'hsla(228, 50%, 14%, 0.9)',
-      'text-halo-width': 1.6,
-    },
-  },
-  {
-    id: 'place_town',
-    paint: {
-      'text-color': 'hsl(200, 25%, 80%)',
-      'text-halo-color': 'hsla(228, 45%, 16%, 0.8)',
-    },
-  },
-  {
-    id: 'place_state',
-    paint: {
-      'text-color': 'hsl(200, 20%, 78%)',
-      'text-halo-color': 'hsla(228, 45%, 16%, 0.8)',
-    },
-  },
-  {
-    id: 'place_country_major',
-    paint: {
-      'text-color': 'hsl(200, 22%, 86%)',
-      'text-halo-color': 'hsla(228, 50%, 12%, 0.9)',
-    },
-  },
-  {
-    id: 'water_name',
-    paint: {
-      'text-color': 'hsla(210, 40%, 78%, 0.9)',
-      'text-halo-color': 'hsla(228, 40%, 18%, 0.75)',
-    },
-  },
 ]);
 
 /**
  * Apply known layer paint overrides. Missing layers are skipped (style drift safe).
- * @param {{ getLayer: (id: string) => unknown, setPaintProperty: (id: string, name: string, value: unknown) => void }} map
- * @param {typeof READABLE_DARK_PAINT_OVERRIDES} [overrides]
- * @returns {number} count of paint properties applied
  */
 export function applyReadableDarkPaint(
   map,
@@ -162,18 +187,39 @@ export function classifyMapError(event) {
   const status = Number(raw?.status || raw?.statusCode || 0);
   const sourceId = String(event?.sourceId || raw?.url || '');
   const lower = message.toLowerCase();
+  const isImagery =
+    /esri-world-imagery|world_imagery|arcgisonline\.com/i.test(sourceId) ||
+    /esri-world-imagery|world_imagery|arcgisonline\.com/i.test(lower);
+  const isOwned =
+    /protomaps|pmtiles|caelrion-basemap/i.test(sourceId) ||
+    /protomaps|pmtiles|caelrion-basemap/i.test(lower);
+  if (
+    /style is not done loading|style not ready|not fully loaded|cancel/i.test(
+      lower,
+    )
+  ) {
+    return { kind: 'unknown', message, isImagery, isOwned };
+  }
   const isTileOrGlyph =
-    /tile|glyph|font|\.pbf|sprite|404|503|failed to fetch|networkerror|load failed/i.test(
+    /tile|glyph|font|\.pbf|sprite|404|503|failed to fetch|networkerror|load failed|missing/i.test(
       lower,
     ) ||
     /\/\d+\/\d+\/\d+/.test(sourceId) ||
     (status >= 400 && status < 600 && !/style/i.test(lower));
   const isStyleFatal =
-    /style|stylesheet|parse|json|unsupported|corrupt/i.test(lower) &&
-    !isTileOrGlyph;
-  if (isStyleFatal) return { kind: 'style-fatal', message };
-  if (isTileOrGlyph) return { kind: 'tile-or-glyph', message };
-  return { kind: 'unknown', message };
+    /stylesheet|style parse|failed to load style|unsupported|corrupt/i.test(
+      lower,
+    ) && !isTileOrGlyph;
+  if (isStyleFatal) return { kind: 'style-fatal', message, isImagery, isOwned };
+  if (isTileOrGlyph) {
+    return {
+      kind: isImagery ? 'imagery-tile' : 'tile-or-glyph',
+      message,
+      isImagery,
+      isOwned,
+    };
+  }
+  return { kind: 'unknown', message, isImagery, isOwned };
 }
 
 /** Offline/fallback style when remote tiles are unavailable — slate, not pure black. */
@@ -186,28 +232,27 @@ export function createOfflineDarkStyleStub() {
       {
         id: 'background',
         type: 'background',
-        paint: { 'background-color': '#3a455c' },
+        paint: { 'background-color': '#2E2C22' },
       },
     ],
-    glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+    glyphs: '/assets/basemaps/fonts/{fontstack}/{range}.pbf',
   };
 }
 
 export const MAP_LICENSE_MANIFEST = Object.freeze({
   style_design: {
-    claim: 'OpenMapTiles Fiord visual family (V1.1)',
-    license:
-      'OpenMapTiles / OpenFreeMap provider terms; CC-compatible design heritage',
-    url: 'https://openmaptiles.org/',
-    predecessor_v1:
-      'CARTO Dark Matter via OpenFreeMap dark (retained as OPENFREEMAP_DARK_STYLE_URL)',
+    claim: OWNED_BASEMAP_LICENSE.claim,
+    license: OWNED_BASEMAP_LICENSE.data_license,
+    url: 'https://www.openstreetmap.org/copyright',
+    predecessor_v1_2_satellite:
+      'Esri World Imagery hybrid (retired as default 2D)',
+    predecessor_v1_1: 'OpenMapTiles Fiord via OpenFreeMap (optional recovery)',
   },
+  owned_basemap: OWNED_BASEMAP_LICENSE.artifact,
   tiles: {
-    provider: 'OpenFreeMap',
-    url: 'https://openfreemap.org/',
-    schema: 'OpenMapTiles',
-    schema_url: 'https://openmaptiles.org/',
-    style_url: OPENFREEMAP_STYLE_URL,
+    provider: 'Caelrion-hosted Protomaps extract',
+    runtime: 'pmtiles',
+    path_pattern: '/assets/maps/caelrion-basemap-r01-*.pmtiles',
   },
   data: {
     provider: 'OpenStreetMap contributors',
@@ -215,17 +260,12 @@ export const MAP_LICENSE_MANIFEST = Object.freeze({
     url: 'https://www.openstreetmap.org/copyright',
   },
   fonts: {
-    ui: 'Inter / Montserrat / Open Sans / Noto Sans / IBM Plex Mono (SIL OFL where applicable)',
-    map_glyphs: 'OpenFreeMap hosted glyphs for OpenMapTiles stacks',
+    ui: 'Inter / Montserrat / Open Sans / Noto Sans / IBM Plex Mono',
+    map_glyphs: 'Self-hosted Noto Sans stacks (SIL OFL)',
   },
   maplibre: {
     package: 'maplibre-gl',
     license: 'BSD-3-Clause',
   },
-  not_used: [
-    'Argos proprietary source',
-    'Argos branded marks/assets',
-    'Hotlinked Argos runtime tile URLs',
-    'Global CSS brightness filter as map substitute',
-  ],
+  not_used: OWNED_BASEMAP_LICENSE.not_used,
 });

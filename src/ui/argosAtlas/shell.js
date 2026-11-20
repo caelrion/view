@@ -1,7 +1,7 @@
 /**
  * Argos-matched standard-map shell chrome (Caelrion branding).
  * Presentation only — no feeds, no backend calls.
- * V1.1: category rail, lighter panels, basemap offline affordance.
+ * V1.2: category rail, Argos charcoal/olive palette, basemap state banner.
  */
 
 export function createArgosAtlasShell(documentRef = document) {
@@ -114,8 +114,8 @@ export function createArgosAtlasShell(documentRef = document) {
       </div>
     </aside>
 
-    <div class="argos-basemap-banner" data-argos-basemap-banner hidden role="alert">
-      <span>BASEMAP OFFLINE</span>
+    <div class="argos-basemap-banner" data-argos-basemap-banner data-state="ready" hidden role="alert">
+      <span data-argos-basemap-label>BASEMAP OFFLINE</span>
       <button type="button" class="argos-hud-btn" data-argos-action="retry-basemap">Retry</button>
     </div>
 
@@ -190,7 +190,43 @@ export function formatUtcCoords(lat, lon, now = new Date()) {
   return `UTC ${utc} · ${Math.abs(lat).toFixed(4)}°${ns} ${Math.abs(lon).toFixed(4)}°${ew}`;
 }
 
-export function setBasemapBanner(shell, offline) {
+/**
+ * Basemap status banner (R15 owned-vector semantics).
+ * @param {ReturnType<typeof createArgosAtlasShell>} shell
+ * @param {boolean|string} state
+ *   true | 'offline' → BASEMAP OFFLINE
+ *   'limited-coverage' → high zoom outside SoCal detail archive
+ *   false | 'ready' | 'loading' | 'hidden' → hide banner
+ *   legacy 'satellite-unavailable' → treated as ready (retired message)
+ */
+export function setBasemapBanner(shell, state) {
   if (!shell.basemapBanner) return;
-  shell.basemapBanner.hidden = !offline;
+  const label =
+    shell.basemapBanner.querySelector('[data-argos-basemap-label]') ||
+    shell.basemapBanner.querySelector('span');
+  const normalized =
+    state === true
+      ? 'offline'
+      : state === false || state === 'satellite-unavailable'
+        ? 'ready'
+        : String(state || 'ready');
+
+  if (normalized === 'offline') {
+    shell.basemapBanner.hidden = false;
+    shell.basemapBanner.dataset.state = 'offline';
+    if (label) label.textContent = 'BASEMAP OFFLINE';
+    return;
+  }
+  if (normalized === 'limited-coverage') {
+    shell.basemapBanner.hidden = false;
+    shell.basemapBanner.dataset.state = 'limited-coverage';
+    if (label) {
+      label.textContent =
+        'LIMITED DETAIL — ZOOM OUT OR PAN TO SOUTHERN CALIFORNIA';
+    }
+    return;
+  }
+  shell.basemapBanner.hidden = true;
+  shell.basemapBanner.dataset.state =
+    normalized === 'loading' ? 'loading' : 'ready';
 }

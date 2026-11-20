@@ -19,6 +19,10 @@ import {
   setBasemapBanner,
 } from './shell.js';
 import { searchLocal } from './localSearch.js';
+import {
+  DEFAULT_MAP_CENTER,
+  DEFAULT_MAP_ZOOM,
+} from '../../maps/maplibre2d/style.js';
 
 async function ensureMapLibreCss() {
   try {
@@ -175,11 +179,18 @@ export class ArgosAtlasMode {
         onError: (err) => {
           this._error = err;
           const msg = String(err.message || err);
-          if (msg.startsWith('MAP_TILE_OR_GLYPH:')) return;
+          if (
+            msg.startsWith('MAP_TILE_OR_GLYPH:') ||
+            msg.startsWith('MAP_IMAGERY_TILE:') ||
+            msg.startsWith('MAP_OWNED_BASEMAP_UNAVAILABLE:') ||
+            msg.startsWith('MAP_SATELLITE_UNAVAILABLE:')
+          ) {
+            return;
+          }
           this._toast(msg);
         },
         onBasemapState: (state) => {
-          setBasemapBanner(this._shell, state === 'offline');
+          setBasemapBanner(this._shell, state);
         },
       });
       // Presenter lifecycle only — not a feed subscription owner.
@@ -188,11 +199,18 @@ export class ArgosAtlasMode {
 
     this._applyInitialFilterState();
     try {
+      // Fresh visit opens over Los Angeles — not the DEMO aircraft corridor.
       await this._presenter.mount({
-        center: [DEMO_AIRCRAFT_FIXTURE.lon, DEMO_AIRCRAFT_FIXTURE.lat],
-        zoom: 5.2,
+        center: [...DEFAULT_MAP_CENTER],
+        zoom: DEFAULT_MAP_ZOOM,
+        bearing: 0,
+        pitch: 0,
       });
       this._presenter.resize?.();
+      // QA / diagnostics only — not a feed owner.
+      if (typeof globalThis !== 'undefined') {
+        globalThis.__argosMap = this._presenter.map || null;
+      }
     } catch (err) {
       this._error = err instanceof Error ? err : new Error(String(err));
       this._toast(`Map unavailable: ${this._error.message}`);
@@ -202,7 +220,7 @@ export class ArgosAtlasMode {
 
     const projection = this._resolveAircraft();
     this._record = projection.record;
-    // Render marker only — do not auto-select or open the detail card.
+    // Render marker only — do not auto-select, open detail, or move camera.
     this._presenter.setAircraft(this._record);
     this._presenter.select(null);
     renderAircraftDetail(this._shell, null);
@@ -231,13 +249,14 @@ export class ArgosAtlasMode {
       this._modeToggle.hidden = false;
     }
     this._stopCoords();
-    setBasemapBanner(this._shell, false);
+    setBasemapBanner(this._shell, 'ready');
     // Tear down MapLibre handlers; do not create/destroy feed owners.
     if (this._presenter) {
       this._presenter.destroy();
       this._presenter = null;
       this._subscriptionOwners = 0;
     }
+    if (typeof globalThis !== 'undefined') globalThis.__argosMap = null;
   }
 
   _resolveAircraft() {

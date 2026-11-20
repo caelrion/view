@@ -26,7 +26,9 @@ try {
   const page = await browser.newPage();
   await page.setViewport({ width: 1440, height: 900 });
   await page.goto(URL, { waitUntil: 'networkidle2', timeout: 90000 });
-  await page.waitForSelector('#argos-atlas-root:not([hidden])', { timeout: 30000 });
+  await page.waitForSelector('#argos-atlas-root:not([hidden])', {
+    timeout: 30000,
+  });
   await page.waitForFunction(
     () => document.body.classList.contains('argos-atlas-active'),
     { timeout: 30000 },
@@ -39,7 +41,9 @@ try {
     const panel = document.getElementById('argos-control-panel');
     const detail = document.getElementById('argos-detail-panel');
     const search = document.getElementById('argos-search-input');
-    const layersBtn = root?.querySelector('[data-argos-action="toggle-filters"]');
+    const layersBtn = root?.querySelector(
+      '[data-argos-action="toggle-filters"]',
+    );
     const attrib = root?.querySelector('.maplibregl-ctrl-attrib');
     const attribRect = attrib?.getBoundingClientRect?.();
     const canvas = root?.querySelector('.maplibregl-canvas');
@@ -51,8 +55,10 @@ try {
       searchEnabled: Boolean(search) && search.disabled !== true,
       searchPlaceholder: search?.placeholder || '',
       attribExists: Boolean(attrib),
-      attribHasCompact: attrib?.classList.contains('maplibregl-compact') === true,
-      attribExpanded: attrib?.classList.contains('maplibregl-compact-show') === true,
+      attribHasCompact:
+        attrib?.classList.contains('maplibregl-compact') === true,
+      attribExpanded:
+        attrib?.classList.contains('maplibregl-compact-show') === true,
       attribWidth: attribRect?.width || 0,
       attribBg: attrib ? getComputedStyle(attrib).backgroundColor : null,
       canvasOk: Boolean(canvas),
@@ -65,7 +71,9 @@ try {
   } else pass('full-screen flat 2D map visible');
 
   if (!state.filtersCollapsed || state.layersAria !== 'false') {
-    fail(`filters not closed: collapsed=${state.filtersCollapsed} aria=${state.layersAria}`);
+    fail(
+      `filters not closed: collapsed=${state.filtersCollapsed} aria=${state.layersAria}`,
+    );
   } else pass('filters closed with aria-expanded=false');
 
   if (!state.detailHidden) fail('aircraft detail open on startup');
@@ -80,13 +88,37 @@ try {
 
   if (!state.searchEnabled) fail('search still disabled');
   else if (/flights,\s*ships/i.test(state.searchPlaceholder)) {
-    fail(`search placeholder still claims universal coverage: ${state.searchPlaceholder}`);
+    fail(
+      `search placeholder still claims universal coverage: ${state.searchPlaceholder}`,
+    );
   } else pass('search enabled with honest local placeholder');
+
+  // R11: after fixture init, camera must still be over Los Angeles (not DEMO Madrid).
+  const camStartup = await page.evaluate(() => {
+    const text =
+      document.querySelector('[data-argos-coords]')?.textContent || '';
+    const m = text.match(/(\d+\.\d+)°([NS])\s+(\d+\.\d+)°([EW])/);
+    if (!m) return { ok: false, text };
+    const lat = Number(m[1]) * (m[2] === 'S' ? -1 : 1);
+    const lon = Number(m[3]) * (m[4] === 'W' ? -1 : 1);
+    return { ok: true, lon, lat, text };
+  });
+  if (
+    !camStartup.ok ||
+    Math.abs(camStartup.lon - -118.2437) > 0.4 ||
+    Math.abs(camStartup.lat - 34.0522) > 0.4
+  ) {
+    fail(
+      `startup camera not over LA after DEMO init: ${JSON.stringify(camStartup)}`,
+    );
+  } else pass('startup camera over Los Angeles after DEMO fixture init');
 
   // Search keyboard path: type DEMO id, Arrow/Enter, expect fly + optional select.
   await page.click('#argos-search-input');
   await page.type('#argos-search-input', 'ae07f6', { delay: 20 });
-  await page.waitForSelector('#argos-search-results:not([hidden])', { timeout: 5000 });
+  await page.waitForSelector('#argos-search-results:not([hidden])', {
+    timeout: 5000,
+  });
   await page.keyboard.press('Enter');
   await new Promise((r) => setTimeout(r, 1200));
 
@@ -96,7 +128,8 @@ try {
     return {
       resultsHidden: list?.hidden === true,
       detailOpen: detail?.hidden === false,
-      detailId: detail?.querySelector('[data-argos-detail-id]')?.textContent || '',
+      detailId:
+        detail?.querySelector('[data-argos-detail-id]')?.textContent || '',
     };
   });
   if (afterSearch.detailId !== 'ae07f6' && !afterSearch.detailOpen) {
@@ -128,7 +161,11 @@ try {
   await page.waitForFunction(
     () => {
       const list = document.getElementById('argos-search-results');
-      return list && !list.hidden && /No locally available result/i.test(list.textContent || '');
+      return (
+        list &&
+        !list.hidden &&
+        /No locally available result/i.test(list.textContent || '')
+      );
     },
     { timeout: 8000 },
   );
@@ -171,9 +208,12 @@ try {
     input.dispatchEvent(new Event('input', { bubbles: true }));
   });
   await page.type('#argos-search-input', 'DEMO01', { delay: 20 });
-  await page.waitForSelector('#argos-search-results:not([hidden]) button.argos-search-option', {
-    timeout: 5000,
-  });
+  await page.waitForSelector(
+    '#argos-search-results:not([hidden]) button.argos-search-option',
+    {
+      timeout: 5000,
+    },
+  );
   await page.click('#argos-search-results button.argos-search-option');
   await new Promise((r) => setTimeout(r, 800));
   const card = await page.evaluate(() => {
@@ -183,7 +223,8 @@ try {
       id: detail?.querySelector('[data-argos-detail-id]')?.textContent || '',
     };
   });
-  if (!card.open || card.id !== 'ae07f6') fail(`DEMO card not open after search select: ${JSON.stringify(card)}`);
+  if (!card.open || card.id !== 'ae07f6')
+    fail(`DEMO card not open after search select: ${JSON.stringify(card)}`);
   else pass('DEMO aircraft card opens after explicit selection');
 
   // 2D/3D toggle still present.
@@ -204,9 +245,15 @@ try {
         show: el?.classList.contains('maplibregl-compact-show') === true,
         hasOsm: /OpenStreetMap/i.test(text),
         hasOfm: /OpenFreeMap/i.test(text),
+        hasEsri: /Esri/i.test(text),
+        hasOpenMapTiles: /OpenMapTiles/i.test(text),
+        hasProtomaps: /Protomaps/i.test(text),
       };
     });
-    if (!open.show || !open.hasOsm || !open.hasOfm) {
+    // R15 owned: Protomaps + OSM. Fiord recovery: OpenFreeMap + OSM.
+    const ownedOk = open.hasProtomaps && open.hasOsm;
+    const fiordOk = open.hasOfm && open.hasOsm;
+    if (!open.show || !(ownedOk || fiordOk)) {
       fail(`attribution disclosure incomplete: ${JSON.stringify(open)}`);
     } else pass('required attribution accessible via disclosure');
   }

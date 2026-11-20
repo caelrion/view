@@ -1,14 +1,16 @@
-# Map / font / library license manifest (V1.1 / R08)
+# Map / font / library license manifest (R15 owned vector)
 
 | Asset | Provider | License / terms | Used how |
 |-------|----------|-----------------|----------|
-| Dark basemap design (V1.1) | OpenMapTiles **Fiord** via OpenFreeMap | OpenMapTiles / OpenFreeMap provider terms | MapLibre style URL `styles/fiord` + bounded paint overrides |
-| V1 predecessor (retained) | CARTO Dark Matter family via OpenFreeMap `dark` | CC BY 4.0 design heritage | `OPENFREEMAP_DARK_STYLE_URL` only — not active presenter default |
-| Vector tiles | OpenFreeMap (`tiles.openfreemap.org`) | Provider terms; OpenMapTiles schema | Style `sources` |
-| Map data | OpenStreetMap contributors | ODbL | Via OpenFreeMap tiles |
-| Map glyphs | OpenFreeMap hosted | As provided for OpenMapTiles stacks | Style `glyphs` URL |
-| UI fonts | Inter / Open Sans / Noto Sans / IBM Plex Mono | SIL OFL / respective licenses | CSS stacks (no Argos Michroma brand mark) |
-| MapLibre GL JS | `maplibre-gl` `^5.24.1` | BSD-3-Clause | 2D presenter |
-| CesiumJS | existing pin | Apache-2.0 | Unchanged 3D |
+| Default 2D basemap | Caelrion-hosted Protomaps v4 extract | OSM ODbL for data; Protomaps tooling BSD | Same-origin PMTiles `/assets/maps/caelrion-basemap-r01-*.pmtiles` |
+| Style layers | `@protomaps/basemaps` | BSD | `layers()` + Argos-tuned `namedFlavor('dark')` |
+| Glyphs / sprites | `protomaps/basemaps-assets` | SIL OFL (fonts) | Self-hosted `/assets/basemaps/fonts` · `/assets/basemaps/sprites/v4/dark` |
+| Optional recovery | OpenMapTiles **Fiord** via OpenFreeMap | OpenMapTiles / OpenFreeMap terms | Only if owned archive style fails |
+| Offline stub | Caelrion | — | Slate background when no style loads |
+| MapLibre GL JS | `maplibre-gl` | BSD-3-Clause | 2D presenter |
+| PMTiles runtime | `pmtiles` | BSD | `pmtiles://` protocol |
+| CesiumJS | existing pin | Apache-2.0 | Optional 3D (external providers unchanged) |
 
-**Not used:** Argos proprietary source, Argos logo/marks, hotlinked Argos runtime tile endpoints, unlicensed screenshots as app assets, global CSS brightness filters as a map substitute.
+**Not used as default 2D:** Esri World Imagery (keyless or Location Platform), MapTiler Hybrid, Argos proprietary tiles, ArcGIS basemaps-api without entitlement.
+
+**R12 Esri entitlement blocker:** Superseded for the **default 2D** path by this owned-vector basemap. Cesium 3D may still reference external imagery stacks independently.
