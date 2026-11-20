@@ -1,0 +1,39 @@
+{
+  "info": {
+    "name": "caelrion-owned-protomaps-dark",
+    "center": {
+      "lng": -117.99833,
+      "lat": 33.66028
+    },
+    "zoom": 11.5,
+    "roads": [
+      {
+        "id": "roads_minor",
+        "color": [
+          "interpolate",
+          [
+            "exponential",
+            1.6
+          ],
+          [
+            "zoom"
+          ],
+          11,
+          "#2B363A",
+          16,
+          "#2B363A"
+        ]
+      },
+      {
+        "id": "roads_major",
+        "color": "#374448"
+      },
+      {
+        "id": "roads_highway",
+        "color": "#47575B"
+      }
+    ],
+    "city": "#BBC8CA"
+  },
+  "sat": "caelrion-streamed-eox-satellite"
+}
