@@ -31,7 +31,10 @@ export class MapLibre2DPresenter {
    * @param {HTMLElement} container
    * @param {{ onSelect?: (id: string|null) => void, onError?: (err: Error) => void, onBasemapState?: (state: string) => void }} [options]
    */
-  constructor(container, { onSelect = null, onError = null, onBasemapState = null } = {}) {
+  constructor(
+    container,
+    { onSelect = null, onError = null, onBasemapState = null } = {},
+  ) {
     if (!(container instanceof HTMLElement)) {
       throw new TypeError('MAPLIBRE_CONTAINER_REQUIRED');
     }
@@ -166,9 +169,7 @@ export class MapLibre2DPresenter {
         // or ambiguous errors — wait for `load` or an explicit style-fatal.
         if (classified.kind !== 'style-fatal') {
           this._tileFailCount += 1;
-          this._onError?.(
-            new Error(`MAP_TILE_OR_GLYPH:${classified.message}`),
-          );
+          this._onError?.(new Error(`MAP_TILE_OR_GLYPH:${classified.message}`));
           return;
         }
         cleanup();
@@ -402,7 +403,11 @@ export class MapLibre2DPresenter {
       event.preventDefault();
       return;
     }
-    if ((key === 'Enter' || key === ' ') && this._aircraft && this._aircraftVisible) {
+    if (
+      (key === 'Enter' || key === ' ') &&
+      this._aircraft &&
+      this._aircraftVisible
+    ) {
       const next =
         this._selectedId === this._aircraft.id ? null : this._aircraft.id;
       this.select(next);
@@ -441,7 +446,12 @@ export class MapLibre2DPresenter {
         paint: {
           'circle-radius': ['case', ['==', ['get', 'selected'], 1], 9, 7],
           'circle-color': '#3de7ff',
-          'circle-stroke-width': ['case', ['==', ['get', 'selected'], 1], 2.5, 1.5],
+          'circle-stroke-width': [
+            'case',
+            ['==', ['get', 'selected'], 1],
+            2.5,
+            1.5,
+          ],
           'circle-stroke-color': '#e8fdff',
           'circle-opacity': 0.95,
         },

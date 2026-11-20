@@ -6,16 +6,86 @@
 
 /** Bundled place presets (lat/lon WGS84). Not a live gazetteer. */
 export const LOCAL_PLACE_PRESETS = Object.freeze([
-  { id: 'place-madrid', label: 'Madrid', kind: 'place', lat: 40.4168, lon: -3.7038, zoom: 10 },
-  { id: 'place-lisbon', label: 'Lisbon', kind: 'place', lat: 38.7223, lon: -9.1393, zoom: 10 },
-  { id: 'place-barcelona', label: 'Barcelona', kind: 'place', lat: 41.3874, lon: 2.1686, zoom: 10 },
-  { id: 'place-paris', label: 'Paris', kind: 'place', lat: 48.8566, lon: 2.3522, zoom: 10 },
-  { id: 'place-london', label: 'London', kind: 'place', lat: 51.5074, lon: -0.1278, zoom: 10 },
-  { id: 'place-nyc', label: 'New York', kind: 'place', lat: 40.7128, lon: -74.006, zoom: 10 },
-  { id: 'place-sf', label: 'San Francisco', kind: 'place', lat: 37.7749, lon: -122.4194, zoom: 11 },
-  { id: 'place-tokyo', label: 'Tokyo', kind: 'place', lat: 35.6762, lon: 139.6503, zoom: 10 },
-  { id: 'place-sydney', label: 'Sydney', kind: 'place', lat: -33.8688, lon: 151.2093, zoom: 10 },
-  { id: 'place-cairo', label: 'Cairo', kind: 'place', lat: 30.0444, lon: 31.2357, zoom: 10 },
+  {
+    id: 'place-madrid',
+    label: 'Madrid',
+    kind: 'place',
+    lat: 40.4168,
+    lon: -3.7038,
+    zoom: 10,
+  },
+  {
+    id: 'place-lisbon',
+    label: 'Lisbon',
+    kind: 'place',
+    lat: 38.7223,
+    lon: -9.1393,
+    zoom: 10,
+  },
+  {
+    id: 'place-barcelona',
+    label: 'Barcelona',
+    kind: 'place',
+    lat: 41.3874,
+    lon: 2.1686,
+    zoom: 10,
+  },
+  {
+    id: 'place-paris',
+    label: 'Paris',
+    kind: 'place',
+    lat: 48.8566,
+    lon: 2.3522,
+    zoom: 10,
+  },
+  {
+    id: 'place-london',
+    label: 'London',
+    kind: 'place',
+    lat: 51.5074,
+    lon: -0.1278,
+    zoom: 10,
+  },
+  {
+    id: 'place-nyc',
+    label: 'New York',
+    kind: 'place',
+    lat: 40.7128,
+    lon: -74.006,
+    zoom: 10,
+  },
+  {
+    id: 'place-sf',
+    label: 'San Francisco',
+    kind: 'place',
+    lat: 37.7749,
+    lon: -122.4194,
+    zoom: 11,
+  },
+  {
+    id: 'place-tokyo',
+    label: 'Tokyo',
+    kind: 'place',
+    lat: 35.6762,
+    lon: 139.6503,
+    zoom: 10,
+  },
+  {
+    id: 'place-sydney',
+    label: 'Sydney',
+    kind: 'place',
+    lat: -33.8688,
+    lon: 151.2093,
+    zoom: 10,
+  },
+  {
+    id: 'place-cairo',
+    label: 'Cairo',
+    kind: 'place',
+    lat: 30.0444,
+    lon: 31.2357,
+    zoom: 10,
+  },
 ]);
 
 /**
@@ -100,7 +170,10 @@ export function searchLocal({
   }
 
   for (const place of LOCAL_PLACE_PRESETS) {
-    if (normalize(place.label).includes(q) || q.includes(normalize(place.label))) {
+    if (
+      normalize(place.label).includes(q) ||
+      q.includes(normalize(place.label))
+    ) {
       push({ ...place });
     }
   }
@@ -151,7 +224,6 @@ export function searchLocal({
   const sliced = results.slice(0, limit);
   return {
     results: sliced,
-    emptyMessage:
-      sliced.length === 0 ? 'No locally available result' : null,
+    emptyMessage: sliced.length === 0 ? 'No locally available result' : null,
   };
 }

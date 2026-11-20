@@ -84,7 +84,10 @@ export class ArgosAtlasMode {
     if (autoAttach) this._injectModeToggle();
     // Hide Cesium immediately when 2D is default so the globe never flashes.
     if (preferArgos2D) {
-      this._document.body.classList.add('argos-atlas-active', 'argos-atlas-booting');
+      this._document.body.classList.add(
+        'argos-atlas-active',
+        'argos-atlas-booting',
+      );
       this._shell.root.hidden = false;
       this._shell.root.dataset.mode = 'argos-2d';
       this._showCesium(false);
@@ -295,7 +298,8 @@ export class ArgosAtlasMode {
   }
 
   _toggleFilters() {
-    const collapsed = this._shell.controlPanel.classList.contains('is-collapsed');
+    const collapsed =
+      this._shell.controlPanel.classList.contains('is-collapsed');
     if (collapsed) {
       this._filtersFocusReturn =
         this._document.activeElement ||
@@ -577,9 +581,7 @@ export class ArgosAtlasMode {
     btn.hidden = start2d;
     btn.title = 'Toggle Argos-style dark 2D map / Cesium 3D';
     btn.addEventListener('click', () => {
-      void this.setMode(
-        this._mode === 'argos-2d' ? 'cesium-3d' : 'argos-2d',
-      );
+      void this.setMode(this._mode === 'argos-2d' ? 'cesium-3d' : 'argos-2d');
     });
     this._document.body.appendChild(btn);
     this._modeToggle = btn;

@@ -48,7 +48,10 @@ export const READABLE_DARK_PAINT_OVERRIDES = Object.freeze([
   },
   { id: 'highway_path', paint: { 'line-color': '#5a6478' } },
   { id: 'highway_minor', paint: { 'line-color': '#6a7388' } },
-  { id: 'highway_major_casing', paint: { 'line-color': 'rgba(120, 130, 150, 0.55)' } },
+  {
+    id: 'highway_major_casing',
+    paint: { 'line-color': 'rgba(120, 130, 150, 0.55)' },
+  },
   { id: 'highway_major_inner', paint: { 'line-color': '#8b93a6' } },
   { id: 'highway_major_subtle', paint: { 'line-color': '#6e7689' } },
   {
@@ -133,7 +136,10 @@ export const READABLE_DARK_PAINT_OVERRIDES = Object.freeze([
  * @param {typeof READABLE_DARK_PAINT_OVERRIDES} [overrides]
  * @returns {number} count of paint properties applied
  */
-export function applyReadableDarkPaint(map, overrides = READABLE_DARK_PAINT_OVERRIDES) {
+export function applyReadableDarkPaint(
+  map,
+  overrides = READABLE_DARK_PAINT_OVERRIDES,
+) {
   let applied = 0;
   for (const { id, paint } of overrides) {
     if (!map.getLayer(id)) continue;
@@ -190,9 +196,11 @@ export function createOfflineDarkStyleStub() {
 export const MAP_LICENSE_MANIFEST = Object.freeze({
   style_design: {
     claim: 'OpenMapTiles Fiord visual family (V1.1)',
-    license: 'OpenMapTiles / OpenFreeMap provider terms; CC-compatible design heritage',
+    license:
+      'OpenMapTiles / OpenFreeMap provider terms; CC-compatible design heritage',
     url: 'https://openmaptiles.org/',
-    predecessor_v1: 'CARTO Dark Matter via OpenFreeMap dark (retained as OPENFREEMAP_DARK_STYLE_URL)',
+    predecessor_v1:
+      'CARTO Dark Matter via OpenFreeMap dark (retained as OPENFREEMAP_DARK_STYLE_URL)',
   },
   tiles: {
     provider: 'OpenFreeMap',
