@@ -25,13 +25,20 @@ test('P0: R17 default camera is Huntington Beach', () => {
   assert.equal(DEFAULT_MAP_ZOOM, 11.5);
 });
 
-test('P0: R16/R17 dark flavor is cool-neutral; city labels are not gold', () => {
+test('P0: R17-P1 dark flavor subdues roads; city labels are not gold', () => {
   const f = createArgosDarkFlavor();
   assert.equal(f.background, '#171D23');
-  assert.equal(f.earth, '#20272D');
-  assert.equal(f.water, '#102D40');
-  assert.equal(f.city_label, '#E5EBEF');
+  assert.equal(f.earth, '#1C2527');
+  assert.equal(f.water, '#0A2A38');
+  assert.equal(f.highway, '#47575B');
+  assert.equal(f.major, '#374448');
+  assert.equal(f.minor_a, '#2B363A');
+  assert.equal(f.city_label, '#BBC8CA');
+  assert.equal(f.subplace_label, '#9DAEB2');
   assert.notEqual(f.city_label.toLowerCase(), '#e8bc3b');
+  // Hierarchy preserved: highway brighter than major, major brighter than minor.
+  assert.ok(f.highway !== f.major);
+  assert.ok(f.major !== f.minor_a);
 });
 
 test('P0: owned dark style still uses same-origin PMTiles + glyphs', () => {
