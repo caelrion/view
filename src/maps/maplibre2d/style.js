@@ -1,22 +1,33 @@
 /**
  * MapLibre styles for the Argos-matched 2D map.
  *
- * V1.2 primary: Esri World Imagery (incumbent keyless ArcGIS Online service
- * already used by Cesium `createEsriImagery`) + OpenFreeMap/OpenMapTiles
- * road/label overlay. Fiord remains the satellite-unavailable fallback.
- * Offline slate stub is last resort when no remote style can load.
- *
- * Terms: DATA_SOURCES.md — Esri World Imagery public endpoint with required
- * attribution; OpenMapTiles/OSM ODbL for vector overlay. Not Argos assets.
+ * R15 primary: Caelrion-hosted Protomaps/PMTiles vector basemap (owned archive).
+ * Fiord remains an optional recovery path when the owned archive cannot load.
+ * Offline slate stub is last resort. Esri satellite hybrid is retained only as
+ * a non-default legacy builder — never the default 2D presentation.
  */
 
+export { DEFAULT_MAP_CENTER, DEFAULT_MAP_ZOOM } from './ownedBasemap.js';
+
+export {
+  createOwnedBasemapStyle,
+  ensurePmtilesProtocol,
+  ownedCoverageState,
+  MAP_ATTRIBUTION_HTML_OWNED,
+  OWNED_BASEMAP_ARTIFACT,
+  OWNED_PMTILES_PATH,
+  OWNED_BASEMAP_LICENSE,
+  SOCAL_DETAIL_BOUNDS,
+  OWNED_GLOBAL_MAX_ZOOM,
+} from './ownedBasemap.js';
+
 import { ESRI_ATTRIBUTION_HTML } from '../imagery.js';
+import {
+  MAP_ATTRIBUTION_HTML_OWNED,
+  OWNED_BASEMAP_LICENSE,
+} from './ownedBasemap.js';
 
-/** Los Angeles default camera (MapLibre [lon, lat]). */
-export const DEFAULT_MAP_CENTER = Object.freeze([-118.2437, 34.0522]);
-export const DEFAULT_MAP_ZOOM = 10.5;
-
-/** OpenFreeMap Fiord — V1.1 / satellite-unavailable fallback. */
+/** OpenFreeMap Fiord — optional recovery when owned archive fails. */
 export const OPENFREEMAP_FIORD_STYLE_URL =
   'https://tiles.openfreemap.org/styles/fiord';
 
@@ -29,7 +40,7 @@ export const OPENFREEMAP_STYLE_URL = OPENFREEMAP_FIORD_STYLE_URL;
 
 export const OPENFREEMAP_PLANET_URL = 'https://tiles.openfreemap.org/planet';
 
-/** ArcGIS Online World Imagery XYZ tiles (same service as Cesium Esri stack). */
+/** Legacy Esri XYZ — not used as default 2D after R15. */
 export const ESRI_WORLD_IMAGERY_TILE_URL =
   'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
@@ -46,17 +57,17 @@ export const MAP_ATTRIBUTION_HTML_FIORD =
   'Tiles <a href="https://openfreemap.org/" target="_blank" rel="noopener">OpenFreeMap</a> · ' +
   'Data © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors (ODbL)';
 
-/** Active attribution for the primary satellite-hybrid presentation. */
-export const MAP_ATTRIBUTION_HTML = MAP_ATTRIBUTION_HTML_SATELLITE;
+/** Active attribution for the primary owned-vector presentation. */
+export const MAP_ATTRIBUTION_HTML = MAP_ATTRIBUTION_HTML_OWNED;
 
 /**
- * Build the V1.2 satellite-hybrid MapLibre style (Esri raster + OFM labels/roads).
+ * @deprecated R15 — not the default 2D style. Kept for hostile/legacy tests only.
  * @returns {object}
  */
 export function createSatelliteHybridStyle() {
   return {
     version: 8,
-    name: 'caelrion-esri-satellite-hybrid',
+    name: 'caelrion-esri-satellite-hybrid-legacy',
     sources: {
       'esri-world-imagery': {
         type: 'raster',
@@ -82,157 +93,14 @@ export function createSatelliteHybridStyle() {
         id: 'satellite',
         type: 'raster',
         source: 'esri-world-imagery',
-        paint: {
-          'raster-opacity': 1,
-          'raster-fade-duration': 0,
-        },
-      },
-      {
-        id: 'highway_minor',
-        type: 'line',
-        source: 'openmaptiles',
-        'source-layer': 'transportation',
-        minzoom: 11,
-        filter: [
-          'all',
-          ['!=', 'class', 'rail'],
-          [
-            'in',
-            'class',
-            'minor',
-            'service',
-            'path',
-            'track',
-            'tertiary',
-            'secondary',
-          ],
-        ],
-        paint: {
-          'line-color': 'rgba(255, 255, 255, 0.28)',
-          'line-width': ['interpolate', ['linear'], ['zoom'], 11, 0.4, 16, 2.2],
-        },
-      },
-      {
-        id: 'highway_major',
-        type: 'line',
-        source: 'openmaptiles',
-        'source-layer': 'transportation',
-        minzoom: 8,
-        filter: [
-          'all',
-          ['!=', 'class', 'rail'],
-          ['in', 'class', 'primary', 'trunk', 'motorway'],
-        ],
-        paint: {
-          'line-color': 'rgba(255, 245, 220, 0.55)',
-          'line-width': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            8,
-            0.8,
-            14,
-            2.8,
-            17,
-            5,
-          ],
-        },
-      },
-      {
-        id: 'place_suburb',
-        type: 'symbol',
-        source: 'openmaptiles',
-        'source-layer': 'place',
-        minzoom: 11,
-        filter: ['==', 'class', 'suburb'],
-        layout: {
-          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name']],
-          'text-font': ['Open Sans Regular', 'Noto Sans Regular'],
-          'text-size': 11,
-          'text-transform': 'uppercase',
-          'text-letter-spacing': 0.04,
-        },
-        paint: {
-          'text-color': '#f4f1e8',
-          'text-halo-color': 'rgba(20, 18, 12, 0.85)',
-          'text-halo-width': 1.4,
-        },
-      },
-      {
-        id: 'place_city',
-        type: 'symbol',
-        source: 'openmaptiles',
-        'source-layer': 'place',
-        filter: ['in', 'class', 'city', 'town'],
-        layout: {
-          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name']],
-          'text-font': ['Open Sans Bold', 'Noto Sans Bold'],
-          'text-size': [
-            'interpolate',
-            ['linear'],
-            ['zoom'],
-            5,
-            11,
-            10,
-            14,
-            14,
-            18,
-          ],
-          'text-transform': 'uppercase',
-          'text-letter-spacing': 0.06,
-        },
-        paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': 'rgba(12, 12, 10, 0.9)',
-          'text-halo-width': 1.6,
-        },
-      },
-      {
-        id: 'place_state',
-        type: 'symbol',
-        source: 'openmaptiles',
-        'source-layer': 'place',
-        maxzoom: 8,
-        filter: ['==', 'class', 'state'],
-        layout: {
-          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name']],
-          'text-font': ['Open Sans Semibold', 'Noto Sans Regular'],
-          'text-size': 13,
-          'text-transform': 'uppercase',
-          'text-letter-spacing': 0.1,
-        },
-        paint: {
-          'text-color': 'rgba(255, 255, 255, 0.88)',
-          'text-halo-color': 'rgba(12, 12, 10, 0.85)',
-          'text-halo-width': 1.5,
-        },
-      },
-      {
-        id: 'place_country',
-        type: 'symbol',
-        source: 'openmaptiles',
-        'source-layer': 'place',
-        maxzoom: 6,
-        filter: ['==', 'class', 'country'],
-        layout: {
-          'text-field': ['coalesce', ['get', 'name:en'], ['get', 'name']],
-          'text-font': ['Open Sans Bold', 'Noto Sans Bold'],
-          'text-size': 14,
-          'text-transform': 'uppercase',
-          'text-letter-spacing': 0.12,
-        },
-        paint: {
-          'text-color': '#ffffff',
-          'text-halo-color': 'rgba(10, 10, 8, 0.9)',
-          'text-halo-width': 1.7,
-        },
+        paint: { 'raster-opacity': 1, 'raster-fade-duration': 0 },
       },
     ],
   };
 }
 
 /**
- * Fiord paint overrides retained for satellite-unavailable fallback.
+ * Fiord paint overrides retained for optional Fiord recovery.
  */
 export const READABLE_DARK_PAINT_OVERRIDES = Object.freeze([
   { id: 'background', paint: { 'background-color': '#3a455c' } },
@@ -281,54 +149,11 @@ export const READABLE_DARK_PAINT_OVERRIDES = Object.freeze([
     },
   },
   {
-    id: 'highway_name_motorway',
-    paint: {
-      'text-color': 'hsl(210, 25%, 88%)',
-      'text-halo-color': 'hsla(228, 40%, 16%, 0.9)',
-    },
-  },
-  {
     id: 'place_city',
     paint: {
       'text-color': 'hsl(195, 35%, 88%)',
       'text-halo-color': 'hsla(228, 50%, 14%, 0.85)',
       'text-halo-width': 1.5,
-    },
-  },
-  {
-    id: 'place_city_large',
-    paint: {
-      'text-color': 'hsl(195, 40%, 90%)',
-      'text-halo-color': 'hsla(228, 50%, 14%, 0.9)',
-      'text-halo-width': 1.6,
-    },
-  },
-  {
-    id: 'place_town',
-    paint: {
-      'text-color': 'hsl(200, 25%, 80%)',
-      'text-halo-color': 'hsla(228, 45%, 16%, 0.8)',
-    },
-  },
-  {
-    id: 'place_state',
-    paint: {
-      'text-color': 'hsl(200, 20%, 78%)',
-      'text-halo-color': 'hsla(228, 45%, 16%, 0.8)',
-    },
-  },
-  {
-    id: 'place_country_major',
-    paint: {
-      'text-color': 'hsl(200, 22%, 86%)',
-      'text-halo-color': 'hsla(228, 50%, 12%, 0.9)',
-    },
-  },
-  {
-    id: 'water_name',
-    paint: {
-      'text-color': 'hsla(210, 40%, 78%, 0.9)',
-      'text-halo-color': 'hsla(228, 40%, 18%, 0.75)',
     },
   },
 ]);
@@ -355,7 +180,7 @@ export function applyReadableDarkPaint(
   return applied;
 }
 
-/** Classify MapLibre error events for fail-soft tile vs fatal style / imagery. */
+/** Classify MapLibre error events for fail-soft tile vs fatal style. */
 export function classifyMapError(event) {
   const raw = event?.error ?? event;
   const message = String(raw?.message || raw || '');
@@ -365,16 +190,18 @@ export function classifyMapError(event) {
   const isImagery =
     /esri-world-imagery|world_imagery|arcgisonline\.com/i.test(sourceId) ||
     /esri-world-imagery|world_imagery|arcgisonline\.com/i.test(lower);
-  // Transient MapLibre transition noise — never treat as basemap death.
+  const isOwned =
+    /protomaps|pmtiles|caelrion-basemap/i.test(sourceId) ||
+    /protomaps|pmtiles|caelrion-basemap/i.test(lower);
   if (
     /style is not done loading|style not ready|not fully loaded|cancel/i.test(
       lower,
     )
   ) {
-    return { kind: 'unknown', message, isImagery };
+    return { kind: 'unknown', message, isImagery, isOwned };
   }
   const isTileOrGlyph =
-    /tile|glyph|font|\.pbf|sprite|404|503|failed to fetch|networkerror|load failed/i.test(
+    /tile|glyph|font|\.pbf|sprite|404|503|failed to fetch|networkerror|load failed|missing/i.test(
       lower,
     ) ||
     /\/\d+\/\d+\/\d+/.test(sourceId) ||
@@ -383,15 +210,16 @@ export function classifyMapError(event) {
     /stylesheet|style parse|failed to load style|unsupported|corrupt/i.test(
       lower,
     ) && !isTileOrGlyph;
-  if (isStyleFatal) return { kind: 'style-fatal', message, isImagery };
+  if (isStyleFatal) return { kind: 'style-fatal', message, isImagery, isOwned };
   if (isTileOrGlyph) {
     return {
       kind: isImagery ? 'imagery-tile' : 'tile-or-glyph',
       message,
       isImagery,
+      isOwned,
     };
   }
-  return { kind: 'unknown', message, isImagery };
+  return { kind: 'unknown', message, isImagery, isOwned };
 }
 
 /** Offline/fallback style when remote tiles are unavailable — slate, not pure black. */
@@ -404,35 +232,27 @@ export function createOfflineDarkStyleStub() {
       {
         id: 'background',
         type: 'background',
-        paint: { 'background-color': '#3a455c' },
+        paint: { 'background-color': '#2E2C22' },
       },
     ],
-    glyphs: 'https://tiles.openfreemap.org/fonts/{fontstack}/{range}.pbf',
+    glyphs: '/assets/basemaps/fonts/{fontstack}/{range}.pbf',
   };
 }
 
 export const MAP_LICENSE_MANIFEST = Object.freeze({
   style_design: {
-    claim: 'Esri World Imagery + OpenMapTiles/OpenFreeMap label hybrid (V1.2)',
-    license:
-      'Esri Master Agreement for public World Imagery; OpenMapTiles / OSM ODbL for labels',
-    url: 'https://www.esri.com/en-us/legal/terms/full-master-agreement',
-    predecessor_v1_1:
-      'OpenMapTiles Fiord via OpenFreeMap (retained as fallback)',
+    claim: OWNED_BASEMAP_LICENSE.claim,
+    license: OWNED_BASEMAP_LICENSE.data_license,
+    url: 'https://www.openstreetmap.org/copyright',
+    predecessor_v1_2_satellite:
+      'Esri World Imagery hybrid (retired as default 2D)',
+    predecessor_v1_1: 'OpenMapTiles Fiord via OpenFreeMap (optional recovery)',
   },
-  imagery: {
-    provider: 'Esri',
-    service:
-      'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer',
-    attribution: ESRI_IMAGERY_ATTRIBUTION_TEXT,
-    note: 'Same keyless ArcGIS Online endpoint already used by Cesium createEsriImagery()',
-  },
+  owned_basemap: OWNED_BASEMAP_LICENSE.artifact,
   tiles: {
-    provider: 'OpenFreeMap',
-    url: 'https://openfreemap.org/',
-    schema: 'OpenMapTiles',
-    schema_url: 'https://openmaptiles.org/',
-    style_url_fallback: OPENFREEMAP_FIORD_STYLE_URL,
+    provider: 'Caelrion-hosted Protomaps extract',
+    runtime: 'pmtiles',
+    path_pattern: '/assets/maps/caelrion-basemap-r01-*.pmtiles',
   },
   data: {
     provider: 'OpenStreetMap contributors',
@@ -440,19 +260,12 @@ export const MAP_LICENSE_MANIFEST = Object.freeze({
     url: 'https://www.openstreetmap.org/copyright',
   },
   fonts: {
-    ui: 'Inter / Montserrat / Open Sans / Noto Sans / IBM Plex Mono (SIL OFL where applicable)',
-    map_glyphs: 'OpenFreeMap hosted glyphs for OpenMapTiles stacks',
+    ui: 'Inter / Montserrat / Open Sans / Noto Sans / IBM Plex Mono',
+    map_glyphs: 'Self-hosted Noto Sans stacks (SIL OFL)',
   },
   maplibre: {
     package: 'maplibre-gl',
     license: 'BSD-3-Clause',
   },
-  not_used: [
-    'Argos proprietary source',
-    'Argos branded marks/assets',
-    'Hotlinked Argos runtime tile URLs',
-    'Global CSS brightness filter as map substitute',
-    'MapTiler Hybrid (requires API key — not configured on this host)',
-    'ArcGIS Location Platform basemaps-api style (token required)',
-  ],
+  not_used: OWNED_BASEMAP_LICENSE.not_used,
 });

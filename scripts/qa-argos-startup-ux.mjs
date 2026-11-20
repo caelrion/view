@@ -247,12 +247,13 @@ try {
         hasOfm: /OpenFreeMap/i.test(text),
         hasEsri: /Esri/i.test(text),
         hasOpenMapTiles: /OpenMapTiles/i.test(text),
+        hasProtomaps: /Protomaps/i.test(text),
       };
     });
-    // V1.2 satellite: Esri + OpenMapTiles/OSM. Fiord fallback: OpenFreeMap + OSM.
-    const satelliteOk = open.hasEsri && open.hasOsm;
+    // R15 owned: Protomaps + OSM. Fiord recovery: OpenFreeMap + OSM.
+    const ownedOk = open.hasProtomaps && open.hasOsm;
     const fiordOk = open.hasOfm && open.hasOsm;
-    if (!open.show || !(satelliteOk || fiordOk)) {
+    if (!open.show || !(ownedOk || fiordOk)) {
       fail(`attribution disclosure incomplete: ${JSON.stringify(open)}`);
     } else pass('required attribution accessible via disclosure');
   }

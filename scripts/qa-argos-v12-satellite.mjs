@@ -122,18 +122,17 @@ try {
     fail(`misleading BASEMAP OFFLINE while map loaded: ${startup.bannerText}`);
   } else if (
     !startup.bannerHidden &&
-    /SATELLITE UNAVAILABLE/i.test(startup.bannerText)
+    /LIMITED DETAIL/i.test(startup.bannerText)
   ) {
-    pass('satellite-unavailable banner (Fiord fallback active)');
+    pass('limited-coverage banner (expected only outside SoCal detail)');
   } else {
-    pass('basemap banner hidden (satellite ready or soft tile noise)');
+    pass('basemap banner hidden or non-offline at LA startup');
   }
 
   if (
-    !/Esri/i.test(startup.attrib) &&
+    !/Protomaps/i.test(startup.attrib) &&
     !/OpenFreeMap|Fiord/i.test(startup.attrib)
   ) {
-    // Compact control may hide text until expanded
     const attribBtn = await page.$('.maplibregl-ctrl-attrib-button');
     if (attribBtn) {
       await attribBtn.click();
@@ -143,11 +142,11 @@ try {
       () =>
         document.querySelector('.maplibregl-ctrl-attrib')?.textContent || '',
     );
-    if (!/Esri/i.test(text) && !/OpenFreeMap|OpenMapTiles/i.test(text)) {
-      fail(`attribution missing Esri/OFM: ${text.slice(0, 200)}`);
+    if (!/Protomaps/i.test(text) && !/OpenFreeMap|OpenMapTiles/i.test(text)) {
+      fail(`attribution missing Protomaps/OFM: ${text.slice(0, 200)}`);
     } else
       pass(
-        `attribution disclosed: ${/Esri/i.test(text) ? 'Esri' : 'Fiord/OFM'}`,
+        `attribution disclosed: ${/Protomaps/i.test(text) ? 'Protomaps' : 'Fiord/OFM'}`,
       );
   } else {
     pass('attribution present on compact control');

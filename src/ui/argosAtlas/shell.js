@@ -191,12 +191,13 @@ export function formatUtcCoords(lat, lon, now = new Date()) {
 }
 
 /**
- * Basemap status banner.
+ * Basemap status banner (R15 owned-vector semantics).
  * @param {ReturnType<typeof createArgosAtlasShell>} shell
  * @param {boolean|string} state
  *   true | 'offline' → BASEMAP OFFLINE
- *   'satellite-unavailable' → Fiord fallback (imagery failed; vector usable)
+ *   'limited-coverage' → high zoom outside SoCal detail archive
  *   false | 'ready' | 'loading' | 'hidden' → hide banner
+ *   legacy 'satellite-unavailable' → treated as ready (retired message)
  */
 export function setBasemapBanner(shell, state) {
   if (!shell.basemapBanner) return;
@@ -206,7 +207,7 @@ export function setBasemapBanner(shell, state) {
   const normalized =
     state === true
       ? 'offline'
-      : state === false
+      : state === false || state === 'satellite-unavailable'
         ? 'ready'
         : String(state || 'ready');
 
@@ -216,10 +217,13 @@ export function setBasemapBanner(shell, state) {
     if (label) label.textContent = 'BASEMAP OFFLINE';
     return;
   }
-  if (normalized === 'satellite-unavailable') {
+  if (normalized === 'limited-coverage') {
     shell.basemapBanner.hidden = false;
-    shell.basemapBanner.dataset.state = 'satellite-unavailable';
-    if (label) label.textContent = 'SATELLITE UNAVAILABLE — VECTOR FALLBACK';
+    shell.basemapBanner.dataset.state = 'limited-coverage';
+    if (label) {
+      label.textContent =
+        'LIMITED DETAIL — ZOOM OUT OR PAN TO SOUTHERN CALIFORNIA';
+    }
     return;
   }
   shell.basemapBanner.hidden = true;

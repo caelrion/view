@@ -659,7 +659,7 @@ body.argos-atlas-booting .argos-atlas-root {
   display: none !important;
 }
 
-.argos-basemap-banner[data-state='satellite-unavailable'] {
+.argos-basemap-banner[data-state='limited-coverage'] {
   border-color: rgba(232, 188, 59, 0.55);
   color: var(--argos-gold);
 }

@@ -1,5 +1,8 @@
 node_modules
 dist
+# Large owned basemap archives are deploy artifacts — not git objects.
+public/assets/maps/*.pmtiles
+/opt/caelrion/view-map-artifacts/
 # Credential files. `.env` alone is not enough: Vite's loadEnv (see
 # server/standalone/vite.config.js) and scripts/setup-doctor.mjs both read the
 # full dotenv ladder — .env, .env.local, .env.<mode> and .env.<mode>.local —

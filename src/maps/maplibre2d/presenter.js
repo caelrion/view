@@ -1,21 +1,23 @@
 /**
  * Bounded MapLibre 2D presenter. Owns map lifecycle only — not feeds.
  *
- * V1.2: Esri World Imagery hybrid primary; OpenFreeMap Fiord on satellite
- * failure; offline slate stub only when no remote style can load.
+ * R15: Caelrion-owned Protomaps/PMTiles primary; Fiord optional recovery;
+ * offline slate stub last. Never silently falls back to Esri/MapTiler.
  * Loading DEMO aircraft must not move the camera.
  */
 import maplibregl from 'maplibre-gl';
 import {
   OPENFREEMAP_STYLE_URL,
-  MAP_ATTRIBUTION_HTML_SATELLITE,
+  MAP_ATTRIBUTION_HTML_OWNED,
   MAP_ATTRIBUTION_HTML_FIORD,
   DEFAULT_MAP_CENTER,
   DEFAULT_MAP_ZOOM,
-  createSatelliteHybridStyle,
+  createOwnedBasemapStyle,
   createOfflineDarkStyleStub,
   applyReadableDarkPaint,
   classifyMapError,
+  ensurePmtilesProtocol,
+  ownedCoverageState,
 } from './style.js';
 
 const SOURCE_ID = 'caelrion-aircraft-demo';
@@ -69,6 +71,7 @@ export class MapLibre2DPresenter {
     this._collapseAttribution = null;
     this._attributionControl = null;
     this._fiordFallbackAttempted = false;
+    this._coverageHandler = null;
   }
 
   get map() {
@@ -101,9 +104,10 @@ export class MapLibre2DPresenter {
     if (this._map) return this._map;
 
     this._setBasemapState('loading');
+    ensurePmtilesProtocol();
     const map = new maplibregl.Map({
       container: this._container,
-      style: createSatelliteHybridStyle(),
+      style: createOwnedBasemapStyle(),
       center,
       zoom,
       bearing,
@@ -115,7 +119,7 @@ export class MapLibre2DPresenter {
     });
     this._map = map;
 
-    this._installAttribution(MAP_ATTRIBUTION_HTML_SATELLITE);
+    this._installAttribution(MAP_ATTRIBUTION_HTML_OWNED);
     map.addControl(
       new maplibregl.NavigationControl({ visualizePitch: true }),
       'bottom-right',
@@ -148,17 +152,16 @@ export class MapLibre2DPresenter {
       if (!this._attributionUserTouched) {
         map.off('sourcedata', this._collapseAttribution);
       }
-      // Clear stale error banners once hybrid is painting.
-      if (
-        this._styleMode === 'satellite-hybrid' &&
-        map.getLayer?.('satellite')
-      ) {
-        this._setBasemapState('ready');
+      if (this._styleMode === 'owned-pmtiles') {
+        this._refreshCoverageState();
       }
     });
 
     this._errorHandler = (event) => this._onMapError(event);
     map.on('error', this._errorHandler);
+    this._coverageHandler = () => this._refreshCoverageState();
+    map.on('moveend', this._coverageHandler);
+    map.on('zoomend', this._coverageHandler);
 
     await new Promise((resolve) => {
       let settled = false;
@@ -169,24 +172,19 @@ export class MapLibre2DPresenter {
         resolve();
       };
       const onLoad = () => {
-        this._styleMode = 'satellite-hybrid';
+        this._styleMode = 'owned-pmtiles';
         this._imageryFailCount = 0;
-        this._setBasemapState('ready');
+        this._refreshCoverageState();
         finish();
       };
       const onError = (event) => {
         const classified = classifyMapError(event);
-        if (classified.kind === 'imagery-tile') {
-          this._imageryFailCount += 1;
-          this._onError?.(new Error(`MAP_IMAGERY_TILE:${classified.message}`));
-          return;
-        }
         if (classified.kind !== 'style-fatal') {
           this._tileFailCount += 1;
           this._onError?.(new Error(`MAP_TILE_OR_GLYPH:${classified.message}`));
           return;
         }
-        // Hybrid style document failed — try Fiord before offline stub.
+        // Owned archive style failed — optional Fiord, then offline.
         void this._enterFiordFallback(classified.message).finally(() =>
           finish(),
         );
@@ -245,7 +243,8 @@ export class MapLibre2DPresenter {
   }
 
   /**
-   * Bounded retry — restores satellite hybrid first; Fiord only if hybrid fails.
+   * Bounded retry — restores owned PMTiles first; Fiord only if owned fails.
+   * Never restores Esri/MapTiler as a silent default.
    */
   async retryBasemap() {
     if (this._destroyed || !this._map) return false;
@@ -257,14 +256,14 @@ export class MapLibre2DPresenter {
     this._setBasemapState('loading');
     this._fiordFallbackAttempted = false;
     this._imageryFailCount = 0;
-    const map = this._map;
     const aircraft = this._aircraft;
     const selected = this._selectedId;
     try {
-      await this._setStyleAwaitLoad(createSatelliteHybridStyle());
-      this._styleMode = 'satellite-hybrid';
-      this._installAttribution(MAP_ATTRIBUTION_HTML_SATELLITE);
-      this._setBasemapState('ready');
+      ensurePmtilesProtocol();
+      await this._setStyleAwaitLoad(createOwnedBasemapStyle());
+      this._styleMode = 'owned-pmtiles';
+      this._installAttribution(MAP_ATTRIBUTION_HTML_OWNED);
+      this._refreshCoverageState();
       this._ensureAircraftLayers();
       if (aircraft) this.setAircraft(aircraft);
       if (selected) this.select(selected);
@@ -359,6 +358,10 @@ export class MapLibre2DPresenter {
     if (this._map) {
       if (this._clickHandler) this._map.off('click', this._clickHandler);
       if (this._errorHandler) this._map.off('error', this._errorHandler);
+      if (this._coverageHandler) {
+        this._map.off('moveend', this._coverageHandler);
+        this._map.off('zoomend', this._coverageHandler);
+      }
       if (this._collapseAttribution) {
         this._map.off('sourcedata', this._collapseAttribution);
       }
@@ -430,9 +433,25 @@ export class MapLibre2DPresenter {
     });
   }
 
+  _refreshCoverageState() {
+    if (this._destroyed || this._styleMode !== 'owned-pmtiles') return;
+    const map = this._map;
+    if (!map?.getCenter || !map?.getZoom) {
+      this._setBasemapState('ready');
+      return;
+    }
+    const c = map.getCenter();
+    const next = ownedCoverageState({
+      lon: c.lng,
+      lat: c.lat,
+      zoom: map.getZoom(),
+    });
+    this._setBasemapState(next);
+  }
+
   /**
-   * Satellite imagery unavailable — keep a usable Fiord vector map and
-   * report satellite-unavailable (not basemap-offline).
+   * Owned archive unavailable — optional Fiord recovery (external).
+   * Never Esri/MapTiler. Report ready when Fiord paints (not offline).
    * @returns {Promise<boolean>}
    */
   async _enterFiordFallback(message) {
@@ -451,9 +470,9 @@ export class MapLibre2DPresenter {
       }
       this._styleMode = 'fiord-fallback';
       this._installAttribution(MAP_ATTRIBUTION_HTML_FIORD);
-      this._setBasemapState('satellite-unavailable');
+      this._setBasemapState('ready');
       this._ensureAircraftLayers();
-      this._onError?.(new Error(`MAP_SATELLITE_UNAVAILABLE:${message}`));
+      this._onError?.(new Error(`MAP_OWNED_BASEMAP_UNAVAILABLE:${message}`));
       return true;
     } catch (err) {
       this._enterOfflineBasemap(String(err?.message || message));
@@ -464,13 +483,12 @@ export class MapLibre2DPresenter {
   _enterOfflineBasemap(message) {
     const map = this._map;
     if (!map) return;
-    // Only claim offline after the stub style loads. Never show
-    // BASEMAP OFFLINE while hybrid/Fiord tiles are still painted.
+    // Only claim offline after the stub style loads.
     try {
       map.once('load', () => {
         if (this._destroyed) return;
         this._styleMode = 'offline-stub';
-        this._installAttribution(MAP_ATTRIBUTION_HTML_FIORD);
+        this._installAttribution(MAP_ATTRIBUTION_HTML_OWNED);
         this._setBasemapState('offline');
         this._onError?.(new Error(`MAP_BASEMAP_OFFLINE:${message}`));
       });
@@ -483,28 +501,25 @@ export class MapLibre2DPresenter {
   _onMapError(event) {
     if (this._destroyed) return;
     if (
-      this._styleMode !== 'satellite-hybrid' &&
+      this._styleMode !== 'owned-pmtiles' &&
       this._styleMode !== 'remote' &&
       this._styleMode !== 'fiord-fallback'
     ) {
       return;
     }
     const classified = classifyMapError(event);
-    // Soft tile/glyph/imagery failures never flip the whole basemap offline.
+    // Soft tile/glyph failures: may mean limited regional coverage, not offline.
     if (
       classified.kind === 'imagery-tile' ||
       classified.kind === 'tile-or-glyph' ||
       classified.kind === 'unknown'
     ) {
-      if (classified.kind === 'imagery-tile') this._imageryFailCount += 1;
-      else this._tileFailCount += 1;
+      this._tileFailCount += 1;
+      if (this._styleMode === 'owned-pmtiles') this._refreshCoverageState();
       return;
     }
     if (classified.kind === 'style-fatal') {
-      if (
-        this._styleMode === 'satellite-hybrid' ||
-        this._styleMode === 'remote'
-      ) {
+      if (this._styleMode === 'owned-pmtiles' || this._styleMode === 'remote') {
         void this._enterFiordFallback(classified.message);
       } else if (this._styleMode === 'fiord-fallback') {
         this._enterOfflineBasemap(classified.message);

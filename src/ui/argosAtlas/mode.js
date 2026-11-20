@@ -182,6 +182,7 @@ export class ArgosAtlasMode {
           if (
             msg.startsWith('MAP_TILE_OR_GLYPH:') ||
             msg.startsWith('MAP_IMAGERY_TILE:') ||
+            msg.startsWith('MAP_OWNED_BASEMAP_UNAVAILABLE:') ||
             msg.startsWith('MAP_SATELLITE_UNAVAILABLE:')
           ) {
             return;

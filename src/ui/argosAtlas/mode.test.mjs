@@ -1,9 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import {
-  ArgosAtlasMode,
-  preferArgos2DFromLocation,
-} from './mode.js';
+import { ArgosAtlasMode, preferArgos2DFromLocation } from './mode.js';
 import { formatUtcCoords, setBasemapBanner } from './shell.js';
 import { DEMO_AIRCRAFT_FIXTURE } from '../../presentation/demoAircraftFixture.js';
 import {
@@ -145,7 +142,14 @@ function fakeDocument() {
           if (sel.startsWith('[data-argos-')) {
             const walk = (n) => {
               const key = sel.slice(1, -1);
-              if (n.attributes?.has(key) || n.dataset?.[key.replace('data-', '').replace(/-([a-z])/g, (_, c) => c.toUpperCase())] != null)
+              if (
+                n.attributes?.has(key) ||
+                n.dataset?.[
+                  key
+                    .replace('data-', '')
+                    .replace(/-([a-z])/g, (_, c) => c.toUpperCase())
+                ] != null
+              )
                 return n;
               // Fallback: create stub nodes for required data hooks after innerHTML assign.
               return null;
@@ -204,14 +208,20 @@ function fakeDocument() {
           };
           const aircraftToggle = documentRef.createElement('button');
           aircraftToggle.setAttribute('data-argos-action', 'toggle-aircraft');
-          aircraftToggle.classList = { toggle() {}, contains() { return false; } };
+          aircraftToggle.classList = {
+            toggle() {},
+            contains() {
+              return false;
+            },
+          };
           aircraftToggle.setAttribute = () => {};
           const searchInput = documentRef.createElement('input');
           searchInput.id = 'argos-search-input';
           searchInput.value = '';
           searchInput.addEventListener = () => {};
           searchInput.removeEventListener = () => {};
-          searchInput.setAttribute = (k, v) => searchInput.attributes.set(k, String(v));
+          searchInput.setAttribute = (k, v) =>
+            searchInput.attributes.set(k, String(v));
           searchInput.removeAttribute = (k) => searchInput.attributes.delete(k);
           searchInput.blur = () => {};
           const searchResults = documentRef.createElement('ul');
@@ -245,7 +255,8 @@ function fakeDocument() {
             if (sel === '[data-argos-toast]') return toast;
             if (sel === '[data-argos-aircraft-count]') return count;
             if (sel === '[data-argos-basemap-banner]') return banner;
-            if (sel === '[data-argos-action="toggle-aircraft"]') return aircraftToggle;
+            if (sel === '[data-argos-action="toggle-aircraft"]')
+              return aircraftToggle;
             if (sel.startsWith('[data-argos-detail')) {
               return { textContent: '', dataset: {} };
             }
@@ -401,7 +412,7 @@ test('R11: mount opens over Los Angeles; fixture load does not move camera', asy
   mode.destroy();
 });
 
-test('R11: basemap banner distinguishes offline vs satellite-unavailable', () => {
+test('R15: basemap banner distinguishes offline vs limited-coverage', () => {
   const label = { textContent: '' };
   const banner = {
     hidden: true,
@@ -414,15 +425,18 @@ test('R11: basemap banner distinguishes offline vs satellite-unavailable', () =>
   setBasemapBanner(shell, 'ready');
   assert.equal(banner.hidden, true);
 
-  setBasemapBanner(shell, 'satellite-unavailable');
+  setBasemapBanner(shell, 'limited-coverage');
   assert.equal(banner.hidden, false);
-  assert.equal(banner.dataset.state, 'satellite-unavailable');
-  assert.match(label.textContent, /SATELLITE UNAVAILABLE/);
+  assert.equal(banner.dataset.state, 'limited-coverage');
+  assert.match(label.textContent, /LIMITED DETAIL/);
 
   setBasemapBanner(shell, 'offline');
   assert.equal(banner.hidden, false);
   assert.equal(banner.dataset.state, 'offline');
   assert.equal(label.textContent, 'BASEMAP OFFLINE');
+
+  setBasemapBanner(shell, 'satellite-unavailable');
+  assert.equal(banner.hidden, true);
 
   setBasemapBanner(shell, false);
   assert.equal(banner.hidden, true);
