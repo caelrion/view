@@ -162,6 +162,7 @@ A successful source build does not establish that the public website has changed
 
 - **Branch:** `feature/view-argos-baseline-v00-v02-r01`
 - **Baseline HEAD / tree:** `32c52db7be18e441d8743e446214b7e209269c0f` / `1c822560351bc7f360ba9c3640024cc1f8711ec8`
+- **Ending HEAD / tree:** `5c6ed084b8b16585b14b6b7689e82883c5e190a6` / `5286db2b9051ff26236f49b919f2bfd1f933b3f6`
 - **Done:** V00 matrix + license manifest + aircraft contract; V01 Caelrion Argos-matched shell; V02 MapLibre dark map + one DEMO aircraft `ae07f6`; mode toggle `?view=argos-2d` / `?map=2d`; MapLibre resize + canvas fill; targeted unit P/H tests (12/12); `npm run build` 0; `npm test` 0 (node:24-bookworm+git); `npm run check:boundaries` 0; local screenshots 1920/1440/390
 - **Holds:** Live Argos interactive map capture blocked by account splash (auth-block screenshot retained); `npm run qa:map-source-tray` exit 1 (Puppeteer Chrome for Testing unavailable — environmental)
 - **Not started:** V03–V08; no deploy
