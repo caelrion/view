@@ -4,6 +4,17 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>God's Eye View</title>
+  <!-- Default flat 2D: hide Cesium globe before modules boot (opt-out: view=3d|map=3d|view=cesium). -->
+  <script>
+    (function () {
+      try {
+        var q = String(location.search || '') + String(location.hash || '');
+        if (!/[?&#](?:view|map)=3d\b/i.test(q) && !/[?&#]view=cesium\b/i.test(q)) {
+          document.documentElement.classList.add('argos-default-2d');
+        }
+      } catch (e) { /* ignore */ }
+    })();
+  </script>
   <link rel="icon" type="image/svg+xml" href="/logo.svg" />
   <link rel="stylesheet" href="/style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />

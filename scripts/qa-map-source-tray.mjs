@@ -8,6 +8,22 @@ import puppeteer from 'puppeteer';
 const repoRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const shotsDir = process.env.QA_SHOTS_DIR || path.join(repoRoot, 'qa-shots', 'map-source-tray');
 const appUrl = process.env.QA_BASE_URL || 'http://localhost:4173';
+/**
+ * Map Source tray QA exercises Cesium chrome + map-stack controller.
+ * Product default at `/` is flat MapLibre 2D, so every harness navigation must
+ * opt into 3D explicitly. Preserve welcome=0 and optional share-hash state.
+ */
+function mapSourceTrayUrl({ hash = '' } = {}) {
+  const target = new URL(appUrl);
+  target.searchParams.set('view', '3d');
+  target.searchParams.set('welcome', '0');
+  if (hash) {
+    target.hash = hash.startsWith('#') ? hash.slice(1) : hash;
+  } else {
+    target.hash = '';
+  }
+  return target.toString();
+}
 const headful = process.argv.includes('--headful');
 // The no-ion-token contract is a real shipped state that a normal keyed
 // `dev-fresh.sh` run can never reach, so it went untested on every machine that
@@ -257,12 +273,18 @@ try {
   // This harness owns the Map Source keyboard. Suppress the separate first-run
   // launcher on every navigation so its Escape/Space handlers cannot turn a
   // tray assertion into a mission or voice action in a pristine browser.
-  await page.goto(`${appUrl}/?welcome=0`, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+  await page.goto(mapSourceTrayUrl(), { waitUntil: 'domcontentloaded', timeout: 60_000 });
   await page.waitForFunction(() => window.__godsEyeView?.styleManager, { timeout: 60_000 });
   await page.waitForFunction(
     () => document.getElementById('loading-screen')?.classList.contains('hidden'),
     { timeout: 60_000 },
   );
+  // Prove the harness is on Cesium 3D, not the default MapLibre shell.
+  await page.waitForFunction(
+    () => !document.body.classList.contains('argos-atlas-active')
+      && document.getElementById('argos-atlas-root')?.hidden !== false,
+    { timeout: 30_000 },
+  ).catch(() => {});
 
   const presentation = await page.evaluate(() => ({
     ids: [...document.querySelectorAll('.map-stack-chip')].map((chip) => chip.dataset.stackId),
@@ -1215,16 +1237,23 @@ try {
       // controller instead.
       await page.evaluate(async (id) => {
         const styleManager = window.__godsEyeView.styleManager;
-        history.replaceState(null, '', `?welcome=0#v=2&lat=30.27&lon=-97.74&map=${id}`);
+        history.replaceState(
+          null,
+          '',
+          `?view=3d&welcome=0#v=2&lat=30.27&lon=-97.74&map=${id}`,
+        );
         const state = styleManager.shareLinkManager.parseInitialHash();
         await styleManager.shareLinkManager.applyState(state, { applyCamera: false });
         styleManager.shareLinkManager.completeInitialRestore();
       }, legacyId);
     } else {
-      await page.goto(`${appUrl}/?welcome=0#v=2&lat=30.27&lon=-97.74&map=${legacyId}`, {
-        waitUntil: 'domcontentloaded',
-        timeout: 60_000,
-      });
+      await page.goto(
+        mapSourceTrayUrl({ hash: `v=2&lat=30.27&lon=-97.74&map=${legacyId}` }),
+        {
+          waitUntil: 'domcontentloaded',
+          timeout: 60_000,
+        },
+      );
       await page.waitForFunction(() => window.__godsEyeView?.styleManager, { timeout: 60_000 });
       await page.waitForFunction(
         () => document.getElementById('loading-screen')?.classList.contains('hidden'),
