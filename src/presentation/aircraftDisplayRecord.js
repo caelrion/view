@@ -30,7 +30,9 @@ export function toAircraftDisplayRecord(raw) {
   if (!raw || typeof raw !== 'object') {
     throw new TypeError('AIRCRAFT_DISPLAY_RECORD_REQUIRED');
   }
-  const id = String(raw.id || raw.icao24 || '').trim().toLowerCase();
+  const id = String(raw.id || raw.icao24 || '')
+    .trim()
+    .toLowerCase();
   if (!id || id.length > 32) throw new TypeError('AIRCRAFT_ID_INVALID');
   if (HEX.test(id) === false && !/^[a-z0-9_-]{1,32}$/i.test(id)) {
     throw new TypeError('AIRCRAFT_ID_INVALID');
@@ -61,13 +63,9 @@ export function toAircraftDisplayRecord(raw) {
 
   let status = String(raw.status || 'UNKNOWN').toUpperCase();
   if (
-    ![
-      'DEMO',
-      'LIVE',
-      'STALE',
-      'UNKNOWN',
-      'BACKEND_CONTRACT_PENDING',
-    ].includes(status)
+    !['DEMO', 'LIVE', 'STALE', 'UNKNOWN', 'BACKEND_CONTRACT_PENDING'].includes(
+      status,
+    )
   ) {
     throw new TypeError('AIRCRAFT_STATUS_INVALID');
   }
@@ -84,8 +82,7 @@ export function toAircraftDisplayRecord(raw) {
     id,
     lat,
     lon,
-    headingDeg:
-      headingDeg === null ? null : ((headingDeg % 360) + 360) % 360,
+    headingDeg: headingDeg === null ? null : ((headingDeg % 360) + 360) % 360,
     label: optionalString(raw.label),
     callsign: optionalString(raw.callsign),
     altitudeFt,

@@ -1,6 +1,7 @@
 /**
  * Argos-matched standard-map shell chrome (Caelrion branding).
  * Presentation only — no feeds, no backend calls.
+ * V1.1: category rail, lighter panels, basemap offline affordance.
  */
 
 export function createArgosAtlasShell(documentRef = document) {
@@ -10,54 +11,88 @@ export function createArgosAtlasShell(documentRef = document) {
   root.hidden = true;
   root.setAttribute('data-mode', 'hidden');
   root.innerHTML = `
-    <div id="argos-map-host" class="argos-map-host" role="application" aria-label="Caelrion dark 2D map"></div>
+    <div id="argos-map-host" class="argos-map-host" role="application" aria-label="Caelrion dark 2D map" tabindex="0"></div>
 
     <header class="argos-hud" role="banner">
       <div class="argos-hud-brand">
-        <img class="argos-hud-logo" src="/logo.svg" alt="" width="28" height="28" />
+        <img class="argos-hud-logo" src="/logo.svg" alt="" width="24" height="24" />
         <div class="argos-hud-brand-text">
           <div class="argos-hud-title">CAELRION VIEW</div>
           <div class="argos-hud-sub">We never blink.</div>
         </div>
       </div>
       <div class="argos-hud-search" role="search">
-        <input type="search" class="argos-search-input" placeholder="Search places, flights, ships…" disabled aria-disabled="true" title="Search — BACKEND_CONTRACT_PENDING" />
-        <span class="argos-chip argos-chip-pending">UNAVAILABLE</span>
+        <label class="argos-sr-only" for="argos-search-input">Local map search</label>
+        <input
+          id="argos-search-input"
+          type="search"
+          class="argos-search-input"
+          placeholder="Local: places, coords, DEMO aircraft…"
+          autocomplete="off"
+          spellcheck="false"
+          aria-autocomplete="list"
+          aria-controls="argos-search-results"
+          aria-expanded="false"
+          aria-describedby="argos-search-help"
+          title="Search bundled places, coordinates, DEMO aircraft, and loaded map labels"
+        />
+        <span class="argos-chip" id="argos-search-help">LOCAL</span>
+        <ul
+          id="argos-search-results"
+          class="argos-search-results"
+          role="listbox"
+          hidden
+          aria-label="Local search results"
+        ></ul>
       </div>
       <div class="argos-hud-right">
-        <button type="button" class="argos-hud-btn" data-argos-action="toggle-filters" aria-expanded="true" aria-controls="argos-control-panel" title="Filters">
-          <span aria-hidden="true">☰</span><span class="argos-hud-btn-label">Filters</span>
+        <button type="button" class="argos-hud-btn" data-argos-action="toggle-filters" aria-expanded="false" aria-controls="argos-control-panel" title="Layers">
+          <span aria-hidden="true">☰</span><span class="argos-hud-btn-label">Layers</span>
         </button>
         <button type="button" class="argos-hud-btn" data-argos-action="toggle-3d" title="Switch to Cesium 3D globe">3D</button>
       </div>
     </header>
 
-    <aside id="argos-control-panel" class="argos-control-panel" aria-label="Layer filters">
+    <aside id="argos-control-panel" class="argos-control-panel is-collapsed" aria-label="Map category rail">
       <div class="argos-cp-head">
         <span>Layers</span>
-        <button type="button" class="argos-icon-btn" data-argos-action="toggle-filters" aria-label="Close filters">✕</button>
+        <button type="button" class="argos-icon-btn" data-argos-action="toggle-filters" aria-label="Close layers">✕</button>
       </div>
-      <div class="argos-cp-body">
-        <label class="argos-layer-row argos-layer-active">
-          <input type="checkbox" checked disabled data-layer="aircraft" />
-          <span class="argos-layer-swatch" style="--swatch:#3de7ff"></span>
-          <span class="argos-layer-name">Aircraft</span>
-          <span class="argos-layer-count" data-argos-aircraft-count>1</span>
-        </label>
-        <label class="argos-layer-row argos-layer-disabled">
-          <input type="checkbox" disabled data-layer="ships" />
-          <span class="argos-layer-swatch" style="--swatch:#5b8cff"></span>
-          <span class="argos-layer-name">Ships</span>
-          <span class="argos-layer-count">—</span>
-        </label>
-        <label class="argos-layer-row argos-layer-disabled">
-          <input type="checkbox" disabled data-layer="cameras" />
-          <span class="argos-layer-swatch" style="--swatch:#ffd23b"></span>
-          <span class="argos-layer-name">Cameras</span>
-          <span class="argos-layer-count">—</span>
-        </label>
-        <p class="argos-cp-note">Additional layers: DEMO/UNAVAILABLE until admitted backend projections exist. No fabricated live counts.</p>
-      </div>
+      <nav class="argos-category-rail" aria-label="Map categories">
+        <button type="button" class="argos-rail-row is-active" data-argos-action="toggle-aircraft" aria-pressed="true" data-layer="aircraft">
+          <span class="argos-rail-icon" aria-hidden="true">✈</span>
+          <span class="argos-rail-label">Aircraft</span>
+          <span class="argos-rail-meta">
+            <span class="argos-layer-count" data-argos-aircraft-count>1</span>
+            <span class="argos-rail-state">DEMO</span>
+          </span>
+        </button>
+        <button type="button" class="argos-rail-row is-disabled" disabled aria-disabled="true" data-layer="ships">
+          <span class="argos-rail-icon" aria-hidden="true">⚓</span>
+          <span class="argos-rail-label">Ships</span>
+          <span class="argos-rail-meta">
+            <span class="argos-layer-count">—</span>
+            <span class="argos-rail-state">UNAVAILABLE</span>
+          </span>
+        </button>
+        <button type="button" class="argos-rail-row is-disabled" disabled aria-disabled="true" data-layer="cameras">
+          <span class="argos-rail-icon" aria-hidden="true">◉</span>
+          <span class="argos-rail-label">Cameras</span>
+          <span class="argos-rail-meta">
+            <span class="argos-layer-count">—</span>
+            <span class="argos-rail-state">UNAVAILABLE</span>
+          </span>
+        </button>
+        <button type="button" class="argos-rail-row is-disabled" disabled aria-disabled="true" data-layer="infra">
+          <span class="argos-rail-icon" aria-hidden="true">▣</span>
+          <span class="argos-rail-label">Infra</span>
+          <span class="argos-rail-meta">
+            <span class="argos-layer-count">—</span>
+            <span class="argos-rail-state">UNAVAILABLE</span>
+          </span>
+        </button>
+      </nav>
+      <p class="argos-cp-note">DEMO counts only when local fixtures exist. No fabricated live totals. Ships/cameras await admitted backends.</p>
     </aside>
 
     <aside id="argos-detail-panel" class="argos-detail-panel" hidden aria-live="polite">
@@ -79,8 +114,13 @@ export function createArgosAtlasShell(documentRef = document) {
       </div>
     </aside>
 
+    <div class="argos-basemap-banner" data-argos-basemap-banner hidden role="alert">
+      <span>BASEMAP OFFLINE</span>
+      <button type="button" class="argos-hud-btn" data-argos-action="retry-basemap">Retry</button>
+    </div>
+
     <div class="argos-bottom-left">
-      <div class="argos-globe-inset" title="Globe inset — presentation placeholder" aria-hidden="true">
+      <div class="argos-globe-inset" title="Decorative inset — presentation only" aria-hidden="true">
         <span>3D</span>
       </div>
       <div class="argos-coords" data-argos-coords>UTC — · —</div>
@@ -97,13 +137,17 @@ export function createArgosAtlasShell(documentRef = document) {
     coordsEl: root.querySelector('[data-argos-coords]'),
     toastEl: root.querySelector('[data-argos-toast]'),
     aircraftCountEl: root.querySelector('[data-argos-aircraft-count]'),
+    basemapBanner: root.querySelector('[data-argos-basemap-banner]'),
+    aircraftToggle: root.querySelector('[data-argos-action="toggle-aircraft"]'),
+    searchInput: root.querySelector('#argos-search-input'),
+    searchResults: root.querySelector('#argos-search-results'),
   };
 }
 
 export function bindArgosShellActions(root, handlers) {
   root.addEventListener('click', (event) => {
     const btn = event.target.closest?.('[data-argos-action]');
-    if (!btn) return;
+    if (!btn || btn.disabled) return;
     const action = btn.getAttribute('data-argos-action');
     handlers[action]?.(event, btn);
   });
@@ -144,4 +188,9 @@ export function formatUtcCoords(lat, lon, now = new Date()) {
   const ns = lat >= 0 ? 'N' : 'S';
   const ew = lon >= 0 ? 'E' : 'W';
   return `UTC ${utc} · ${Math.abs(lat).toFixed(4)}°${ns} ${Math.abs(lon).toFixed(4)}°${ew}`;
+}
+
+export function setBasemapBanner(shell, offline) {
+  if (!shell.basemapBanner) return;
+  shell.basemapBanner.hidden = !offline;
 }

@@ -1,0 +1,52 @@
+# R08 / V1.1 Implementation Ledger (R01)
+
+Branch: `feature/view-argos-v11-r08-r01`
+Baseline: `3aadc626…` / `67cbb3f2…` (production V1 pin — unchanged on `main`)
+
+## Implemented (P0 + targeted P1)
+
+| Area | Change |
+|------|--------|
+| Cartography | OpenFreeMap **Fiord** + bounded paint overrides (roads/labels/boundaries) |
+| Layers | Full-height desktop category rail; mobile bottom drawer; collapsed by default on ≤720px |
+| Header/panels | Lighter slate panels; reduced opacity; compact header; DEMO preserved |
+| 3D toggle | Floating duplicate hidden in 2D; visible return control in Cesium |
+| Basemap errors | Tile/glyph soft-fail; style-fatal → BASEMAP OFFLINE + Retry |
+| Interactions | Larger hit target; Enter/Space/Escape; DEMO aircraft show/hide |
+| Startup UX | Compact dark attribution (no white strip); filters+detail closed; local-only search |
+
+## Startup UX correction (same branch)
+
+| Check | Result |
+|-------|--------|
+| Attribution | MapLibre compact collapsed on load; dark chip; disclosure retains OFM/OSM |
+| Menus | Layers `aria-expanded=false`; DEMO marker without auto-select/detail |
+| Search | Local presets + coords + DEMO id/callsign + loaded map labels; honest empty |
+| Preview | `http://127.0.0.1:4174/?welcome=0` — no production deploy |
+| Tests | `localSearch`/`mode`/`presenter`/`style` unit + `scripts/qa-argos-startup-ux.mjs` exit 0 |
+
+## Deferred (P2)
+
+Enhanced mini-globe, conversational dock, extra scene density.
+
+## Package gap
+
+`CAELRION_VIEW_ARGOS_UI_ONLY_FULL_SUCCESSOR_CHECKLIST_R08.md` and `references/Screenshot_A|B_*.png` were **not deposited** on this host. Comparison **C (Argos reference)** pending Mario package drop.
+
+## Preview
+
+Local nonprod: `http://127.0.0.1:4174/?welcome=0` (vite preview; not production).
+
+## R09 publication (feature only)
+
+| Field | Value |
+|-------|-------|
+| Outcome | **A — V11_PUBLISHED_AND_PREVIEW_ACCESSIBLE** |
+| Published commit | `ee2145d2e46e550b07a82c46492b9932ba833ea9` |
+| Published tree | `f58cbad922faffac29c2b851984e51f8a4d3fc99` |
+| Remote | `origin/feature/view-argos-v11-r08-r01` |
+| Production | **HOLD** — awaiting Mario visual accept + release auth |
+| Preview | SSH `-L 4174:127.0.0.1:4174` → `http://127.0.0.1:4174/?welcome=0` |
+| Evidence | `/var/lib/caelrion-host-config-custody/evidence/view-argos-v11-r08-r01/r09/` |
+| Compare C | MISSING (Argos reference not deposited) |
+

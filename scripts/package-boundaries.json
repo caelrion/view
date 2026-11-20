@@ -2028,14 +2028,16 @@
       "src/data/local_data/osm_military_names/names.json",
       "src/layers/installations/namedMarkers.js",
       "src/data/infrastructureOverlayEntry.js",
-    
+
       "src/presentation/aircraftDisplayRecord.js",
       "src/presentation/demoAircraftFixture.js",
       "src/maps/maplibre2d/style.js",
       "src/maps/maplibre2d/presenter.js",
       "src/ui/argosAtlas/shell.js",
       "src/ui/argosAtlas/mode.js",
-      "src/ui/styles/argos-atlas.css"],
+      "src/ui/argosAtlas/localSearch.js",
+      "src/ui/styles/argos-atlas.css"
+    ],
     "external": [
       "hls.js",
       "@mapbox/vector-tile",
@@ -2045,8 +2047,9 @@
       "pbf",
       "satellite.js",
       "@jtarrio/webrtlsdr",
-    
-      "maplibre-gl"]
+
+      "maplibre-gl"
+    ]
   },
   "application-catalog": {
     "exports": ["./application/catalog"],

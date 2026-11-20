@@ -154,6 +154,7 @@ function fakeDocument() {
           return [];
         },
         addEventListener() {},
+        removeEventListener() {},
         remove() {
           if (!this.parent) return;
           const list = this.parent.children || bodyChildren;
@@ -183,21 +184,67 @@ function fakeDocument() {
           const count = documentRef.createElement('span');
           count.setAttribute('data-argos-aircraft-count', '');
           count.textContent = '0';
-          node.children = [mapHost, detail, control, coords, toast, count];
+          const banner = documentRef.createElement('div');
+          banner.setAttribute('data-argos-basemap-banner', '');
+          banner.hidden = true;
+          const aircraftToggle = documentRef.createElement('button');
+          aircraftToggle.setAttribute('data-argos-action', 'toggle-aircraft');
+          aircraftToggle.classList = { toggle() {}, contains() { return false; } };
+          aircraftToggle.setAttribute = () => {};
+          const searchInput = documentRef.createElement('input');
+          searchInput.id = 'argos-search-input';
+          searchInput.value = '';
+          searchInput.addEventListener = () => {};
+          searchInput.removeEventListener = () => {};
+          searchInput.setAttribute = (k, v) => searchInput.attributes.set(k, String(v));
+          searchInput.removeAttribute = (k) => searchInput.attributes.delete(k);
+          searchInput.blur = () => {};
+          const searchResults = documentRef.createElement('ul');
+          searchResults.id = 'argos-search-results';
+          searchResults.hidden = true;
+          searchResults.replaceChildren = () => {
+            searchResults.children = [];
+          };
+          searchResults.addEventListener = () => {};
+          searchResults.removeEventListener = () => {};
+          control.classList.add('is-collapsed');
+          node.children = [
+            mapHost,
+            detail,
+            control,
+            banner,
+            coords,
+            toast,
+            count,
+            aircraftToggle,
+            searchInput,
+            searchResults,
+          ];
           node.querySelector = (sel) => {
             if (sel === '#argos-map-host') return mapHost;
             if (sel === '#argos-detail-panel') return detail;
             if (sel === '#argos-control-panel') return control;
+            if (sel === '#argos-search-input') return searchInput;
+            if (sel === '#argos-search-results') return searchResults;
             if (sel === '[data-argos-coords]') return coords;
             if (sel === '[data-argos-toast]') return toast;
             if (sel === '[data-argos-aircraft-count]') return count;
+            if (sel === '[data-argos-basemap-banner]') return banner;
+            if (sel === '[data-argos-action="toggle-aircraft"]') return aircraftToggle;
             if (sel.startsWith('[data-argos-detail')) {
               return { textContent: '', dataset: {} };
             }
             if (sel.startsWith('[data-argos-action')) return null;
             return null;
           };
-          node.querySelectorAll = () => [];
+          node.querySelectorAll = (sel) => {
+            if (sel === '[data-argos-action="toggle-filters"]') {
+              const btn = documentRef.createElement('button');
+              btn.setAttribute('aria-expanded', 'false');
+              return [btn];
+            }
+            return [];
+          };
         },
         get() {
           return '';
@@ -210,27 +257,40 @@ function fakeDocument() {
 }
 
 class FakePresenter {
-  constructor(container, { onSelect } = {}) {
+  constructor(container, { onSelect, onBasemapState } = {}) {
     this.container = container;
     this.onSelect = onSelect;
+    this.onBasemapState = onBasemapState;
     this.mounted = 0;
     this.destroyed = 0;
     this.aircraft = null;
     this.selectedId = null;
+    this.aircraftVisible = true;
     this.map = {
       getCenter: () => ({ lat: DEMO_AIRCRAFT_FIXTURE.lat, lng: DEMO_AIRCRAFT_FIXTURE.lon }),
     };
   }
   async mount() {
     this.mounted += 1;
+    this.onBasemapState?.('ready');
     return this.map;
   }
   setAircraft(record) {
     this.aircraft = record;
   }
+  setAircraftVisible(visible) {
+    this.aircraftVisible = Boolean(visible);
+  }
   select(id) {
     this.selectedId = id;
     this.onSelect?.(id);
+  }
+  flyTo() {
+    this.flew = true;
+  }
+  async retryBasemap() {
+    this.onBasemapState?.('ready');
+    return true;
   }
   destroy() {
     this.destroyed += 1;
@@ -276,5 +336,25 @@ test('P2/H3: showDemoAircraft labels DEMO and never LIVE', async () => {
   assert.equal(record.status, 'DEMO');
   assert.equal(record.provenance, 'DEMO');
   assert.equal(mode._presenter.selectedId, 'ae07f6');
+  mode.destroy();
+});
+
+test('R08 startup: filters collapsed and aircraft not auto-selected', async () => {
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+  });
+  await mode.setMode('argos-2d');
+  assert.equal(
+    mode._shell.controlPanel.classList.contains('is-collapsed'),
+    true,
+  );
+  assert.equal(mode._shell.detailPanel.hidden, true);
+  assert.equal(mode._presenter.selectedId, null);
+  assert.ok(mode._presenter.aircraft);
+  assert.equal(mode._presenter.aircraft.id, 'ae07f6');
   mode.destroy();
 });
