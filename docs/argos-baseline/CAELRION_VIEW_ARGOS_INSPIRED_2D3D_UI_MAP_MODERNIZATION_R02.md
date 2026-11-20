@@ -180,3 +180,13 @@ A successful source build does not establish that the public website has changed
 - **Preview:** `npx vite preview --host 127.0.0.1 --port 4173` → http://127.0.0.1:4173/
 - **Not started:** V03–V08; no merge/deploy
 - **Outcome class:** `C_PARTIAL_WITH_EVIDENCE` (full-bleed default 2D verified; map-source-tray suite not fully green on this host)
+
+### 2026-11-20 — R03 Map Source tray QA closure
+
+- **Prior tip:** `007049482698c12c688791587f12d0bd457b628f` / `6ab735a818500a6780ad68f9ade43b6ae718ca12`
+- **First failed predicate (preimage):** harness navigated to `${QA_BASE_URL}/?welcome=0` → default MapLibre 2D; Cesium Map Source tray chrome hidden/paused. First named FAIL under that route: `two active Esri tile failures fall back to a rendered, truthful OSM stack` (`afterTwo.creditVisible` stayed true). Cascade: tray keyboard/open assertions. `ProtocolError` was secondary (late timeout after assertion failures).
+- **Correction:** `scripts/qa-map-source-tray.mjs` — `mapSourceTrayUrl()` forces `?view=3d&welcome=0` on boot + legacy share-hash reloads (preserve map=bing-road/garbage coverage). Toggle CSS moved off the tray dismiss path under 3D.
+- **QA status:** `QA_BASE_URL=http://127.0.0.1:4173 npm run qa:map-source-tray` → **exit 0**, 82 PASS / 0 FAIL (Vite **DEV** on :4173 required — Data Layers uses `allowQaRegistration` / `/src/main.js`, which preview does not expose).
+- **Regression:** `/` remains full-bleed MapLibre 2D DEMO `ae07f6` + `BACKEND_CONTRACT_PENDING`; `?view=argos-2d` / `?map=2d` valid; `?view=3d` Cesium. Unit mode 4/4, build 0, boundaries 0.
+- **Changed hashes:** `qa-map-source-tray.mjs` `11c4d0ce…0225`; `argos-atlas.css` `2a87c7a9…7af6a`
+- **Outcome class:** `A_QA_PASS`
