@@ -22,16 +22,28 @@ export function createArgosAtlasShell(documentRef = document) {
         </div>
       </div>
       <div class="argos-hud-search" role="search">
+        <label class="argos-sr-only" for="argos-search-input">Local map search</label>
         <input
+          id="argos-search-input"
           type="search"
           class="argos-search-input"
-          placeholder="Search places, flights, ships…"
-          disabled
-          aria-disabled="true"
+          placeholder="Local: places, coords, DEMO aircraft…"
+          autocomplete="off"
+          spellcheck="false"
+          aria-autocomplete="list"
+          aria-controls="argos-search-results"
+          aria-expanded="false"
           aria-describedby="argos-search-help"
-          title="Search — BACKEND_CONTRACT_PENDING"
+          title="Search bundled places, coordinates, DEMO aircraft, and loaded map labels"
         />
-        <span class="argos-chip argos-chip-pending" id="argos-search-help">UNAVAILABLE</span>
+        <span class="argos-chip" id="argos-search-help">LOCAL</span>
+        <ul
+          id="argos-search-results"
+          class="argos-search-results"
+          role="listbox"
+          hidden
+          aria-label="Local search results"
+        ></ul>
       </div>
       <div class="argos-hud-right">
         <button type="button" class="argos-hud-btn" data-argos-action="toggle-filters" aria-expanded="false" aria-controls="argos-control-panel" title="Layers">
@@ -127,6 +139,8 @@ export function createArgosAtlasShell(documentRef = document) {
     aircraftCountEl: root.querySelector('[data-argos-aircraft-count]'),
     basemapBanner: root.querySelector('[data-argos-basemap-banner]'),
     aircraftToggle: root.querySelector('[data-argos-action="toggle-aircraft"]'),
+    searchInput: root.querySelector('#argos-search-input'),
+    searchResults: root.querySelector('#argos-search-results'),
   };
 }
 

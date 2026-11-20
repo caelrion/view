@@ -13,6 +13,17 @@ Baseline: `3aadc626…` / `67cbb3f2…` (production V1 pin — unchanged on `mai
 | 3D toggle | Floating duplicate hidden in 2D; visible return control in Cesium |
 | Basemap errors | Tile/glyph soft-fail; style-fatal → BASEMAP OFFLINE + Retry |
 | Interactions | Larger hit target; Enter/Space/Escape; DEMO aircraft show/hide |
+| Startup UX | Compact dark attribution (no white strip); filters+detail closed; local-only search |
+
+## Startup UX correction (same branch)
+
+| Check | Result |
+|-------|--------|
+| Attribution | MapLibre compact collapsed on load; dark chip; disclosure retains OFM/OSM |
+| Menus | Layers `aria-expanded=false`; DEMO marker without auto-select/detail |
+| Search | Local presets + coords + DEMO id/callsign + loaded map labels; honest empty |
+| Preview | `http://127.0.0.1:4174/?welcome=0` — no production deploy |
+| Tests | `localSearch`/`mode`/`presenter`/`style` unit + `scripts/qa-argos-startup-ux.mjs` exit 0 |
 
 ## Deferred (P2)
 

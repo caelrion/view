@@ -53,6 +53,8 @@ export class MapLibre2DPresenter {
     this._onWindowResize = null;
     this._basemapRetries = 0;
     this._tileFailCount = 0;
+    this._attributionUserTouched = false;
+    this._collapseAttribution = null;
   }
 
   get map() {
@@ -110,6 +112,38 @@ export class MapLibre2DPresenter {
       new maplibregl.NavigationControl({ visualizePitch: true }),
       'bottom-right',
     );
+    // MapLibre with compact:true starts with `maplibregl-compact-show` (expanded
+    // white strip). Collapse to the info chip until the operator opens it.
+    // Re-assert on early sourcedata/idle; stop once the operator has interacted.
+    this._collapseAttribution = () => {
+      if (this._attributionUserTouched) return;
+      const el = this._container.querySelector?.('.maplibregl-ctrl-attrib');
+      if (!el) return;
+      el.classList.add('maplibregl-compact');
+      el.classList.remove('maplibregl-compact-show');
+      // MapLibre collapsed compact state uses the `open` attribute (details quirk).
+      el.setAttribute('open', '');
+    };
+    this._onAttributionUserToggle = () => {
+      this._attributionUserTouched = true;
+    };
+    map.once('load', () => {
+      this._collapseAttribution();
+      const el = this._container.querySelector?.('.maplibregl-ctrl-attrib');
+      el?.querySelector?.('.maplibregl-ctrl-attrib-button')?.addEventListener(
+        'click',
+        this._onAttributionUserToggle,
+        { once: true },
+      );
+    });
+    map.on('sourcedata', this._collapseAttribution);
+    map.once('idle', () => {
+      this._collapseAttribution();
+      // After first idle, stop fighting MapLibre unless still untouched.
+      if (!this._attributionUserTouched) {
+        map.off('sourcedata', this._collapseAttribution);
+      }
+    });
 
     this._errorHandler = (event) => this._onMapError(event);
     map.on('error', this._errorHandler);
@@ -283,6 +317,17 @@ export class MapLibre2DPresenter {
     this._onSelect?.(this._selectedId);
   }
 
+  /** Fly camera to a WGS84 point (local search / programmatic focus). */
+  flyTo({ lon, lat, zoom = 8, duration = 900 } = {}) {
+    if (!this._map || !Number.isFinite(lon) || !Number.isFinite(lat)) return;
+    this._map.flyTo({
+      center: [lon, lat],
+      zoom,
+      duration,
+      essential: true,
+    });
+  }
+
   resize() {
     this._map?.resize();
   }
@@ -302,6 +347,9 @@ export class MapLibre2DPresenter {
     if (this._map) {
       if (this._clickHandler) this._map.off('click', this._clickHandler);
       if (this._errorHandler) this._map.off('error', this._errorHandler);
+      if (this._collapseAttribution) {
+        this._map.off('sourcedata', this._collapseAttribution);
+      }
       for (const [type, handler] of this._moveHandlers) {
         this._map.off(type, handler);
       }

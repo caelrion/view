@@ -18,6 +18,7 @@ import {
   formatUtcCoords,
   setBasemapBanner,
 } from './shell.js';
+import { searchLocal } from './localSearch.js';
 
 async function ensureMapLibreCss() {
   try {
@@ -63,6 +64,11 @@ export class ArgosAtlasMode {
     this._pollOwners = 0;
     this._error = null;
     this._preferArgos2D = preferArgos2D;
+    this._searchResults = [];
+    this._searchActiveIndex = -1;
+    this._filtersFocusReturn = null;
+    this._detailFocusReturn = null;
+    this._onShellKeyDown = (event) => this._handleShellKeyDown(event);
 
     if (autoAttach) documentRef.body.appendChild(this._shell.root);
     bindArgosShellActions(this._shell.root, {
@@ -72,6 +78,8 @@ export class ArgosAtlasMode {
       'toggle-aircraft': () => this._toggleAircraftLayer(),
       'retry-basemap': () => void this._retryBasemap(),
     });
+    this._bindSearch();
+    this._shell.root.addEventListener('keydown', this._onShellKeyDown);
 
     if (autoAttach) this._injectModeToggle();
     // Hide Cesium immediately when 2D is default so the globe never flashes.
@@ -81,7 +89,7 @@ export class ArgosAtlasMode {
       this._shell.root.dataset.mode = 'argos-2d';
       this._showCesium(false);
       this._pauseCesium(true);
-      // Desktop: open slim rail; mobile: keep collapsed so map stays reachable.
+      // Startup: every menu closed (filters + detail).
       this._applyInitialFilterState();
       void this.setMode('argos-2d').finally(() => {
         this._document.body.classList.remove('argos-atlas-booting');
@@ -121,6 +129,8 @@ export class ArgosAtlasMode {
   destroy() {
     this._destroyed = true;
     this._stopCoords();
+    this._shell.root.removeEventListener?.('keydown', this._onShellKeyDown);
+    this._unbindSearch();
     this._presenter?.destroy();
     this._presenter = null;
     this._shell.root.remove();
@@ -173,6 +183,7 @@ export class ArgosAtlasMode {
       this._subscriptionOwners = 1;
     }
 
+    this._applyInitialFilterState();
     try {
       await this._presenter.mount({
         center: [DEMO_AIRCRAFT_FIXTURE.lon, DEMO_AIRCRAFT_FIXTURE.lat],
@@ -188,15 +199,15 @@ export class ArgosAtlasMode {
 
     const projection = this._resolveAircraft();
     this._record = projection.record;
+    // Render marker only — do not auto-select or open the detail card.
     this._presenter.setAircraft(this._record);
-    if (this._record) {
-      this._presenter.select(this._record.id);
-      renderAircraftDetail(this._shell, this._record);
-      this._shell.aircraftCountEl.textContent = '1';
-    }
-    if (projection.contract === 'BACKEND_CONTRACT_PENDING') {
-      this._toast(BACKEND_CONTRACT_PENDING.message);
-    }
+    this._presenter.select(null);
+    renderAircraftDetail(this._shell, null);
+    this._shell.aircraftCountEl.textContent = this._record ? '1' : '0';
+    this._error =
+      projection.contract === 'BACKEND_CONTRACT_PENDING'
+        ? new Error(BACKEND_CONTRACT_PENDING.code)
+        : this._error;
     this._startCoords();
     this._presenter.resize?.();
   }
@@ -251,32 +262,46 @@ export class ArgosAtlasMode {
       renderAircraftDetail(this._shell, null);
       return;
     }
+    this._detailFocusReturn =
+      this._document.activeElement || this._shell.mapHost;
     renderAircraftDetail(this._shell, this._record);
   }
 
   _clearSelection() {
     this._presenter?.select(null);
     renderAircraftDetail(this._shell, null);
-    this._shell.mapHost?.focus?.();
+    const returnTo = this._detailFocusReturn;
+    this._detailFocusReturn = null;
+    if (returnTo?.focus) returnTo.focus();
+    else this._shell.mapHost?.focus?.();
   }
 
   _applyInitialFilterState() {
-    const narrow =
-      typeof globalThis.matchMedia === 'function' &&
-      globalThis.matchMedia('(max-width: 720px)').matches;
-    this._setFiltersExpanded(!narrow);
+    // Fresh session: Layers/Filters always start collapsed.
+    this._setFiltersExpanded(false);
   }
 
   _setFiltersExpanded(expanded) {
-    this._shell.controlPanel.classList.toggle('is-collapsed', !expanded);
+    if (expanded) this._shell.controlPanel.classList.remove('is-collapsed');
+    else this._shell.controlPanel.classList.add('is-collapsed');
     this._shell.root
       .querySelectorAll('[data-argos-action="toggle-filters"]')
       .forEach((btn) => btn.setAttribute('aria-expanded', String(expanded)));
+    if (!expanded) {
+      const returnTo = this._filtersFocusReturn;
+      this._filtersFocusReturn = null;
+      if (returnTo?.focus) returnTo.focus();
+    }
   }
 
   _toggleFilters() {
-    const expanded = this._shell.controlPanel.classList.contains('is-collapsed');
-    this._setFiltersExpanded(expanded);
+    const collapsed = this._shell.controlPanel.classList.contains('is-collapsed');
+    if (collapsed) {
+      this._filtersFocusReturn =
+        this._document.activeElement ||
+        this._shell.root.querySelector('[data-argos-action="toggle-filters"]');
+    }
+    this._setFiltersExpanded(collapsed);
   }
 
   _toggleAircraftLayer() {
@@ -288,10 +313,217 @@ export class ArgosAtlasMode {
       btn.setAttribute('aria-pressed', String(next));
     }
     this._shell.aircraftCountEl.textContent = next && this._record ? '1' : '0';
-    if (!next) renderAircraftDetail(this._shell, null);
-    else if (this._record) {
-      this._presenter?.select(this._record.id);
+    // Hiding the layer clears selection; showing it again does not auto-open detail.
+    if (!next) {
+      this._presenter?.select(null);
+      renderAircraftDetail(this._shell, null);
+    }
+  }
+
+  _bindSearch() {
+    const input = this._shell.searchInput;
+    const list = this._shell.searchResults;
+    if (!input || !list) return;
+    this._onSearchInput = () => this._runSearch(input.value);
+    this._onSearchKeyDown = (event) => this._handleSearchKeyDown(event);
+    this._onSearchBlur = () => {
+      // Delay so option click can fire first.
+      clearTimeout(this._searchBlurTimer);
+      this._searchBlurTimer = setTimeout(() => this._closeSearchPanel(), 140);
+    };
+    this._onSearchFocus = () => {
+      if (input.value.trim()) this._runSearch(input.value);
+    };
+    this._onSearchResultsClick = (event) => {
+      const option = event.target.closest?.('[data-search-index]');
+      if (!option) return;
+      const index = Number(option.getAttribute('data-search-index'));
+      if (Number.isInteger(index)) this._selectSearchResult(index);
+    };
+    input.addEventListener('input', this._onSearchInput);
+    input.addEventListener('keydown', this._onSearchKeyDown);
+    input.addEventListener('blur', this._onSearchBlur);
+    input.addEventListener('focus', this._onSearchFocus);
+    list.addEventListener('mousedown', (event) => event.preventDefault());
+    list.addEventListener('click', this._onSearchResultsClick);
+  }
+
+  _unbindSearch() {
+    const input = this._shell.searchInput;
+    const list = this._shell.searchResults;
+    clearTimeout(this._searchBlurTimer);
+    if (input) {
+      input.removeEventListener('input', this._onSearchInput);
+      input.removeEventListener('keydown', this._onSearchKeyDown);
+      input.removeEventListener('blur', this._onSearchBlur);
+      input.removeEventListener('focus', this._onSearchFocus);
+    }
+    if (list && this._onSearchResultsClick) {
+      list.removeEventListener('click', this._onSearchResultsClick);
+    }
+  }
+
+  _runSearch(raw) {
+    const { results, emptyMessage } = searchLocal({
+      query: raw,
+      aircraft: this._record,
+      map: this._presenter?.map || null,
+    });
+    this._searchResults = results;
+    this._searchActiveIndex = results.length ? 0 : -1;
+    this._renderSearchResults(emptyMessage);
+  }
+
+  _renderSearchResults(emptyMessage) {
+    const list = this._shell.searchResults;
+    const input = this._shell.searchInput;
+    if (!list || !input) return;
+    list.replaceChildren();
+    if (!String(input.value || '').trim()) {
+      list.hidden = true;
+      input.setAttribute('aria-expanded', 'false');
+      return;
+    }
+    if (!this._searchResults.length) {
+      const empty = this._document.createElement('li');
+      empty.className = 'argos-search-empty';
+      empty.setAttribute('role', 'presentation');
+      empty.textContent = emptyMessage || 'No locally available result';
+      list.appendChild(empty);
+      list.hidden = false;
+      input.setAttribute('aria-expanded', 'true');
+      return;
+    }
+    this._searchResults.forEach((item, index) => {
+      const li = this._document.createElement('li');
+      li.setAttribute('role', 'option');
+      li.id = `argos-search-option-${index}`;
+      li.setAttribute('data-search-index', String(index));
+      li.setAttribute(
+        'aria-selected',
+        String(index === this._searchActiveIndex),
+      );
+      const btn = this._document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'argos-search-option';
+      if (index === this._searchActiveIndex) btn.classList.add('is-active');
+      btn.setAttribute('data-search-index', String(index));
+      const kind = this._document.createElement('span');
+      kind.className = 'argos-search-option-kind';
+      kind.textContent = item.kind;
+      const label = this._document.createElement('span');
+      label.textContent = item.label;
+      btn.append(kind, label);
+      li.appendChild(btn);
+      list.appendChild(li);
+    });
+    list.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+    if (this._searchActiveIndex >= 0) {
+      input.setAttribute(
+        'aria-activedescendant',
+        `argos-search-option-${this._searchActiveIndex}`,
+      );
+    } else {
+      input.removeAttribute('aria-activedescendant');
+    }
+  }
+
+  _setSearchActiveIndex(index) {
+    if (!this._searchResults.length) {
+      this._searchActiveIndex = -1;
+      return;
+    }
+    const max = this._searchResults.length - 1;
+    this._searchActiveIndex = Math.max(0, Math.min(max, index));
+    this._renderSearchResults(null);
+  }
+
+  _selectSearchResult(index) {
+    const item = this._searchResults[index];
+    if (!item) return;
+    this._presenter?.flyTo?.({
+      lon: item.lon,
+      lat: item.lat,
+      zoom: item.zoom ?? 8,
+    });
+    if (item.kind === 'aircraft' && item.aircraftId) {
+      this._presenter?.select(item.aircraftId);
       renderAircraftDetail(this._shell, this._record);
+    }
+    this._closeSearchPanel({ clearInput: false });
+    this._shell.mapHost?.focus?.();
+  }
+
+  _closeSearchPanel({ clearInput = false } = {}) {
+    const list = this._shell.searchResults;
+    const input = this._shell.searchInput;
+    if (clearInput && input) input.value = '';
+    this._searchResults = [];
+    this._searchActiveIndex = -1;
+    if (list) {
+      list.replaceChildren();
+      list.hidden = true;
+    }
+    if (input) {
+      input.setAttribute('aria-expanded', 'false');
+      input.removeAttribute('aria-activedescendant');
+    }
+  }
+
+  _handleSearchKeyDown(event) {
+    const key = event.key;
+    if (key === 'Escape') {
+      if (!this._shell.searchResults?.hidden) {
+        this._closeSearchPanel();
+        event.preventDefault();
+        event.stopPropagation();
+        return;
+      }
+      event.target.blur?.();
+      this._shell.mapHost?.focus?.();
+      return;
+    }
+    if (key === 'ArrowDown') {
+      this._setSearchActiveIndex(this._searchActiveIndex + 1);
+      event.preventDefault();
+      return;
+    }
+    if (key === 'ArrowUp') {
+      this._setSearchActiveIndex(this._searchActiveIndex - 1);
+      event.preventDefault();
+      return;
+    }
+    if (key === 'Enter') {
+      if (this._searchActiveIndex >= 0) {
+        this._selectSearchResult(this._searchActiveIndex);
+      } else if (String(this._shell.searchInput?.value || '').trim()) {
+        this._runSearch(this._shell.searchInput.value);
+        if (this._searchResults.length === 1) {
+          this._selectSearchResult(0);
+        }
+      }
+      event.preventDefault();
+    }
+  }
+
+  _handleShellKeyDown(event) {
+    if (event.key !== 'Escape') return;
+    const target = event.target;
+    if (target === this._shell.searchInput) return;
+    if (!this._shell.searchResults?.hidden) {
+      this._closeSearchPanel();
+      event.preventDefault();
+      return;
+    }
+    if (!this._shell.detailPanel?.hidden) {
+      this._clearSelection();
+      event.preventDefault();
+      return;
+    }
+    if (!this._shell.controlPanel?.classList.contains('is-collapsed')) {
+      this._setFiltersExpanded(false);
+      event.preventDefault();
     }
   }
 
