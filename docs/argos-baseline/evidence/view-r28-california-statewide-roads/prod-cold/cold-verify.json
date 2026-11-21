@@ -1,0 +1,52 @@
+{
+  "coordinate": "CAELRION_VIEW_R28_CALIFORNIA_STATEWIDE_DETAILED_ROADS_R01",
+  "outcome": "R28_CALIFORNIA_STATEWIDE_ROAD_DETAIL_PRODUCTION_VERIFIED",
+  "production_cold_verified": true,
+  "mario_visual_acceptance": "pending_separate_product_decision",
+  "baseline_main_at_start": "fda98a58088fdd719ebdba8656a5afcf50014456",
+  "baseline_tree_at_start": "0461e135b251d1f821a45610a37f9da75d7b344d",
+  "deployed_commit": "e21ce2295860c642c487f5c3ad9d94a63c1d776e",
+  "deployed_tree": "34eb084dae005430856f05e93b2dfa66465078a9",
+  "feature_commit": "430d6b3e6f00a6093fc49ffaef1e8faf00a794ce",
+  "pr": "https://github.com/caelrion/view/pull/22",
+  "ci_run": "https://github.com/caelrion/view/actions/runs/44936908846",
+  "ci_conclusion": "success",
+  "unit_tests": { "maplibre_focused": { "pass": 31, "exit": 0 } },
+  "served_js": "assets/index-zZuI7mg6.js",
+  "served_js_sha256": "e610eff43c5e932fcb31a719f5518512597d01b1df5ca340a7f470ff40c58009",
+  "served_css": "assets/index-Dhr9dhZh.css",
+  "served_css_sha256": "5a85eba5ac636bedc3d63885eae2104007916279b967518089e44de683f16b97",
+  "basemap_artifact": {
+    "id": "caelrion-basemap-r02",
+    "filename": "caelrion-basemap-r02-b0c934a219c8.pmtiles",
+    "sha256": "b0c934a219c857aa389a635b09162bbd74131347dfed1e7378965ec45eb9515a",
+    "bytes": 1793865770,
+    "source_build": "https://build.protomaps.com/20261118.pmtiles",
+    "source_etag": "f80d23ebf8f97045b56ad0bc73b8ec76-521",
+    "source_osm_time": "2026-11-18T04:00:00Z",
+    "bbox": [-125.0, 32.0, -113.5, 42.5],
+    "zooms": { "global": "0-7", "california_detail": "8-15" },
+    "pmtiles_verify": "exit 0",
+    "http_206_content_range": "bytes 0-6/1793865770",
+    "r01_preserved_sha256": "822f068466c79112046e1ccbc4e93c306110d208a535d746a19bc84aed729d55"
+  },
+  "naip_note": "LA NAIP footprint unchanged — statewide roads do not imply statewide high-res aerial",
+  "highway_only_gold": true,
+  "rollback_js": "/opt/caelrion/view-releases/r27-before-r28-20261121T184639Z",
+  "checks": {
+    "northern_ca_detail": true,
+    "bay_area_detail": true,
+    "central_ca_detail": true,
+    "southern_ca_preserved": true,
+    "dark_and_satellite_share_r02": true,
+    "r27_soft_gold_preserved_on_highways": true,
+    "trunk_demoted_to_neutral": true,
+    "r01_immutable": true
+  },
+  "probe_notes": {
+    "initial_failures": 3,
+    "disposition": "false_positives_or_sparse_viewport",
+    "dark_gg_reprobe_road_count": 354,
+    "tahoe_oregon_z12_roads_present": true
+  }
+}
