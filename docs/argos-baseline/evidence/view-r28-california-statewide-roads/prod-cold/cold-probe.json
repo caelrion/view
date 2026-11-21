@@ -1,0 +1,752 @@
+{
+  "coordinate": "CAELRION_VIEW_R28_CALIFORNIA_STATEWIDE_DETAILED_ROADS_R01",
+  "startedAt": "2026-11-21T18:47:08.228Z",
+  "shots": [
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-eureka-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-eureka-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-eureka-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-redding-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-redding-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-redding-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-san-francisco-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-san-francisco-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-san-francisco-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-sacramento-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-sacramento-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-sacramento-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-fresno-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-fresno-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-fresno-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-los-angeles-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-los-angeles-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-los-angeles-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-garden-grove-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-garden-grove-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-garden-grove-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-san-diego-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-san-diego-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-san-diego-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-tahoe-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-tahoe-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-tahoe-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-oregon-border-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-oregon-border-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/sat-oregon-border-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/dark-san-francisco-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/dark-sacramento-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/dark-garden-grove-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r28-california-statewide-roads/prod-cold/dark-eureka-z12.png"
+  ],
+  "probes": [
+    {
+      "at": "sat-eureka-z10",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 15,
+      "zoom": 10,
+      "center": {
+        "lng": -124.1637,
+        "lat": 40.8021
+      }
+    },
+    {
+      "at": "sat-eureka-z12",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 78,
+      "zoom": 12,
+      "center": {
+        "lng": -124.1637,
+        "lat": 40.8021
+      }
+    },
+    {
+      "at": "sat-eureka-z15",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 139,
+      "zoom": 15,
+      "center": {
+        "lng": -124.1637,
+        "lat": 40.8021
+      }
+    },
+    {
+      "at": "sat-redding-z10",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 34,
+      "zoom": 10,
+      "center": {
+        "lng": -122.3917,
+        "lat": 40.5865
+      }
+    },
+    {
+      "at": "sat-redding-z12",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 111,
+      "zoom": 12,
+      "center": {
+        "lng": -122.3917,
+        "lat": 40.5865
+      }
+    },
+    {
+      "at": "sat-redding-z15",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 166,
+      "zoom": 15,
+      "center": {
+        "lng": -122.3917,
+        "lat": 40.5865
+      }
+    },
+    {
+      "at": "sat-san-francisco-z10",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 99,
+      "zoom": 10,
+      "center": {
+        "lng": -122.4194,
+        "lat": 37.7749
+      }
+    },
+    {
+      "at": "sat-san-francisco-z12",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 268,
+      "zoom": 12,
+      "center": {
+        "lng": -122.4194,
+        "lat": 37.7749
+      }
+    },
+    {
+      "at": "sat-san-francisco-z15",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 341,
+      "zoom": 15,
+      "center": {
+        "lng": -122.4194,
+        "lat": 37.7749
+      }
+    },
+    {
+      "at": "sat-sacramento-z10",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 76,
+      "zoom": 10,
+      "center": {
+        "lng": -121.4944,
+        "lat": 38.5816
+      }
+    },
+    {
+      "at": "sat-sacramento-z12",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 263,
+      "zoom": 12,
+      "center": {
+        "lng": -121.4944,
+        "lat": 38.5816
+      }
+    },
+    {
+      "at": "sat-sacramento-z15",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 188,
+      "zoom": 15,
+      "center": {
+        "lng": -121.4944,
+        "lat": 38.5816
+      }
+    },
+    {
+      "at": "sat-fresno-z10",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 56,
+      "zoom": 10,
+      "center": {
+        "lng": -119.7871,
+        "lat": 36.7378
+      }
+    },
+    {
+      "at": "sat-fresno-z12",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 203,
+      "zoom": 12,
+      "center": {
+        "lng": -119.7871,
+        "lat": 36.7378
+      }
+    },
+    {
+      "at": "sat-fresno-z15",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 169,
+      "zoom": 15,
+      "center": {
+        "lng": -119.7871,
+        "lat": 36.7378
+      }
+    },
+    {
+      "at": "sat-los-angeles-z10",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 187,
+      "zoom": 10,
+      "center": {
+        "lng": -118.2437,
+        "lat": 34.0522
+      }
+    },
+    {
+      "at": "sat-los-angeles-z12",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 533,
+      "zoom": 12,
+      "center": {
+        "lng": -118.2437,
+        "lat": 34.0522
+      }
+    },
+    {
+      "at": "sat-los-angeles-z15",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 231,
+      "zoom": 15,
+      "center": {
+        "lng": -118.2437,
+        "lat": 34.0522
+      }
+    },
+    {
+      "at": "sat-garden-grove-z10",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 173,
+      "zoom": 10,
+      "center": {
+        "lng": -117.9414,
+        "lat": 33.7739
+      }
+    },
+    {
+      "at": "sat-garden-grove-z12",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 315,
+      "zoom": 12,
+      "center": {
+        "lng": -117.9414,
+        "lat": 33.7739
+      }
+    },
+    {
+      "at": "sat-garden-grove-z15",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 210,
+      "zoom": 15,
+      "center": {
+        "lng": -117.9414,
+        "lat": 33.7739
+      }
+    },
+    {
+      "at": "sat-san-diego-z10",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 159,
+      "zoom": 10,
+      "center": {
+        "lng": -117.1611,
+        "lat": 32.7157
+      }
+    },
+    {
+      "at": "sat-san-diego-z12",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 495,
+      "zoom": 12,
+      "center": {
+        "lng": -117.1611,
+        "lat": 32.7157
+      }
+    },
+    {
+      "at": "sat-san-diego-z15",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 209,
+      "zoom": 15,
+      "center": {
+        "lng": -117.1611,
+        "lat": 32.7157
+      }
+    },
+    {
+      "at": "sat-tahoe-z10",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 39,
+      "zoom": 10,
+      "center": {
+        "lng": -120.0324,
+        "lat": 39.0968
+      }
+    },
+    {
+      "at": "sat-tahoe-z12",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 20,
+      "zoom": 12,
+      "center": {
+        "lng": -120.0324,
+        "lat": 39.0968
+      }
+    },
+    {
+      "at": "sat-tahoe-z15",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 0,
+      "zoom": 15,
+      "center": {
+        "lng": -120.0324,
+        "lat": 39.0968
+      }
+    },
+    {
+      "at": "sat-oregon-border-z10",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 19,
+      "zoom": 10,
+      "center": {
+        "lng": -122.5,
+        "lat": 42
+      }
+    },
+    {
+      "at": "sat-oregon-border-z12",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 27,
+      "zoom": 12,
+      "center": {
+        "lng": -122.5,
+        "lat": 42
+      }
+    },
+    {
+      "at": "sat-oregon-border-z15",
+      "mode": "satellite",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#E4E9ED",
+        "roads_primary": "#E4E9ED"
+      },
+      "highwayGold": true,
+      "trunkNeutral": true,
+      "roadCount": 0,
+      "zoom": 15,
+      "center": {
+        "lng": -122.5,
+        "lat": 42
+      }
+    },
+    {
+      "at": "dark-san-francisco-z12",
+      "mode": "dark",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#47575B",
+        "roads_major": "#374448",
+        "roads_primary": null
+      },
+      "highwayGold": false,
+      "trunkNeutral": false,
+      "roadCount": 295,
+      "zoom": 12,
+      "center": {
+        "lng": -122.4194,
+        "lat": 37.7749
+      }
+    },
+    {
+      "at": "dark-sacramento-z12",
+      "mode": "dark",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#47575B",
+        "roads_major": "#374448",
+        "roads_primary": null
+      },
+      "highwayGold": false,
+      "trunkNeutral": false,
+      "roadCount": 297,
+      "zoom": 12,
+      "center": {
+        "lng": -121.4944,
+        "lat": 38.5816
+      }
+    },
+    {
+      "at": "dark-garden-grove-z12",
+      "mode": "dark",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#47575B",
+        "roads_major": "#374448",
+        "roads_primary": null
+      },
+      "highwayGold": false,
+      "trunkNeutral": false,
+      "roadCount": 0,
+      "zoom": 12,
+      "center": {
+        "lng": -117.9414,
+        "lat": 33.7739
+      }
+    },
+    {
+      "at": "dark-eureka-z12",
+      "mode": "dark",
+      "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+      "usesR02": true,
+      "colors": {
+        "roads_highway": "#47575B",
+        "roads_major": "#374448",
+        "roads_primary": null
+      },
+      "highwayGold": false,
+      "trunkNeutral": false,
+      "roadCount": 95,
+      "zoom": 12,
+      "center": {
+        "lng": -124.1637,
+        "lat": 40.8021
+      }
+    }
+  ],
+  "failures": [
+    {
+      "at": "sat-tahoe-z15",
+      "pr": {
+        "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+        "usesR02": true,
+        "colors": {
+          "roads_highway": "#D2B56A",
+          "roads_major": "#E4E9ED",
+          "roads_primary": "#E4E9ED"
+        },
+        "highwayGold": true,
+        "trunkNeutral": true,
+        "roadCount": 0,
+        "zoom": 15,
+        "center": {
+          "lng": -120.0324,
+          "lat": 39.0968
+        }
+      }
+    },
+    {
+      "at": "sat-oregon-border-z15",
+      "pr": {
+        "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+        "usesR02": true,
+        "colors": {
+          "roads_highway": "#D2B56A",
+          "roads_major": "#E4E9ED",
+          "roads_primary": "#E4E9ED"
+        },
+        "highwayGold": true,
+        "trunkNeutral": true,
+        "roadCount": 0,
+        "zoom": 15,
+        "center": {
+          "lng": -122.5,
+          "lat": 42
+        }
+      }
+    },
+    {
+      "at": "dark-garden-grove-z12",
+      "pr": {
+        "url": "pmtiles:///assets/maps/caelrion-basemap-r02-b0c934a219c8.pmtiles",
+        "usesR02": true,
+        "colors": {
+          "roads_highway": "#47575B",
+          "roads_major": "#374448",
+          "roads_primary": null
+        },
+        "highwayGold": false,
+        "trunkNeutral": false,
+        "roadCount": 0,
+        "zoom": 12,
+        "center": {
+          "lng": -117.9414,
+          "lat": 33.7739
+        }
+      }
+    }
+  ],
+  "finishedAt": "2026-11-21T18:49:35.681Z",
+  "ok": false
+}
