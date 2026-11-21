@@ -41,50 +41,45 @@ test('P0: R17-P1 dark flavor subdues roads; city labels are not gold', () => {
   assert.ok(f.major !== f.minor_a);
 });
 
-test('R20: Satellite road palette is muted; R17 Dark palette is unchanged', () => {
+test('R21: Satellite gold hierarchy; residential off-white; Dark unchanged', () => {
   const aerial = createAerialOverlayFlavor();
-  assert.deepEqual(
-    {
-      highway: aerial.highway,
-      major: aerial.major,
-      minor: aerial.minor_a,
-      minor_b: aerial.minor_b,
-      link: aerial.link,
-      other: aerial.other,
-      road_label_major: aerial.roads_label_major,
-      road_label_minor: aerial.roads_label_minor,
-    },
-    {
-      highway: '#819398',
-      major: '#697A80',
-      minor: '#53656C',
-      minor_b: '#53656C',
-      link: '#697A80',
-      other: '#53656C',
-      road_label_major: '#C5CFD3',
-      road_label_minor: '#AEBDC2',
-    },
-  );
-  // Prevent near-white photography overlays from returning in later refactors.
-  for (const color of [
-    aerial.highway,
-    aerial.major,
-    aerial.minor_a,
-    aerial.minor_b,
-    aerial.link,
-    aerial.other,
-  ]) {
-    assert.match(color, /^#[0-9A-F]{6}$/i);
-    assert.ok(
-      Math.max(...[1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16))) <
-        0xa0,
-      `Satellite line color ${color} is too bright`,
-    );
-  }
+  assert.equal(aerial.highway, '#E5C56B');
+  assert.equal(aerial.major, '#D6BE82');
+  assert.equal(aerial.link, '#D6BE82');
+  assert.equal(aerial.bridges_highway, '#E5C56B');
+  assert.equal(aerial.bridges_major, '#D6BE82');
+  assert.equal(aerial.tunnel_highway, '#E5C56B');
+  // Residential never receives gold highlight.
+  assert.equal(aerial.minor_a, '#C8D0D4');
+  assert.equal(aerial.minor_b, '#C8D0D4');
+  assert.equal(aerial.other, '#C8D0D4');
+  assert.equal(aerial.minor_service, '#C8D0D4');
+  assert.equal(aerial.bridges_minor, '#C8D0D4');
+  assert.notEqual(aerial.minor_a, aerial.highway);
+  assert.notEqual(aerial.minor_a, aerial.major);
+  // Style applies satellite restraint so minors stay faint.
+  const style = createOwnedAerialStyle();
+  const minor = style.layers.find((l) => l.id === 'roads_minor');
+  const highway = style.layers.find((l) => l.id === 'roads_highway');
+  assert.ok(Array.isArray(minor?.paint?.['line-opacity']));
+  assert.equal(minor.paint['line-opacity'][0], 'interpolate');
+  // Cap residential opacity well below a dense street grid (last stop ≤ 0.35).
+  const minorStops = minor.paint['line-opacity'];
+  const lastOpacity = minorStops[minorStops.length - 1];
+  assert.ok(typeof lastOpacity === 'number' && lastOpacity <= 0.35);
+  assert.equal(highway?.paint?.['line-color'], '#E5C56B');
+  // R17 Dark palette untouched.
   const dark = createArgosDarkFlavor();
   assert.equal(dark.highway, '#47575B');
   assert.equal(dark.major, '#374448');
   assert.equal(dark.minor_a, '#2B363A');
+  const darkStyle = createOwnedBasemapStyle();
+  assert.equal(
+    darkStyle.layers.find((l) => l.id === 'roads_highway')?.paint?.[
+      'line-color'
+    ],
+    '#47575B',
+  );
 });
 
 test('P0: owned dark style still uses same-origin PMTiles + glyphs', () => {
