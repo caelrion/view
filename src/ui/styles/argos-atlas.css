@@ -44,9 +44,9 @@
   cursor: pointer;
 }
 
-/* Hidden while Argos 2D shell is active (header owns 3D). Visible in Cesium. */
+/* Shared header owns Dark | Satellite | 3D — never show the floating duplicate. */
 body.argos-atlas-active .argos-mode-toggle {
-  display: none;
+  display: none !important;
 }
 
 .argos-mode-toggle.is-active,
@@ -709,22 +709,74 @@ body.argos-atlas-booting .argos-atlas-root {
   z-index: 4;
 }
 
-body.argos-atlas-active #cesiumContainer,
-body.argos-atlas-active .cesium-viewer-bottom,
+/* 2D owns the viewport: hide Cesium canvas + credits chrome (credits restored in 3D via JS). */
+body.argos-atlas-active:not(.argos-atlas-3d) #cesiumContainer,
+body.argos-atlas-active:not(.argos-atlas-3d) .cesium-viewer-bottom {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+/* Shared shell in either mode: suppress legacy God's Eye View chrome. */
 body.argos-atlas-active #title-bar,
 body.argos-atlas-active #style-indicator,
 body.argos-atlas-active #top-center-actions,
 body.argos-atlas-active #command-dock,
 body.argos-atlas-active .left-panel-rail,
 body.argos-atlas-active .right-panel-rail,
+body.argos-atlas-active #left-panel-stack,
+body.argos-atlas-active #right-context-rail,
+body.argos-atlas-active #global-context-panel,
+body.argos-atlas-active #loading-screen,
+body.argos-atlas-active #intel-hud,
+body.argos-atlas-active #first-run-launcher,
+body.argos-atlas-active #traffic-sync-chip,
+body.argos-atlas-active #cctv-sync-chip,
+body.argos-atlas-active #global-loading-status,
+body.argos-atlas-active #safe-frame-overlay,
+body.argos-atlas-active #toast,
 body.argos-atlas-active #loader,
 body.argos-atlas-active .first-view,
 body.argos-atlas-active [data-first-view],
 body.argos-atlas-active .welcome-gate,
-body.argos-atlas-active #welcome-gate {
+body.argos-atlas-active #welcome-gate,
+body.argos-atlas-active #scope-mask,
+body.argos-atlas-active .celestial-ring-overlay,
+body.argos-atlas-active .celestial-ring-outline {
   opacity: 0 !important;
   visibility: hidden !important;
   pointer-events: none !important;
+}
+
+/* 3D: MapLibre host must not intercept globe gestures; keep header/panels interactive. */
+body.argos-atlas-3d {
+  background: #000;
+}
+
+body.argos-atlas-3d .argos-map-host {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+  background: transparent !important;
+}
+
+body.argos-atlas-3d .argos-globe-inset {
+  display: none;
+}
+
+body.argos-atlas-3d #cesiumContainer {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  z-index: 0;
+}
+
+/* Credits stay readable under the shared header. */
+body.argos-atlas-3d .cesium-viewer-bottom,
+body.argos-atlas-3d #cesium-credits {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
 }
 
 /* Mobile: single-row header where possible; layers as bottom drawer */
