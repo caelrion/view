@@ -25,8 +25,14 @@ import {
   BASEMAP_MODE_DARK,
   BASEMAP_MODE_SATELLITE,
 } from './style.js';
+import {
+  applySatelliteDayNightPaint,
+  nightFactorForMapCenter,
+} from './solarDayNight.js';
 
 const SOURCE_ID = 'caelrion-aircraft-demo';
+/** Recheck solar elevation while Satellite stays open (ms). */
+const SATELLITE_DAY_NIGHT_INTERVAL_MS = 60_000;
 const LAYER_ID = 'caelrion-aircraft-demo-circle';
 const HEADING_LAYER_ID = 'caelrion-aircraft-demo-heading';
 const SELECTED_LAYER_ID = 'caelrion-aircraft-demo-selected';
@@ -78,6 +84,9 @@ export class MapLibre2DPresenter {
     this._attributionControl = null;
     this._fiordFallbackAttempted = false;
     this._coverageHandler = null;
+    this._dayNightHandler = null;
+    this._dayNightTimer = null;
+    this._lastNightFactor = null;
     /** @type {'dark-vector'|'owned-aerial'} */
     this._basemapMode = BASEMAP_MODE_SATELLITE;
   }
@@ -192,6 +201,8 @@ export class MapLibre2DPresenter {
     this._coverageHandler = () => this._refreshCoverageState();
     map.on('moveend', this._coverageHandler);
     map.on('zoomend', this._coverageHandler);
+    this._dayNightHandler = () => this._refreshSatelliteDayNight();
+    map.on('moveend', this._dayNightHandler);
 
     await new Promise((resolve) => {
       let settled = false;
@@ -244,6 +255,7 @@ export class MapLibre2DPresenter {
     }
 
     this._ensureAircraftLayers();
+    this._syncSatelliteDayNightLifecycle();
     this._clickHandler = (event) => {
       const layers = AIRCRAFT_LAYER_IDS.filter((id) => map.getLayer(id));
       if (!layers.length || !this._aircraftVisible) {
@@ -329,6 +341,7 @@ export class MapLibre2DPresenter {
       }
       this._refreshCoverageState();
       this._ensureAircraftLayers();
+      this._syncSatelliteDayNightLifecycle();
       if (aircraft) this.setAircraft(aircraft);
       if (selected) this.select(selected);
       this.setAircraftVisible(this._aircraftVisible);
@@ -423,6 +436,7 @@ export class MapLibre2DPresenter {
 
   destroy() {
     this._destroyed = true;
+    this._stopSatelliteDayNight();
     if (this._onWindowResize) {
       if (typeof globalThis.removeEventListener === 'function') {
         globalThis.removeEventListener('resize', this._onWindowResize);
@@ -440,6 +454,9 @@ export class MapLibre2DPresenter {
         this._map.off('moveend', this._coverageHandler);
         this._map.off('zoomend', this._coverageHandler);
       }
+      if (this._dayNightHandler) {
+        this._map.off('moveend', this._dayNightHandler);
+      }
       if (this._collapseAttribution) {
         this._map.off('sourcedata', this._collapseAttribution);
       }
@@ -451,10 +468,76 @@ export class MapLibre2DPresenter {
     this._map = null;
     this._clickHandler = null;
     this._errorHandler = null;
+    this._dayNightHandler = null;
     this._moveHandlers = [];
     this._aircraft = null;
     this._selectedId = null;
     this._attributionControl = null;
+  }
+
+  /** Start/stop solar day-night updates for Satellite only. */
+  _syncSatelliteDayNightLifecycle() {
+    if (this._destroyed) return;
+    if (
+      this._basemapMode === BASEMAP_MODE_SATELLITE &&
+      this._styleMode === 'owned-aerial'
+    ) {
+      this._lastNightFactor = null;
+      this._startSatelliteDayNight();
+      this._refreshSatelliteDayNight();
+      return;
+    }
+    this._stopSatelliteDayNight();
+    // Leave paint at daylight defaults when leaving Satellite.
+    applySatelliteDayNightPaint(this._map, 0);
+    this._lastNightFactor = 0;
+  }
+
+  _startSatelliteDayNight() {
+    if (this._dayNightTimer) return;
+    this._dayNightTimer = setInterval(() => {
+      this._refreshSatelliteDayNight();
+    }, SATELLITE_DAY_NIGHT_INTERVAL_MS);
+    this._dayNightTimer?.unref?.();
+  }
+
+  _stopSatelliteDayNight() {
+    if (this._dayNightTimer) {
+      clearInterval(this._dayNightTimer);
+      this._dayNightTimer = null;
+    }
+  }
+
+  /**
+   * Recalculate solar elevation at the current map center (UTC) and paint.
+   * @param {{ nowMs?: number }} [opts] injectable clock for tests
+   */
+  _refreshSatelliteDayNight({ nowMs } = {}) {
+    if (this._destroyed || !this._map) return;
+    if (
+      this._basemapMode !== BASEMAP_MODE_SATELLITE ||
+      this._styleMode !== 'owned-aerial'
+    ) {
+      return;
+    }
+    const center = this._map.getCenter?.();
+    const lat = Number(center?.lat);
+    const lon = Number(center?.lng);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon)) return;
+    const factor = nightFactorForMapCenter({
+      lat,
+      lon,
+      nowMs: nowMs ?? Date.now(),
+    });
+    // Skip redundant paint writes during tiny float jitter.
+    if (
+      this._lastNightFactor != null &&
+      Math.abs(this._lastNightFactor - factor) < 0.01
+    ) {
+      return;
+    }
+    this._lastNightFactor = factor;
+    applySatelliteDayNightPaint(this._map, factor);
   }
 
   _setBasemapState(state) {

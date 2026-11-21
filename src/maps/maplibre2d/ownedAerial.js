@@ -14,6 +14,7 @@ import {
   applyProgressiveRoadDetail,
   applySatelliteResidentialRestraint,
 } from './zoomDetail.js';
+import { createSatelliteNightWaterLayer } from './solarDayNight.js';
 
 /** EOxCloudless 2016 — Web Mercator WMTS (TileMatrix/TileRow/TileCol = z/y/x). */
 export const EOX_CLOUDLESS_2016_TILE_URL =
@@ -270,6 +271,8 @@ export function createOwnedAerialStyle({
           'raster-fade-duration': 0,
         },
       },
+      // R25: nighttime water tint (opacity driven by solar elevation in presenter).
+      createSatelliteNightWaterLayer(),
       ...overlay,
     ],
   };

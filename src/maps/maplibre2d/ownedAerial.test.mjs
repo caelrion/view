@@ -116,6 +116,18 @@ test('P0: Satellite style streams EOx + GIBS + NAIP LA detail (no Esri planet)',
   assert.ok(style.layers.some((l) => l.id === 'gibs-blue-marble-raster'));
   assert.ok(style.layers.some((l) => l.id === 'naip-la-raster'));
   assert.ok(style.layers.some((l) => String(l.id).startsWith('roads_')));
+  // R25: night water tint sits above rasters and below road overlays.
+  const waterIdx = style.layers.findIndex(
+    (l) => l.id === 'satellite-night-water',
+  );
+  const roadIdx = style.layers.findIndex((l) =>
+    String(l.id).startsWith('roads_'),
+  );
+  const eoxIdx = style.layers.findIndex((l) => l.id === 'eox-cloudless-raster');
+  assert.ok(waterIdx > eoxIdx);
+  assert.ok(waterIdx < roadIdx);
+  assert.equal(style.layers[waterIdx].paint['fill-color'], '#050E18');
+  assert.equal(style.layers[waterIdx].paint['fill-opacity'], 0);
 });
 
 test('P0: aerial overlay filter drops opaque land fills', () => {
