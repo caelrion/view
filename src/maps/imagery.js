@@ -1,11 +1,10 @@
 import * as Cesium from 'cesium';
 
 // Attribution and service rights are documented in DATA_SOURCES.md.
-// On-screen credit is source text only — no promotional "Powered by Esri" link.
-export const ESRI_SOURCE_ATTRIBUTION =
-  'Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
+// Argos 3D declutter: no on-screen Esri source strip (footer removed).
+export const ESRI_SOURCE_ATTRIBUTION = '';
 
-/** @deprecated Prefer ESRI_SOURCE_ATTRIBUTION — kept as the same plain-text credit. */
+/** @deprecated Prefer ESRI_SOURCE_ATTRIBUTION — empty for Argos 3D declutter. */
 export const ESRI_ATTRIBUTION_HTML = ESRI_SOURCE_ATTRIBUTION;
 
 export function createOsmImagery() {

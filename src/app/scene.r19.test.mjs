@@ -6,15 +6,20 @@ import { dirname, join } from 'node:path';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '../..');
 
-test('R19-0: ion-free body class only hides Cesium logo mark, not credits', () => {
+test('R19-0: ion-free / Argos 3D hide credit chrome without suppressing #cesium-credits', () => {
   const css = readFileSync(join(root, 'src/ui/styles/argos-atlas.css'), 'utf8');
   assert.match(
     css,
     /body\.caelrion-no-cesium-ion \.cesium-credit-logoContainer/,
   );
+  assert.match(css, /body\.argos-atlas-3d \.cesium-credit-textContainer/);
   assert.doesNotMatch(
     css,
     /body\.caelrion-no-cesium-ion #cesium-credits[^{]*\{[^}]*display:\s*none/,
+  );
+  assert.doesNotMatch(
+    css,
+    /body\.argos-atlas-3d #cesium-credits[^{]*\{[^}]*display:\s*none/,
   );
   assert.doesNotMatch(
     css,

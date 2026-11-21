@@ -8,8 +8,12 @@
 /** Shared Dark/Satellite local zoom (neighborhood/city). Matches DEFAULT_MAP_ZOOM. */
 export const SHARED_2D_LOCAL_ZOOM = 11.5;
 
-/** Whole-Earth Cesium camera height (meters). */
-export const CESIUM_GLOBE_HEIGHT_M = 18_000_000;
+/**
+ * Whole-Earth Cesium camera height (meters).
+ * One zoom-factor step closer than the prior 18e6 framing so the globe fills
+ * the viewport without leaving street/city scale.
+ */
+export const CESIUM_GLOBE_HEIGHT_M = 12_000_000;
 
 /** Regional Cesium camera height (meters). */
 export const CESIUM_REGION_HEIGHT_M = 850_000;
