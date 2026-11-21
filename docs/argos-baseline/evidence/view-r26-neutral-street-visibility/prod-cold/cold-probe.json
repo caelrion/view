@@ -1,0 +1,2746 @@
+{
+  "coordinate": "CAELRION_VIEW_R26_RESTORE_SECONDARY_STREET_VISIBILITY_R04",
+  "startedAt": "2026-11-21T08:28:00.508Z",
+  "shots": [
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/01-current-oc-regional-z11.5.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/garden-grove-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/garden-grove-z11p5.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/garden-grove-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/garden-grove-z13p5.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/garden-grove-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/fountain-valley-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/fountain-valley-z11p5.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/fountain-valley-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/fountain-valley-z13p5.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/fountain-valley-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/huntington-beach-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/huntington-beach-z11p5.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/huntington-beach-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/huntington-beach-z13p5.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/huntington-beach-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/los-angeles-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/los-angeles-z11p5.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/los-angeles-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/los-angeles-z13p5.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/los-angeles-z15.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r26-neutral-street-visibility/prod-cold/hb-dark-nonregression-z12.png"
+  ],
+  "probes": [
+    {
+      "at": "01",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 11.5,
+      "center": {
+        "lng": -117.95,
+        "lat": 33.72
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "garden-grove-z10",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 10,
+      "center": {
+        "lng": -117.9414,
+        "lat": 33.7739
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "garden-grove-z11p5",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 11.5,
+      "center": {
+        "lng": -117.9414,
+        "lat": 33.7739
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "garden-grove-z12",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 12,
+      "center": {
+        "lng": -117.9414,
+        "lat": 33.7739
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "garden-grove-z13p5",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 13.5,
+      "center": {
+        "lng": -117.9414,
+        "lat": 33.7739
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "garden-grove-z15",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 15,
+      "center": {
+        "lng": -117.9414,
+        "lat": 33.7739
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "fountain-valley-z10",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 10,
+      "center": {
+        "lng": -117.954,
+        "lat": 33.7092
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "fountain-valley-z11p5",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 11.5,
+      "center": {
+        "lng": -117.954,
+        "lat": 33.7092
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "fountain-valley-z12",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 12,
+      "center": {
+        "lng": -117.954,
+        "lat": 33.7092
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "fountain-valley-z13p5",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 13.5,
+      "center": {
+        "lng": -117.954,
+        "lat": 33.7092
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "fountain-valley-z15",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 15,
+      "center": {
+        "lng": -117.954,
+        "lat": 33.7092
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "huntington-beach-z10",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 10,
+      "center": {
+        "lng": -117.9988,
+        "lat": 33.6595
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "huntington-beach-z11p5",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 11.5,
+      "center": {
+        "lng": -117.9988,
+        "lat": 33.6595
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "huntington-beach-z12",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 12,
+      "center": {
+        "lng": -117.9988,
+        "lat": 33.6595
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "huntington-beach-z13p5",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 13.5,
+      "center": {
+        "lng": -117.9988,
+        "lat": 33.6595
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "huntington-beach-z15",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 15,
+      "center": {
+        "lng": -117.9988,
+        "lat": 33.6595
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "los-angeles-z10",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 10,
+      "center": {
+        "lng": -118.2437,
+        "lat": 34.0522
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "los-angeles-z11p5",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 11.5,
+      "center": {
+        "lng": -118.2437,
+        "lat": 34.0522
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "los-angeles-z12",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 12,
+      "center": {
+        "lng": -118.2437,
+        "lat": 34.0522
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "los-angeles-z13p5",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 13.5,
+      "center": {
+        "lng": -118.2437,
+        "lat": 34.0522
+      },
+      "layerCount": 90
+    },
+    {
+      "at": "los-angeles-z15",
+      "ok": true,
+      "present": {
+        "roads_highway": true,
+        "roads_major": true,
+        "roads_primary": true,
+        "roads_secondary": true,
+        "roads_tertiary": true,
+        "roads_labels_primary": true,
+        "roads_labels_secondary": true
+      },
+      "paint": {
+        "roads_major": {
+          "color": "#D6BE82",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            8,
+            0,
+            10,
+            0.3,
+            11.5,
+            0.5,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_primary": {
+          "color": "#D0D6DB",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            9,
+            0,
+            10.5,
+            0.28,
+            11.5,
+            0.48,
+            13,
+            0.62,
+            15,
+            0.72
+          ]
+        },
+        "roads_secondary": {
+          "color": "#B7C0C7",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10,
+            0,
+            11,
+            0.18,
+            12,
+            0.32,
+            13.5,
+            0.45,
+            15,
+            0.55
+          ]
+        },
+        "roads_tertiary": {
+          "color": "#C8D0D4",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            10.5,
+            0,
+            12,
+            0.12,
+            13.5,
+            0.2,
+            15,
+            0.28,
+            16,
+            0.34
+          ]
+        },
+        "roads_highway": {
+          "color": "#E5C56B",
+          "opacity": [
+            "interpolate",
+            [
+              "linear"
+            ],
+            [
+              "zoom"
+            ],
+            5,
+            0.05,
+            7,
+            0.35,
+            9,
+            0.85,
+            11,
+            1
+          ]
+        }
+      },
+      "zoom": 15,
+      "center": {
+        "lng": -118.2437,
+        "lat": 34.0522
+      },
+      "layerCount": 90
+    }
+  ],
+  "failures": [
+    {
+      "fatal": "TypeError: Cannot read properties of undefined (reading 'getPaintProperty')\n    at evaluate (evaluate at file:///tmp/r04-cold-verify.mjs:183:32, <anonymous>:2:39)\n    at #evaluate (file:///opt/caelrion/view/node_modules/puppeteer-core/lib/puppeteer/cdp/ExecutionContext.js:402:19)\n    at async ExecutionContext.evaluate (file:///opt/caelrion/view/node_modules/puppeteer-core/lib/puppeteer/cdp/ExecutionContext.js:288:16)\n    at async IsolatedWorld.evaluate (file:///opt/caelrion/view/node_modules/puppeteer-core/lib/puppeteer/cdp/IsolatedWorld.js:104:16)\n    at async CdpFrame.evaluate (file:///opt/caelrion/view/node_modules/puppeteer-core/lib/puppeteer/api/Frame.js:364:20)\n    at async CdpPage.evaluate (file:///opt/caelrion/view/node_modules/puppeteer-core/lib/puppeteer/api/Page.js:832:20)\n    at async file:///tmp/r04-cold-verify.mjs:183:21\n    at getPaintProperty (https://view.caelrion.com/assets/index-B21N2zJ_.js:2378:117436)\n    at getPaintProperty (https://view.caelrion.com/assets/index-B21N2zJ_.js:2374:98322)"
+    }
+  ],
+  "finishedAt": "2026-11-21T08:29:26.920Z",
+  "ok": false
+}

@@ -1,0 +1,69 @@
+{
+  "coordinate": "CAELRION_VIEW_R26_RESTORE_SECONDARY_STREET_VISIBILITY_R04",
+  "outcome": "R26_NEUTRAL_STREET_VISIBILITY_PRODUCTION_VERIFIED",
+  "production_cold_verified": true,
+  "mario_visual_acceptance": "pending_separate_product_decision",
+  "baseline_main_at_start": "0ea3a3a5647faf50c434cd95c0b873ac3f85eceb",
+  "baseline_tree_at_start": "0b84540ab479eb0da5c45569dd327b2ebb22ce9c",
+  "prior_zoomDetail_blob": "129d4626983e92390cb6b6f9b3f02221ae04ad3b",
+  "deployed_commit": "bcee97da405d98e34f10ef53b1d8961a4c57a75e",
+  "deployed_tree": "aa4198669ede43bc10203b8adfae52fc35131b6e",
+  "feature_commits": [
+    "82a28f70dd717d0f446d76c78d9606c02c55494e",
+    "37c84249cf5de6669cb3fb2ac6c4159192ee11b8"
+  ],
+  "prs": [
+    "https://github.com/caelrion/view/pull/17",
+    "https://github.com/caelrion/view/pull/18"
+  ],
+  "ci_runs": [
+    "https://github.com/caelrion/view/actions/runs/44884701260",
+    "https://github.com/caelrion/view/actions/runs/44885307239"
+  ],
+  "ci_conclusion": "success",
+  "unit_tests": {
+    "maplibre_zoomDetail_ownedAerial": { "pass": 12, "exit": 0 },
+    "with_solar_nonregression": { "pass": 20, "exit": 0 }
+  },
+  "served_js": "assets/index-DIZB6V59.js",
+  "served_js_sha256": "ed62618c993b33c0eb7873f91f462f8e059c265c5789f3268cde36ea1f5d6d51",
+  "served_css": "assets/index-Dhr9dhZh.css",
+  "served_css_sha256": "5a85eba5ac636bedc3d63885eae2104007916279b967518089e44de683f16b97",
+  "rollback": "/opt/caelrion/view-releases/r26-before-r04-20261121T082447Z",
+  "install_target": "/opt/caelrion/core/view/dist",
+  "hierarchy": {
+    "gold": "highway #E5C56B + trunk #D6BE82 + motorway/trunk_link",
+    "primary_neutral": "#E4E9ED roads_primary (not gold)",
+    "secondary_neutral": "#C5CDD3 roads_secondary",
+    "tertiary_subtle": "#C8D0D4 roads_tertiary",
+    "residential": "restrained minor opacity curve (not shared 5% demote)"
+  },
+  "first_failed_predicate_before": "SATELLITE_SECONDARY_AND_LOCAL_STREETS_VISUALLY_READABLE = FALSE",
+  "checks": {
+    "gold_highways_preserved": true,
+    "primary_secondary_not_gold": true,
+    "primary_secondary_layers_present": true,
+    "arterial_labels_restored": true,
+    "city_zoom_primary_opacity_ge_0_6": true,
+    "city_zoom_secondary_opacity_ge_0_4": true,
+    "r25_solar_math_preserved": true,
+    "night_bmax_0_68": true,
+    "dark_mode_nonregression_shot": true,
+    "no_yellow_grid": true
+  },
+  "cold_probe": "cold-probe-r04b.json",
+  "screenshots": [
+    "r04b-garden-grove-z10.png",
+    "r04b-garden-grove-z11p5.png",
+    "r04b-garden-grove-z12.png",
+    "r04b-garden-grove-z13p5.png",
+    "r04b-garden-grove-z15.png",
+    "r04b-fountain-valley-z12.png",
+    "r04b-huntington-beach-z12.png",
+    "r04b-huntington-beach-z13p5.png",
+    "r04b-los-angeles-z11p5.png",
+    "r04b-los-angeles-z13p5.png",
+    "r04b-garden-grove-z12-forced-day.png",
+    "r04b-hb-dark-nonregression-z12.png"
+  ]
+}
