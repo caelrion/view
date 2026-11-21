@@ -8,18 +8,47 @@
  *   z ≥ 12  street detail (Satellite then restrains residential — R21)
  *
  * Mutates paint copies only — does not replace Protomaps layer definitions.
+ *
+ * R26 Satellite selective gold: Protomaps `kind=major_road` includes
+ * secondary/tertiary. Only trunk/primary keep soft gold; demoted classes
+ * reuse residential paint. See applySatelliteSelectiveGoldRoads.
  */
 
 /** Residential / service / pier — never highway ramps (`roads_link`). */
 const MINOR_ROAD =
-  /^(roads_minor|roads_other|roads_minor_service|roads_tunnels_other|roads_tunnels_minor|roads_bridges_other|roads_bridges_minor|roads_pier)/;
-/** Arterials + motorway/highway link ramps. */
+  /^(roads_minor|roads_other|roads_minor_service|roads_tunnels_other|roads_tunnels_minor|roads_bridges_other|roads_bridges_minor|roads_pier|roads_secondary|roads_bridges_secondary|roads_tunnels_secondary|roads_link_local|roads_bridges_link_local|roads_tunnels_link_local)/;
+/** True arterials (post-R26 filter) + qualifying highway/trunk ramps. */
 const MAJOR_ROAD =
   /^(roads_major|roads_link|roads_bridges_major|roads_bridges_link|roads_tunnels_major|roads_tunnels_link)/;
 const HIGHWAY_ROAD =
   /^(roads_highway|roads_bridges_highway|roads_tunnels_highway)/;
 const ROAD_LABEL =
   /^(roads_labels_|roads_label_|address_label|roads_shields|roads_oneway)/;
+
+/**
+ * OSM kind_detail values that keep Satellite soft-gold (Tier 2).
+ * Verified present on owned Protomaps `roads` layer.
+ */
+export const SATELLITE_GOLD_MAJOR_KIND_DETAILS = Object.freeze([
+  'trunk',
+  'primary',
+]);
+
+/**
+ * Demoted former major_road classes — neutral residential treatment.
+ */
+export const SATELLITE_DEMOTE_MAJOR_KIND_DETAILS = Object.freeze([
+  'secondary',
+  'tertiary',
+]);
+
+/**
+ * Link kind_detail values that keep soft gold for freeway continuity.
+ */
+export const SATELLITE_GOLD_LINK_KIND_DETAILS = Object.freeze([
+  'motorway_link',
+  'trunk_link',
+]);
 
 function opacityExpr(stops) {
   return ['interpolate', ['linear'], ['zoom'], ...stops];
@@ -46,7 +75,8 @@ export function applyProgressiveRoadDetail(layers) {
       // Dark mode: minors can reach full opacity at street scale.
       expr = opacityExpr([7, 0, 9, 0, 10.5, 0.35, 12, 1, 13, 1]);
     } else if (MAJOR_ROAD.test(id)) {
-      expr = opacityExpr([6, 0, 8, 0.25, 9.5, 0.7, 11, 1, 12, 1]);
+      // Progressive fade-in; Satellite R26 further caps via selective gold.
+      expr = opacityExpr([6, 0, 8, 0.2, 9.5, 0.55, 11, 0.85, 12.5, 1]);
     } else if (HIGHWAY_ROAD.test(id)) {
       // Highway casings/lines: quiet at world scale, clear by metro zoom.
       if (/casing|_casing/.test(id)) {
@@ -123,4 +153,152 @@ export function applySatelliteResidentialRestraint(layers) {
     }
     return layer;
   });
+}
+
+function andFilter(existing, extra) {
+  if (!extra) return existing;
+  if (!existing) return extra;
+  if (Array.isArray(existing) && existing[0] === 'all') {
+    return [...existing, extra];
+  }
+  return ['all', existing, extra];
+}
+
+function kindDetailIn(details) {
+  return ['in', ['get', 'kind_detail'], ['literal', [...details]]];
+}
+
+function cloneLayerWith(layer, { id, filter, paintPatch }) {
+  return {
+    ...layer,
+    id,
+    filter,
+    paint: { ...(layer.paint || {}), ...paintPatch },
+  };
+}
+
+/**
+ * R26 — Restrict Satellite gold to highways + trunk/primary arterials.
+ *
+ * Diagnostic (owned PMTiles, Garden Grove / Huntington Beach z12):
+ *   major_road|secondary was as numerous as primary and all painted `#D6BE82`.
+ * Secondary/tertiary stay drawn as neutral residential; motorway/trunk ramps
+ * keep soft gold for network continuity; other links demote.
+ *
+ * @param {object[]} layers
+ * @param {{ residentialColor?: string }} [opts]
+ * @returns {object[]}
+ */
+export function applySatelliteSelectiveGoldRoads(
+  layers,
+  { residentialColor = '#C8D0D4' } = {},
+) {
+  if (!Array.isArray(layers)) return layers;
+
+  const goldMajor = kindDetailIn(SATELLITE_GOLD_MAJOR_KIND_DETAILS);
+  const demoteMajor = kindDetailIn(SATELLITE_DEMOTE_MAJOR_KIND_DETAILS);
+  const goldLink = [
+    'any',
+    ['==', ['get', 'kind'], 'highway'],
+    kindDetailIn(SATELLITE_GOLD_LINK_KIND_DETAILS),
+  ];
+  const demoteLink = ['!', goldLink];
+  const notLink = ['!', ['has', 'is_link']];
+
+  const minorLine = opacityExpr([
+    9, 0, 11, 0.08, 12.5, 0.18, 14, 0.28, 16, 0.32,
+  ]);
+  const minorCasing = opacityExpr([12, 0, 14, 0.1, 16, 0.16]);
+  /** Soft-gold majors: readable but less dominant than R21 full-grid. */
+  const majorLine = opacityExpr([7, 0, 9, 0.35, 10.5, 0.65, 12, 0.82, 14, 0.9]);
+  const majorCasing = opacityExpr([8, 0, 10, 0.25, 12, 0.55, 14, 0.7]);
+  const goldLinkLine = opacityExpr([12, 0, 13, 0.45, 14.5, 0.75, 16, 0.85]);
+
+  const out = [];
+  for (const layer of layers) {
+    const id = String(layer?.id || '');
+    const type = layer?.type;
+
+    // Narrow major arterials to trunk/primary; emit secondary/tertiary clones.
+    if (
+      type === 'line' &&
+      /^(roads_major|roads_bridges_major|roads_tunnels_major)/.test(id)
+    ) {
+      const narrowed = andFilter(andFilter(layer.filter, notLink), goldMajor);
+      const isCasing = /casing|_casing/.test(id);
+      out.push({
+        ...layer,
+        filter: narrowed,
+        paint: withOpacity(
+          layer.paint || {},
+          'line-opacity',
+          isCasing ? majorCasing : majorLine,
+        ),
+      });
+      const demotedId = id
+        .replace('roads_major', 'roads_secondary')
+        .replace('roads_bridges_major', 'roads_bridges_secondary')
+        .replace('roads_tunnels_major', 'roads_tunnels_secondary');
+      out.push(
+        cloneLayerWith(layer, {
+          id: demotedId,
+          filter: andFilter(andFilter(layer.filter, notLink), demoteMajor),
+          paintPatch: {
+            'line-color': residentialColor,
+            'line-opacity': isCasing ? minorCasing : minorLine,
+          },
+        }),
+      );
+      continue;
+    }
+
+    // Links: keep soft gold only for freeway / trunk ramps.
+    if (
+      type === 'line' &&
+      /^(roads_link|roads_bridges_link|roads_tunnels_link)/.test(id) &&
+      !/_local$/.test(id)
+    ) {
+      const isCasing = /casing|_casing/.test(id);
+      out.push({
+        ...layer,
+        filter: andFilter(layer.filter, goldLink),
+        paint: withOpacity(
+          {
+            ...(layer.paint || {}),
+            // Soft gold retained via existing flavor color on roads_link.
+          },
+          'line-opacity',
+          isCasing ? majorCasing : goldLinkLine,
+        ),
+      });
+      const localId = `${id}_local`;
+      out.push(
+        cloneLayerWith(layer, {
+          id: localId,
+          filter: andFilter(layer.filter, demoteLink),
+          paintPatch: {
+            'line-color': residentialColor,
+            'line-opacity': isCasing ? minorCasing : minorLine,
+          },
+        }),
+      );
+      continue;
+    }
+
+    // Major road name labels: highway + trunk/primary only (not secondary grid).
+    if (type === 'symbol' && id === 'roads_labels_major') {
+      out.push({
+        ...layer,
+        filter: andFilter(layer.filter, [
+          'any',
+          ['==', ['get', 'kind'], 'highway'],
+          kindDetailIn(SATELLITE_GOLD_MAJOR_KIND_DETAILS),
+        ]),
+      });
+      continue;
+    }
+
+    out.push(layer);
+  }
+  return out;
 }

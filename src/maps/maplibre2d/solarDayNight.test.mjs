@@ -71,23 +71,27 @@ test('R25: twilight factor is smooth and monotonic', () => {
   assert.equal(samples.at(-1), 1);
 });
 
-test('R25/R02: night raster is dramatically darker than day; water more opaque than land crush', () => {
+test('R26: night is cooler/darker than day but keeps photographic headroom', () => {
   const day = rasterPaintForNightFactor(0);
   const night = rasterPaintForNightFactor(1);
   assert.equal(day['raster-saturation'], 0);
   assert.equal(day['raster-brightness-max'], 1);
   assert.equal(day['raster-hue-rotate'], 0);
-  // Wide day/night separation — not a mild dim.
-  assert.ok(night['raster-saturation'] <= -0.9);
-  assert.ok(night['raster-brightness-max'] <= 0.3);
-  assert.ok(night['raster-contrast'] >= 0.35);
-  assert.ok(night['raster-hue-rotate'] >= 180);
+  // Darker than day, not crushed black (Mario rejected brightness-max 0.26).
+  assert.ok(night['raster-saturation'] < -0.4);
+  assert.ok(night['raster-saturation'] > -0.85);
+  assert.ok(night['raster-brightness-max'] >= 0.45);
+  assert.ok(night['raster-brightness-max'] <= 0.65);
+  assert.ok(night['raster-contrast'] <= 0.25);
+  assert.ok(night['raster-hue-rotate'] >= 150);
   assert.ok(
-    day['raster-brightness-max'] - night['raster-brightness-max'] >= 0.65,
-    'day/night brightness gap must be obvious at a glance',
+    day['raster-brightness-max'] - night['raster-brightness-max'] >= 0.35,
+    'day/night brightness gap must remain visible',
   );
   assert.equal(waterTintOpacityForNightFactor(0), 0);
-  assert.ok(waterTintOpacityForNightFactor(1) >= 0.88);
+  assert.ok(waterTintOpacityForNightFactor(1) >= 0.65);
+  assert.ok(waterTintOpacityForNightFactor(1) <= 0.82);
+  // Water tint stronger than residual land brightness headroom.
   assert.ok(
     waterTintOpacityForNightFactor(1) > 1 - night['raster-brightness-max'],
   );

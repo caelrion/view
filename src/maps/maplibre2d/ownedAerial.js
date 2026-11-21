@@ -13,6 +13,7 @@ import { OWNED_PMTILES_PATH, createArgosDarkFlavor } from './ownedBasemap.js';
 import {
   applyProgressiveRoadDetail,
   applySatelliteResidentialRestraint,
+  applySatelliteSelectiveGoldRoads,
 } from './zoomDetail.js';
 import { createSatelliteNightWaterLayer } from './solarDayNight.js';
 
@@ -84,10 +85,10 @@ export function isInNaipCoverage(lon, lat) {
   );
 }
 /**
- * R21 Satellite road hierarchy (Mario visual target):
+ * R21/R26 Satellite road hierarchy (Mario visual target):
  *   highways → warm gold emphasis
- *   major arterials → softer gold
- *   residential/minor → faint off-white (never gold)
+ *   trunk/primary arterials → softer gold (R26; not all Protomaps major_road)
+ *   secondary/tertiary/local → faint off-white (never gold)
  * Dark-mode palette stays in createArgosDarkFlavor(); this flavor is Satellite-only.
  */
 export const SATELLITE_HIGHWAY_GOLD = '#E5C56B';
@@ -171,12 +172,16 @@ export function createOwnedAerialStyle({
   const sourceUrl = vectorUrl.startsWith('pmtiles://')
     ? vectorUrl
     : `pmtiles://${vectorUrl}`;
-  const overlay = applySatelliteResidentialRestraint(
-    applyProgressiveRoadDetail(
-      selectAerialOverlayLayers(
-        layers('protomaps', createAerialOverlayFlavor(), { lang: 'en' }),
+  // Progressive → residential restraint → R26 selective gold (trunk/primary only).
+  const overlay = applySatelliteSelectiveGoldRoads(
+    applySatelliteResidentialRestraint(
+      applyProgressiveRoadDetail(
+        selectAerialOverlayLayers(
+          layers('protomaps', createAerialOverlayFlavor(), { lang: 'en' }),
+        ),
       ),
     ),
+    { residentialColor: SATELLITE_RESIDENTIAL },
   );
   const naipUrl = OWNED_AERIAL_PMTILES_PATH.startsWith('pmtiles://')
     ? OWNED_AERIAL_PMTILES_PATH
