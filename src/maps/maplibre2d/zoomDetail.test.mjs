@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import {
   applyProgressiveRoadDetail,
   applySatelliteResidentialRestraint,
+  applySatelliteSelectiveGoldRoads,
+  SATELLITE_GOLD_MAJOR_KIND_DETAILS,
+  SATELLITE_DEMOTE_MAJOR_KIND_DETAILS,
 } from './zoomDetail.js';
 
 test('R19-2: progressive opacity wraps minor/major/highway/label layers', () => {
@@ -59,4 +62,62 @@ test('R21: satellite restraint caps residential; leaves highway/major alone', ()
     base[2].paint['line-opacity'],
   );
   assert.equal(next[3].paint['text-opacity'][0], 'interpolate');
+});
+
+test('R26: selective gold keeps trunk/primary; demotes secondary; preserves highway', () => {
+  const layers = applySatelliteSelectiveGoldRoads([
+    {
+      id: 'roads_highway',
+      type: 'line',
+      filter: ['==', 'kind', 'highway'],
+      paint: { 'line-color': '#E5C56B' },
+    },
+    {
+      id: 'roads_major',
+      type: 'line',
+      filter: ['==', 'kind', 'major_road'],
+      paint: { 'line-color': '#D6BE82' },
+    },
+    {
+      id: 'roads_link',
+      type: 'line',
+      filter: ['has', 'is_link'],
+      paint: { 'line-color': '#D6BE82' },
+    },
+    {
+      id: 'roads_labels_major',
+      type: 'symbol',
+      filter: ['in', 'kind', 'highway', 'major_road'],
+      paint: { 'text-color': '#E8D9A8' },
+    },
+  ]);
+  const ids = layers.map((l) => l.id);
+  assert.ok(ids.includes('roads_highway'));
+  assert.ok(ids.includes('roads_major'));
+  assert.ok(ids.includes('roads_secondary'));
+  assert.ok(ids.includes('roads_link'));
+  assert.ok(ids.includes('roads_link_local'));
+
+  const major = layers.find((l) => l.id === 'roads_major');
+  const secondary = layers.find((l) => l.id === 'roads_secondary');
+  const link = layers.find((l) => l.id === 'roads_link');
+  const linkLocal = layers.find((l) => l.id === 'roads_link_local');
+  const labels = layers.find((l) => l.id === 'roads_labels_major');
+
+  assert.equal(major.paint['line-color'], '#D6BE82');
+  assert.equal(secondary.paint['line-color'], '#C8D0D4');
+  assert.equal(linkLocal.paint['line-color'], '#C8D0D4');
+  assert.ok(JSON.stringify(major.filter).includes('trunk'));
+  assert.ok(JSON.stringify(major.filter).includes('primary'));
+  assert.ok(JSON.stringify(secondary.filter).includes('secondary'));
+  assert.ok(JSON.stringify(link.filter).includes('motorway_link'));
+  assert.ok(JSON.stringify(labels.filter).includes('primary'));
+  // Hostile: demoted classes must not remain on the gold major filter.
+  for (const d of SATELLITE_DEMOTE_MAJOR_KIND_DETAILS) {
+    assert.equal(
+      SATELLITE_GOLD_MAJOR_KIND_DETAILS.includes(d),
+      false,
+      `${d} must not be gold-major`,
+    );
+  }
 });
