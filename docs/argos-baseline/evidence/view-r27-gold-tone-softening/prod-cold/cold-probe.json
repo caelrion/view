@@ -1,0 +1,139 @@
+{
+  "coordinate": "CAELRION_VIEW_R27_GOLD_TONE_SOFTENING_AND_WIDE_ZOOM_STREET_RESTRAINT_R01",
+  "startedAt": "2026-11-21T08:56:45.663Z",
+  "shots": [
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/garden-grove-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/garden-grove-z11p5.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/garden-grove-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/westminster-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/fountain-valley-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/huntington-beach-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/costa-mesa-z12.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/oc-regional-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/la-regional-z10.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/garden-grove-z12-forced-day.png",
+    "/opt/caelrion/view/docs/argos-baseline/evidence/view-r27-gold-tone-softening/prod-cold/hb-dark-nonregression-z12.png"
+  ],
+  "probes": [
+    {
+      "at": "garden-grove-z10",
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#BFA876",
+        "roads_primary": "#E4E9ED",
+        "roads_secondary": "#C5CDD3"
+      },
+      "hwyCap": 0.9,
+      "softGold": true,
+      "neutrals": true,
+      "notOldBrightGold": true
+    },
+    {
+      "at": "garden-grove-z11p5",
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#BFA876",
+        "roads_primary": "#E4E9ED",
+        "roads_secondary": "#C5CDD3"
+      },
+      "hwyCap": 0.9,
+      "softGold": true,
+      "neutrals": true,
+      "notOldBrightGold": true
+    },
+    {
+      "at": "garden-grove-z12",
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#BFA876",
+        "roads_primary": "#E4E9ED",
+        "roads_secondary": "#C5CDD3"
+      },
+      "hwyCap": 0.9,
+      "softGold": true,
+      "neutrals": true,
+      "notOldBrightGold": true
+    },
+    {
+      "at": "westminster-z12",
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#BFA876",
+        "roads_primary": "#E4E9ED",
+        "roads_secondary": "#C5CDD3"
+      },
+      "hwyCap": 0.9,
+      "softGold": true,
+      "neutrals": true,
+      "notOldBrightGold": true
+    },
+    {
+      "at": "fountain-valley-z12",
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#BFA876",
+        "roads_primary": "#E4E9ED",
+        "roads_secondary": "#C5CDD3"
+      },
+      "hwyCap": 0.9,
+      "softGold": true,
+      "neutrals": true,
+      "notOldBrightGold": true
+    },
+    {
+      "at": "huntington-beach-z12",
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#BFA876",
+        "roads_primary": "#E4E9ED",
+        "roads_secondary": "#C5CDD3"
+      },
+      "hwyCap": 0.9,
+      "softGold": true,
+      "neutrals": true,
+      "notOldBrightGold": true
+    },
+    {
+      "at": "costa-mesa-z12",
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#BFA876",
+        "roads_primary": "#E4E9ED",
+        "roads_secondary": "#C5CDD3"
+      },
+      "hwyCap": 0.9,
+      "softGold": true,
+      "neutrals": true,
+      "notOldBrightGold": true
+    },
+    {
+      "at": "oc-regional-z10",
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#BFA876",
+        "roads_primary": "#E4E9ED",
+        "roads_secondary": "#C5CDD3"
+      },
+      "hwyCap": 0.9,
+      "softGold": true,
+      "neutrals": true,
+      "notOldBrightGold": true
+    },
+    {
+      "at": "la-regional-z10",
+      "colors": {
+        "roads_highway": "#D2B56A",
+        "roads_major": "#BFA876",
+        "roads_primary": "#E4E9ED",
+        "roads_secondary": "#C5CDD3"
+      },
+      "hwyCap": 0.9,
+      "softGold": true,
+      "neutrals": true,
+      "notOldBrightGold": true
+    }
+  ],
+  "failures": [],
+  "finishedAt": "2026-11-21T08:57:30.438Z",
+  "ok": true
+}
