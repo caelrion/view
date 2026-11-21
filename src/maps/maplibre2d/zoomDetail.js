@@ -164,8 +164,13 @@ function andFilter(existing, extra) {
   return ['all', existing, extra];
 }
 
+/** Legacy MapLibre filter form — matches Protomaps layer filters (no ['get']). */
 function kindDetailIn(details) {
-  return ['in', ['get', 'kind_detail'], ['literal', [...details]]];
+  return ['in', 'kind_detail', ...details];
+}
+
+function kindDetailNotIn(details) {
+  return ['!in', 'kind_detail', ...details];
 }
 
 function cloneLayerWith(layer, { id, filter, paintPatch }) {
@@ -197,13 +202,18 @@ export function applySatelliteSelectiveGoldRoads(
 
   const goldMajor = kindDetailIn(SATELLITE_GOLD_MAJOR_KIND_DETAILS);
   const demoteMajor = kindDetailIn(SATELLITE_DEMOTE_MAJOR_KIND_DETAILS);
+  // Freeway ramps (kind=highway) + trunk_link keep soft gold.
   const goldLink = [
     'any',
-    ['==', ['get', 'kind'], 'highway'],
+    ['==', 'kind', 'highway'],
     kindDetailIn(SATELLITE_GOLD_LINK_KIND_DETAILS),
   ];
-  const demoteLink = ['!', goldLink];
-  const notLink = ['!', ['has', 'is_link']];
+  const demoteLink = [
+    'all',
+    ['!=', 'kind', 'highway'],
+    kindDetailNotIn(SATELLITE_GOLD_LINK_KIND_DETAILS),
+  ];
+  const notLink = ['!has', 'is_link'];
 
   const minorLine = opacityExpr([
     9, 0, 11, 0.08, 12.5, 0.18, 14, 0.28, 16, 0.32,
@@ -291,7 +301,7 @@ export function applySatelliteSelectiveGoldRoads(
         ...layer,
         filter: andFilter(layer.filter, [
           'any',
-          ['==', ['get', 'kind'], 'highway'],
+          ['==', 'kind', 'highway'],
           kindDetailIn(SATELLITE_GOLD_MAJOR_KIND_DETAILS),
         ]),
       });
