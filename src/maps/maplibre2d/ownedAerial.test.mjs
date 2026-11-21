@@ -63,10 +63,10 @@ test('R21: Satellite gold hierarchy; residential off-white; Dark unchanged', () 
   const highway = style.layers.find((l) => l.id === 'roads_highway');
   assert.ok(Array.isArray(minor?.paint?.['line-opacity']));
   assert.equal(minor.paint['line-opacity'][0], 'interpolate');
-  // Cap residential opacity well below a dense street grid (last stop ≤ 0.35).
+  // Cap residential opacity well below a dense street grid (last stop ≤ 0.22).
   const minorStops = minor.paint['line-opacity'];
   const lastOpacity = minorStops[minorStops.length - 1];
-  assert.ok(typeof lastOpacity === 'number' && lastOpacity <= 0.35);
+  assert.ok(typeof lastOpacity === 'number' && lastOpacity <= 0.22);
   assert.equal(highway?.paint?.['line-color'], '#E5C56B');
   // R26: gold majors narrowed to trunk/primary; secondary demoted off-white.
   const major = style.layers.find((l) => l.id === 'roads_major');

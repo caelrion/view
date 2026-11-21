@@ -51,7 +51,7 @@ test('R21: satellite restraint caps residential; leaves highway/major alone', ()
   ]);
   const next = applySatelliteResidentialRestraint(base);
   const minorStops = next[0].paint['line-opacity'];
-  assert.ok(minorStops[minorStops.length - 1] <= 0.35);
+  assert.ok(minorStops[minorStops.length - 1] <= 0.22);
   // Highway / link (major class) keep progressive highway/major curves.
   assert.deepEqual(
     next[1].paint['line-opacity'],

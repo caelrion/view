@@ -78,19 +78,19 @@ test('R26: night is cooler/darker than day but keeps photographic headroom', () 
   assert.equal(day['raster-brightness-max'], 1);
   assert.equal(day['raster-hue-rotate'], 0);
   // Darker than day, not crushed black (Mario rejected brightness-max 0.26).
-  assert.ok(night['raster-saturation'] < -0.4);
-  assert.ok(night['raster-saturation'] > -0.85);
-  assert.ok(night['raster-brightness-max'] >= 0.45);
-  assert.ok(night['raster-brightness-max'] <= 0.65);
-  assert.ok(night['raster-contrast'] <= 0.25);
-  assert.ok(night['raster-hue-rotate'] >= 150);
+  assert.ok(night['raster-saturation'] < -0.3);
+  assert.ok(night['raster-saturation'] > -0.7);
+  assert.ok(night['raster-brightness-max'] >= 0.6);
+  assert.ok(night['raster-brightness-max'] <= 0.78);
+  assert.ok(night['raster-contrast'] <= 0.2);
+  assert.ok(night['raster-hue-rotate'] >= 120);
   assert.ok(
-    day['raster-brightness-max'] - night['raster-brightness-max'] >= 0.35,
+    day['raster-brightness-max'] - night['raster-brightness-max'] >= 0.25,
     'day/night brightness gap must remain visible',
   );
   assert.equal(waterTintOpacityForNightFactor(0), 0);
-  assert.ok(waterTintOpacityForNightFactor(1) >= 0.65);
-  assert.ok(waterTintOpacityForNightFactor(1) <= 0.82);
+  assert.ok(waterTintOpacityForNightFactor(1) >= 0.6);
+  assert.ok(waterTintOpacityForNightFactor(1) <= 0.8);
   // Water tint stronger than residual land brightness headroom.
   assert.ok(
     waterTintOpacityForNightFactor(1) > 1 - night['raster-brightness-max'],

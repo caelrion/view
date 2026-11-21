@@ -117,9 +117,9 @@ export function applySatelliteResidentialRestraint(layers) {
   if (!Array.isArray(layers)) return layers;
   // Cap: never a dense opaque street grid over photography.
   const minorLine = opacityExpr([
-    9, 0, 11, 0.08, 12.5, 0.18, 14, 0.28, 16, 0.32,
+    10, 0, 12, 0.05, 13.5, 0.1, 15, 0.16, 16, 0.2,
   ]);
-  const minorLabel = opacityExpr([12.5, 0, 14, 0.28, 16, 0.4]);
+  const minorLabel = opacityExpr([13, 0, 14.5, 0.22, 16, 0.32]);
   return layers.map((layer) => {
     const id = String(layer?.id || '');
     const type = layer?.type;
@@ -133,7 +133,7 @@ export function applySatelliteResidentialRestraint(layers) {
           paint: withOpacity(
             layer.paint || {},
             'line-opacity',
-            opacityExpr([12, 0, 14, 0.1, 16, 0.16]),
+            opacityExpr([13, 0, 15, 0.06, 16, 0.1]),
           ),
         };
       }
@@ -215,14 +215,15 @@ export function applySatelliteSelectiveGoldRoads(
   ];
   const notLink = ['!has', 'is_link'];
 
+  // Demoted/secondary + local: keep faint so photography dominates.
   const minorLine = opacityExpr([
-    9, 0, 11, 0.08, 12.5, 0.18, 14, 0.28, 16, 0.32,
+    10, 0, 12, 0.05, 13.5, 0.1, 15, 0.16, 16, 0.2,
   ]);
-  const minorCasing = opacityExpr([12, 0, 14, 0.1, 16, 0.16]);
-  /** Soft-gold majors: readable but less dominant than R21 full-grid. */
-  const majorLine = opacityExpr([7, 0, 9, 0.35, 10.5, 0.65, 12, 0.82, 14, 0.9]);
-  const majorCasing = opacityExpr([8, 0, 10, 0.25, 12, 0.55, 14, 0.7]);
-  const goldLinkLine = opacityExpr([12, 0, 13, 0.45, 14.5, 0.75, 16, 0.85]);
+  const minorCasing = opacityExpr([13, 0, 15, 0.06, 16, 0.1]);
+  /** Soft-gold trunk/primary: present but not a glowing street carpet. */
+  const majorLine = opacityExpr([8, 0, 10, 0.3, 11.5, 0.5, 13, 0.62, 15, 0.72]);
+  const majorCasing = opacityExpr([9, 0, 11, 0.15, 13, 0.35, 15, 0.45]);
+  const goldLinkLine = opacityExpr([12.5, 0, 13.5, 0.35, 15, 0.6, 16, 0.7]);
 
   const out = [];
   for (const layer of layers) {

@@ -31,14 +31,14 @@ export const SOLAR_NIGHT_ELEV_DEG = -12;
  * urban photo structure must remain legible (Mario rejected brightness-max 0.26
  * crush). Water stays distinctly darker than land.
  */
-export const NIGHT_RASTER_BRIGHTNESS_MIN = 0.02;
-export const NIGHT_RASTER_BRIGHTNESS_MAX = 0.52;
-export const NIGHT_RASTER_SATURATION = -0.58;
-export const NIGHT_RASTER_CONTRAST = 0.16;
-export const NIGHT_RASTER_HUE_ROTATE_DEG = 175;
-export const NIGHT_WATER_TINT_OPACITY = 0.72;
+export const NIGHT_RASTER_BRIGHTNESS_MIN = 0.0;
+export const NIGHT_RASTER_BRIGHTNESS_MAX = 0.68;
+export const NIGHT_RASTER_SATURATION = -0.42;
+export const NIGHT_RASTER_CONTRAST = 0.1;
+export const NIGHT_RASTER_HUE_ROTATE_DEG = 145;
+export const NIGHT_WATER_TINT_OPACITY = 0.7;
 /** Fraction of full night reached by end of civil twilight (−6°). */
-export const CIVIL_TWILIGHT_NIGHT_FRACTION = 0.45;
+export const CIVIL_TWILIGHT_NIGHT_FRACTION = 0.4;
 
 const D2R = Math.PI / 180;
 const R2D = 180 / Math.PI;
