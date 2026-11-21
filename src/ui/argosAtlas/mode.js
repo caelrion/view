@@ -55,8 +55,10 @@ export class ArgosAtlasMode {
     aircraftProjection = null,
     Presenter = MapLibre2DPresenter,
     autoAttach = true,
+    cesium = null,
   } = {}) {
     this._viewer = viewer;
+    this._cesium = cesium;
     this._cesiumContainer =
       cesiumContainer || documentRef.getElementById?.('cesiumContainer');
     this._document = documentRef;
@@ -94,6 +96,7 @@ export class ArgosAtlasMode {
 
     if (autoAttach) this._injectModeToggle();
     // Hide Cesium immediately when 2D is default so the globe never flashes.
+    // Direct ?view=3d keeps the shared Caelrion header — never expose legacy chrome.
     if (preferArgos2D) {
       this._document.body.classList.add(
         'argos-atlas-active',
@@ -108,6 +111,8 @@ export class ArgosAtlasMode {
       void this.setMode('argos-2d').finally(() => {
         this._document.body.classList.remove('argos-atlas-booting');
       });
+    } else if (autoAttach) {
+      this._enter3D();
     }
   }
 
@@ -177,6 +182,7 @@ export class ArgosAtlasMode {
     );
     this._document.documentElement?.classList?.add?.('argos-default-2d');
     this._document.body.classList.add('argos-atlas-active');
+    this._document.body.classList.remove('argos-atlas-3d');
     this._showCesium(false);
     if (this._modeToggle) {
       this._modeToggle.classList.add('is-active');
@@ -254,20 +260,20 @@ export class ArgosAtlasMode {
   _enter3D() {
     this._mode = 'cesium-3d';
     setBasemapToggle(this._shell, 'cesium-3d');
-    this._shell.root.hidden = true;
+    // Shared Caelrion header stays mounted — do not reveal legacy GEV chrome.
+    this._shell.root.hidden = false;
     this._shell.root.dataset.mode = 'cesium-3d';
     this._document.documentElement?.classList?.remove?.('argos-default-2d');
-    this._document.body.classList.remove(
-      'argos-atlas-active',
-      'argos-atlas-booting',
-    );
+    this._document.body.classList.add('argos-atlas-active', 'argos-atlas-3d');
+    this._document.body.classList.remove('argos-atlas-booting');
+    this._applyInitialFilterState();
     this._showCesium(true);
     if (this._modeToggle) {
+      // Header owns Dark | Satellite | 3D — no floating duplicate.
       this._modeToggle.classList.remove('is-active');
       this._modeToggle.textContent = '2D Map';
-      this._modeToggle.hidden = false;
+      this._modeToggle.hidden = true;
     }
-    this._stopCoords();
     setBasemapBanner(this._shell, 'ready');
     // Tear down MapLibre handlers; do not create/destroy feed owners.
     if (this._presenter) {
@@ -276,6 +282,7 @@ export class ArgosAtlasMode {
       this._subscriptionOwners = 0;
     }
     if (typeof globalThis !== 'undefined') globalThis.__argosMap = null;
+    this._startCesiumCoords();
   }
 
   _resolveAircraft() {
@@ -484,17 +491,45 @@ export class ArgosAtlasMode {
   _selectSearchResult(index) {
     const item = this._searchResults[index];
     if (!item) return;
-    this._presenter?.flyTo?.({
-      lon: item.lon,
-      lat: item.lat,
-      zoom: item.zoom ?? 8,
-    });
-    if (item.kind === 'aircraft' && item.aircraftId) {
-      this._presenter?.select(item.aircraftId);
-      renderAircraftDetail(this._shell, this._record);
+    if (this._mode === 'cesium-3d') {
+      this._flyCesiumTo(item.lon, item.lat, item.zoom ?? 8);
+    } else {
+      this._presenter?.flyTo?.({
+        lon: item.lon,
+        lat: item.lat,
+        zoom: item.zoom ?? 8,
+      });
+      if (item.kind === 'aircraft' && item.aircraftId) {
+        this._presenter?.select(item.aircraftId);
+        renderAircraftDetail(this._shell, this._record);
+      }
     }
     this._closeSearchPanel({ clearInput: false });
-    this._shell.mapHost?.focus?.();
+    if (this._mode !== 'cesium-3d') this._shell.mapHost?.focus?.();
+  }
+
+  /** Route local search hits through the incumbent Cesium camera when in 3D. */
+  _flyCesiumTo(lon, lat, zoom = 8) {
+    const viewer = this._viewer;
+    const Cesium = this._cesium || globalThis.Cesium;
+    if (!viewer?.camera || !Cesium?.Cartesian3?.fromDegrees) return;
+    const z = Number(zoom);
+    // MapLibre zoom → approximate camera height (meters).
+    const height = Number.isFinite(z)
+      ? Math.max(400, 4e7 / 2 ** Math.min(Math.max(z, 1), 18))
+      : 2e6;
+    try {
+      viewer.camera.flyTo({
+        destination: Cesium.Cartesian3.fromDegrees(
+          Number(lon),
+          Number(lat),
+          height,
+        ),
+        duration: 1.6,
+      });
+    } catch {
+      /* ignore navigation failures */
+    }
   }
 
   _closeSearchPanel({ clearInput = false } = {}) {
@@ -598,6 +633,11 @@ export class ArgosAtlasMode {
       mode === BASEMAP_MODE_DARK ? BASEMAP_MODE_DARK : BASEMAP_MODE_SATELLITE;
     setBasemapToggle(this._shell, next);
     this._storeBasemapMode(next);
+    // Dark / Satellite from 3D returns to the shared 2D shell with that basemap.
+    if (this._mode === 'cesium-3d') {
+      await this.setMode('argos-2d');
+      return;
+    }
     if (!this._presenter) return;
     const ok = await this._presenter.setBasemapMode(next);
     if (!ok) this._toast('Basemap switch failed');
@@ -678,6 +718,24 @@ export class ArgosAtlasMode {
     };
     tick();
     this._coordsTimer = setInterval(tick, 1000);
+    this._coordsTimer?.unref?.();
+  }
+
+  _startCesiumCoords() {
+    this._stopCoords();
+    const tick = () => {
+      const carto = this._viewer?.camera?.positionCartographic;
+      if (!carto) {
+        this._shell.coordsEl.textContent = formatUtcCoords(null, null);
+        return;
+      }
+      const lat = (Number(carto.latitude) * 180) / Math.PI;
+      const lon = (Number(carto.longitude) * 180) / Math.PI;
+      this._shell.coordsEl.textContent = formatUtcCoords(lat, lon);
+    };
+    tick();
+    this._coordsTimer = setInterval(tick, 1000);
+    this._coordsTimer?.unref?.();
   }
 
   _stopCoords() {

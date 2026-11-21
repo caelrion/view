@@ -1,3 +1,4 @@
+import * as Cesium from 'cesium';
 import { catalogControlServices } from './catalog.js';
 import { StyleManager } from '../ui/composition.js';
 import { flyToAustin } from '../camera.js';
@@ -51,6 +52,7 @@ export function createApplicationControls({
     viewer,
     preferArgos2D,
     aircraftProjection: null,
+    cesium: Cesium,
   });
   defer(() => argosAtlasMode.destroy());
 
@@ -59,7 +61,7 @@ export function createApplicationControls({
   if (preferArgos2D) {
     loaderStatus.textContent = 'Dark map ready';
   } else if (!styleManager.hasShareState) {
-    loaderStatus.textContent = 'Flying to Austin, TX...';
+    loaderStatus.textContent = 'Caelrion View 3D ready';
     defer(flyToAustin(viewer));
   } else {
     loaderStatus.textContent = 'Restoring shared view...';

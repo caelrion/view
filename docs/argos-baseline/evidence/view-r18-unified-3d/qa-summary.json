@@ -1,0 +1,62 @@
+{
+  "desktop3d": {
+    "title": "Caelrion View",
+    "brand": "CAELRION VIEW",
+    "mode": "cesium-3d",
+    "body": "argos-atlas-active argos-atlas-3d",
+    "three": "true",
+    "scope": {
+      "v": "hidden",
+      "o": "0"
+    },
+    "gev": false
+  },
+  "desktop1440": {
+    "title": "Caelrion View",
+    "brand": "CAELRION VIEW",
+    "mode": "cesium-3d",
+    "body": "argos-atlas-active argos-atlas-3d",
+    "three": "true",
+    "scope": {
+      "v": "hidden",
+      "o": "0"
+    },
+    "gev": false
+  },
+  "tablet": {
+    "title": "Caelrion View",
+    "brand": "CAELRION VIEW",
+    "mode": "cesium-3d",
+    "body": "argos-atlas-active argos-atlas-3d",
+    "three": "true",
+    "scope": {
+      "v": "hidden",
+      "o": "0"
+    },
+    "gev": false
+  },
+  "mobile": {
+    "title": "Caelrion View",
+    "brand": "CAELRION VIEW",
+    "mode": "cesium-3d",
+    "body": "argos-atlas-active argos-atlas-3d",
+    "three": "true",
+    "scope": {
+      "v": "hidden",
+      "o": "0"
+    },
+    "gev": false
+  },
+  "desktop2d": {
+    "title": "Caelrion View",
+    "brand": "CAELRION VIEW",
+    "mode": "argos-2d",
+    "body": "argos-atlas-active",
+    "three": "false",
+    "scope": {
+      "v": "hidden",
+      "o": "0"
+    },
+    "gev": false
+  }
+}

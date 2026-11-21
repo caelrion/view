@@ -45,20 +45,21 @@ test('formatUtcCoords is presentation-only', () => {
 
 function fakeDocument() {
   const bodyChildren = [];
+  const makeClassList = () => ({
+    _v: new Set(),
+    add(...values) {
+      for (const v of values) this._v.add(v);
+    },
+    remove(...values) {
+      for (const v of values) this._v.delete(v);
+    },
+    contains(v) {
+      return this._v.has(v);
+    },
+  });
   const body = {
     children: bodyChildren,
-    classList: {
-      _v: new Set(),
-      add(v) {
-        this._v.add(v);
-      },
-      remove(v) {
-        this._v.delete(v);
-      },
-      contains(v) {
-        return this._v.has(v);
-      },
-    },
+    classList: makeClassList(),
     appendChild(node) {
       bodyChildren.push(node);
       node.parent = body;
@@ -66,18 +67,7 @@ function fakeDocument() {
     },
   };
   const documentElement = {
-    classList: {
-      _v: new Set(),
-      add(v) {
-        this._v.add(v);
-      },
-      remove(v) {
-        this._v.delete(v);
-      },
-      contains(v) {
-        return this._v.has(v);
-      },
-    },
+    classList: makeClassList(),
   };
   const documentRef = {
     body,
@@ -356,6 +346,44 @@ test('P4: 2D→3D→2D does not multiply poll owners; presenter remounts cleanly
   mode.destroy();
   assert.equal(mode.pollOwners, 0);
   assert.equal(mode.subscriptionOwners, 0);
+});
+
+test('R18: 3D keeps shared shell visible and marks unified presentation', async () => {
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+  });
+  assert.equal(mode.mode, 'cesium-3d');
+  assert.equal(mode._shell.root.hidden, false);
+  assert.equal(mode._shell.root.dataset.mode, 'cesium-3d');
+  assert.equal(documentRef.body.classList.contains('argos-atlas-active'), true);
+  assert.equal(documentRef.body.classList.contains('argos-atlas-3d'), true);
+  assert.equal(mode._modeToggle?.hidden, true);
+  await mode.setMode('argos-2d');
+  assert.equal(documentRef.body.classList.contains('argos-atlas-3d'), false);
+  assert.equal(documentRef.body.classList.contains('argos-atlas-active'), true);
+  assert.equal(mode._shell.root.hidden, false);
+  mode.destroy();
+});
+
+test('R18: Dark/Satellite from 3D returns to 2D with shared header', async () => {
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+  });
+  assert.equal(mode.mode, 'cesium-3d');
+  await mode._setBasemapMode('dark-vector');
+  assert.equal(mode.mode, 'argos-2d');
+  assert.equal(mode._shell.root.hidden, false);
+  assert.equal(documentRef.body.classList.contains('argos-atlas-active'), true);
+  assert.equal(documentRef.body.classList.contains('argos-atlas-3d'), false);
+  mode.destroy();
 });
 
 test('P2/H3: showDemoAircraft labels DEMO and never LIVE', async () => {
