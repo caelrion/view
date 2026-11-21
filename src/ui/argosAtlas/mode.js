@@ -1226,11 +1226,17 @@ export class ArgosAtlasMode {
       );
     }
     // JS-only: never CSS-hide #cesium-credits (creditAttribution gate).
-    // MapLibre attribution covers 2D; restore Cesium credits in 3D.
+    // Argos View keeps the credit strip collapsed — MapLibre covers 2D; 3D
+    // declutter removes the Esri source / Data attribution footer. Source
+    // licenses remain documented in DATA_SOURCES.md.
     const credits = this._document.getElementById?.('cesium-credits');
     if (credits) {
-      credits.hidden = !visible;
-      credits.setAttribute('aria-hidden', visible ? 'false' : 'true');
+      const argosOwns = Boolean(
+        this._document.body?.classList?.contains?.('argos-atlas-active'),
+      );
+      const showCredits = visible && !argosOwns;
+      credits.hidden = !showCredits;
+      credits.setAttribute('aria-hidden', showCredits ? 'false' : 'true');
     }
     this._pauseCesium(!visible);
   }

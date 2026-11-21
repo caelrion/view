@@ -870,21 +870,16 @@ body.argos-atlas-3d #cesiumContainer {
   z-index: 0;
 }
 
-/* Credits stay readable under the shared header. */
-body.argos-atlas-3d .cesium-viewer-bottom,
-body.argos-atlas-3d #cesium-credits {
-  opacity: 1 !important;
-  visibility: visible !important;
-  pointer-events: auto !important;
-}
-
 /*
- * R19-0: Hide only the Cesium ion logo mark when no ion route is active.
- * Selector deliberately omits `#cesium-credits { … }` so creditAttribution's
- * keep-out scan (never display:none the credit line) stays green. Never hide
- * the credit container, expand link, text credits, or lightbox.
+ * R19-0 / Argos 3D: Hide logo/text/expand chrome via child selectors only.
+ * Never put display-none on the credit container itself (creditAttribution
+ * keep-out). Argos mode.js also sets the container hidden attribute while
+ * the shared shell owns the viewport.
  */
-body.caelrion-no-cesium-ion .cesium-credit-logoContainer {
+body.caelrion-no-cesium-ion .cesium-credit-logoContainer,
+body.argos-atlas-3d .cesium-credit-logoContainer,
+body.argos-atlas-3d .cesium-credit-textContainer,
+body.argos-atlas-3d .cesium-credit-expand-link {
   display: none !important;
 }
 

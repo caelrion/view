@@ -69,6 +69,7 @@ export const ESRI_WORLD_IMAGERY_TILE_URL =
 
 export const ESRI_IMAGERY_ATTRIBUTION_TEXT = ESRI_SOURCE_ATTRIBUTION;
 
+/** Legacy Esri-hybrid MapLibre attribution (not the R15+ owned aerial default). */
 export const MAP_ATTRIBUTION_HTML_SATELLITE =
   `${ESRI_IMAGERY_ATTRIBUTION_TEXT} · ` +
   'Labels © <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · ' +
