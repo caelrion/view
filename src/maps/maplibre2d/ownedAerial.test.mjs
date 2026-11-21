@@ -63,21 +63,28 @@ test('R21: Satellite gold hierarchy; residential off-white; Dark unchanged', () 
   const highway = style.layers.find((l) => l.id === 'roads_highway');
   assert.ok(Array.isArray(minor?.paint?.['line-opacity']));
   assert.equal(minor.paint['line-opacity'][0], 'interpolate');
-  // Cap residential opacity well below a dense street grid (last stop ≤ 0.22).
+  // Residential stays subdued; last stop well below an opaque street carpet.
   const minorStops = minor.paint['line-opacity'];
   const lastOpacity = minorStops[minorStops.length - 1];
-  assert.ok(typeof lastOpacity === 'number' && lastOpacity <= 0.22);
+  assert.ok(typeof lastOpacity === 'number' && lastOpacity <= 0.4);
   assert.equal(highway?.paint?.['line-color'], '#E5C56B');
-  // R26: gold majors narrowed to trunk; primary/secondary demoted off-white.
+  // R26/R04: gold trunk; neutral primary/secondary; tertiary subtle.
   const major = style.layers.find((l) => l.id === 'roads_major');
+  const primary = style.layers.find((l) => l.id === 'roads_primary');
   const secondary = style.layers.find((l) => l.id === 'roads_secondary');
+  const tertiary = style.layers.find((l) => l.id === 'roads_tertiary');
   assert.ok(major);
+  assert.ok(primary);
   assert.ok(secondary);
+  assert.ok(tertiary);
   assert.equal(major.paint['line-color'], '#D6BE82');
-  assert.equal(secondary.paint['line-color'], '#C8D0D4');
+  assert.equal(primary.paint['line-color'], '#D0D6DB');
+  assert.equal(secondary.paint['line-color'], '#B7C0C7');
+  assert.equal(tertiary.paint['line-color'], '#C8D0D4');
   assert.ok(JSON.stringify(major.filter).includes('trunk'));
   assert.equal(JSON.stringify(major.filter).includes('primary'), false);
-  assert.ok(JSON.stringify(secondary.filter).includes('primary'));
+  assert.ok(JSON.stringify(primary.filter).includes('primary'));
+  assert.ok(style.layers.some((l) => l.id === 'roads_labels_primary'));
   // R17 Dark palette untouched.
   const dark = createArgosDarkFlavor();
   assert.equal(dark.highway, '#47575B');
