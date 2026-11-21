@@ -5,12 +5,21 @@ import {
   preferArgos2DFromLocation,
   heightFromZoom,
   zoomFromHeight,
+  CESIUM_GLOBE_HEIGHT_M,
+  CESIUM_REGION_HEIGHT_M,
+  CESIUM_CITY_HEIGHT_M,
+  SHARED_2D_LOCAL_ZOOM,
 } from './mode.js';
 import {
   formatUtcCoords,
   setBasemapBanner,
   setSatelliteControls,
 } from './shell.js';
+import {
+  isValidWgs84,
+  locationFailureMessage,
+  requestDeviceLocation,
+} from './deviceLocation.js';
 import { DEMO_AIRCRAFT_FIXTURE } from '../../presentation/demoAircraftFixture.js';
 import {
   DEFAULT_MAP_CENTER,
@@ -345,8 +354,14 @@ class FakePresenter {
     this.cameraMoves = 0;
     this.map = {
       getCenter: () => ({
-        lat: this._centerLat ?? this.mountOpts?.center?.[1] ?? DEFAULT_MAP_CENTER[1],
-        lng: this._centerLon ?? this.mountOpts?.center?.[0] ?? DEFAULT_MAP_CENTER[0],
+        lat:
+          this._centerLat ??
+          this.mountOpts?.center?.[1] ??
+          DEFAULT_MAP_CENTER[1],
+        lng:
+          this._centerLon ??
+          this.mountOpts?.center?.[0] ??
+          DEFAULT_MAP_CENTER[0],
       }),
       getZoom: () => this._zoom ?? this.mountOpts?.zoom ?? DEFAULT_MAP_ZOOM,
     };
@@ -377,8 +392,12 @@ class FakePresenter {
     this.selectedId = id;
     this.onSelect?.(id);
   }
-  flyTo() {
+  flyTo(opts = {}) {
     this.flew = true;
+    this.flyOpts = opts;
+    if (Number.isFinite(opts.lon)) this._centerLon = opts.lon;
+    if (Number.isFinite(opts.lat)) this._centerLat = opts.lat;
+    if (Number.isFinite(opts.zoom)) this._zoom = opts.zoom;
   }
   async retryBasemap() {
     this.onBasemapState?.('ready');
@@ -517,7 +536,7 @@ test('R19-3: zoom↔height helpers are comparable', () => {
   assert.ok(Math.abs(back - z) < 0.05);
 });
 
-test('R19-3: 2D→3D→2D preserves geographical handoff focus', async () => {
+test('R19-3 / R22: 2D→3D first entry is whole-Earth; 2D restore keeps focus', async () => {
   const setViews = [];
   const documentRef = fakeDocument();
   const viewer = {
@@ -528,8 +547,17 @@ test('R19-3: 2D→3D→2D preserves geographical handoff focus', async () => {
       },
       setView(opts) {
         setViews.push(opts);
+        if (opts?.destination) {
+          this.positionCartographic = {
+            longitude: (opts.destination.lon * Math.PI) / 180,
+            latitude: (opts.destination.lat * Math.PI) / 180,
+            height: opts.destination.height,
+          };
+        }
       },
-      flyTo() {},
+      flyTo(opts) {
+        this.setView(opts);
+      },
       positionCartographic: {
         longitude: (-118.25 * Math.PI) / 180,
         latitude: (34.05 * Math.PI) / 180,
@@ -538,6 +566,7 @@ test('R19-3: 2D→3D→2D preserves geographical handoff focus', async () => {
     },
   };
   const Cesium = {
+    Math: { PI_OVER_TWO: Math.PI / 2 },
     Cartesian3: {
       fromDegrees(lon, lat, height) {
         return { lon, lat, height };
@@ -551,7 +580,11 @@ test('R19-3: 2D→3D→2D preserves geographical handoff focus', async () => {
     preferArgos2D: false,
     viewer,
     cesium: Cesium,
+    requestLocation: async () => ({ ok: false, reason: 'unavailable' }),
   });
+  // Initial ?view=3d already entered once — reset for 2D→3D first-entry path.
+  mode._entered3DOnce = false;
+  setViews.length = 0;
   await mode.setMode('argos-2d');
   mode._presenter.simulateView(-118.25, 34.05, 13);
   await mode.setMode('cesium-3d');
@@ -561,6 +594,7 @@ test('R19-3: 2D→3D→2D preserves geographical handoff focus', async () => {
   assert.equal(setViews.length, 1);
   assert.equal(setViews[0].destination.lon, -118.25);
   assert.equal(setViews[0].destination.lat, 34.05);
+  assert.equal(setViews[0].destination.height, CESIUM_GLOBE_HEIGHT_M);
   await mode.setMode('argos-2d');
   assert.deepEqual(mode._presenter.mountOpts.center, [-118.25, 34.05]);
   assert.ok(Math.abs(mode._presenter.mountOpts.zoom - 13) < 0.05);
@@ -577,6 +611,9 @@ test('R19-3: tracked Cesium camera ownership skips handoff apply', async () => {
       setView(opts) {
         setViews.push(opts);
       },
+      flyTo(opts) {
+        setViews.push(opts);
+      },
       positionCartographic: null,
     },
   };
@@ -587,15 +624,20 @@ test('R19-3: tracked Cesium camera ownership skips handoff apply', async () => {
     preferArgos2D: false,
     viewer,
     cesium: {
+      Math: { PI_OVER_TWO: Math.PI / 2 },
       Cartesian3: {
         fromDegrees(lon, lat, height) {
           return { lon, lat, height };
         },
       },
     },
+    requestLocation: async () => ({ ok: false, reason: 'unavailable' }),
   });
+  // Initial 3D entry also skips while tracked — then 2D→3D must not overwrite.
+  assert.equal(setViews.length, 0);
   await mode.setMode('argos-2d');
   mode._presenter.simulateView(-117.9, 33.7, 12);
+  setViews.length = 0;
   await mode.setMode('cesium-3d');
   assert.equal(setViews.length, 0);
   mode.destroy();
@@ -701,4 +743,292 @@ test('R15: basemap banner distinguishes offline vs limited-coverage', () => {
 
   setBasemapBanner(shell, false);
   assert.equal(banner.hidden, true);
+});
+
+test('R22: SHARED_2D_LOCAL_ZOOM matches DEFAULT_MAP_ZOOM', () => {
+  assert.equal(SHARED_2D_LOCAL_ZOOM, DEFAULT_MAP_ZOOM);
+  assert.ok(CESIUM_GLOBE_HEIGHT_M > CESIUM_REGION_HEIGHT_M);
+  assert.ok(CESIUM_REGION_HEIGHT_M > CESIUM_CITY_HEIGHT_M);
+});
+
+test('R22: delayed geolocation does not override manual 2D navigation', async () => {
+  let resolveGeo;
+  const geoPromise = new Promise((resolve) => {
+    resolveGeo = resolve;
+  });
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+    requestLocation: () => geoPromise,
+  });
+  await mode.setMode('argos-2d');
+  mode._presenter.simulateView(-122.4, 37.8, 12);
+  mode._navAuthority = 'user';
+  resolveGeo({ ok: true, lon: -73.98, lat: 40.75 });
+  await geoPromise;
+  await new Promise((r) => setTimeout(r, 10));
+  assert.equal(mode._presenter.map.getCenter().lng, -122.4);
+  assert.equal(mode._presenter.map.getCenter().lat, 37.8);
+  assert.equal(mode._navAuthority, 'user');
+  mode.destroy();
+});
+
+test('R22: startup geolocation moves 2D camera when still at startup authority', async () => {
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+    requestLocation: async () => ({ ok: true, lon: -122.4194, lat: 37.7749 }),
+  });
+  await mode.setMode('argos-2d');
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(mode._deviceFix?.lon, -122.4194);
+  assert.equal(mode._presenter.flyOpts?.lon, -122.4194);
+  assert.equal(mode._presenter.flyOpts?.zoom, SHARED_2D_LOCAL_ZOOM);
+  assert.equal(mode._shared2DView?.lat, 37.7749);
+  mode.destroy();
+});
+
+test('R22: Home in 2D flies to device location at shared local zoom', async () => {
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+    requestLocation: async () => ({ ok: true, lon: -0.12, lat: 51.5 }),
+  });
+  await mode.setMode('argos-2d');
+  mode._navAuthority = 'user';
+  await mode._goHome();
+  assert.equal(mode._navAuthority, 'home');
+  assert.equal(mode._presenter.flyOpts.lon, -0.12);
+  assert.equal(mode._presenter.flyOpts.lat, 51.5);
+  assert.equal(mode._presenter.flyOpts.zoom, SHARED_2D_LOCAL_ZOOM);
+  mode.destroy();
+});
+
+test('R22: Home denied surfaces honest toast', async () => {
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+    requestLocation: async () => ({ ok: false, reason: 'denied' }),
+  });
+  await mode.setMode('argos-2d');
+  await mode._goHome();
+  assert.match(mode._shell.toastEl.textContent, /permission denied/i);
+  mode.destroy();
+});
+
+test('R22: Globe / Region / City presets use distinct Cesium heights', async () => {
+  const setViews = [];
+  const documentRef = fakeDocument();
+  const viewer = {
+    trackedEntity: null,
+    camera: {
+      cancelFlight() {},
+      setView(opts) {
+        setViews.push(opts);
+        if (opts?.destination) {
+          this.positionCartographic = {
+            longitude: (opts.destination.lon * Math.PI) / 180,
+            latitude: (opts.destination.lat * Math.PI) / 180,
+            height: opts.destination.height,
+          };
+        }
+      },
+      flyTo(opts) {
+        this.setView(opts);
+      },
+      positionCartographic: {
+        longitude: (-117.99833 * Math.PI) / 180,
+        latitude: (33.66028 * Math.PI) / 180,
+        height: CESIUM_GLOBE_HEIGHT_M,
+      },
+    },
+  };
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+    viewer,
+    cesium: {
+      Math: { PI_OVER_TWO: Math.PI / 2 },
+      Cartesian3: {
+        fromDegrees(lon, lat, height) {
+          return { lon, lat, height };
+        },
+      },
+    },
+    requestLocation: async () => ({ ok: false, reason: 'unavailable' }),
+  });
+  setViews.length = 0;
+  await mode._set3DScalePreset('region');
+  assert.equal(setViews.at(-1).destination.height, CESIUM_REGION_HEIGHT_M);
+  await mode._set3DScalePreset('city');
+  assert.equal(setViews.at(-1).destination.height, CESIUM_CITY_HEIGHT_M);
+  await mode._set3DScalePreset('globe');
+  assert.equal(setViews.at(-1).destination.height, CESIUM_GLOBE_HEIGHT_M);
+  mode.destroy();
+});
+
+test('R22: later 3D entry restores user-selected scale at 2D geographic focus', async () => {
+  const setViews = [];
+  const documentRef = fakeDocument();
+  const viewer = {
+    trackedEntity: null,
+    camera: {
+      cancelFlight() {},
+      setView(opts) {
+        setViews.push(opts);
+        if (opts?.destination) {
+          this.positionCartographic = {
+            longitude: (opts.destination.lon * Math.PI) / 180,
+            latitude: (opts.destination.lat * Math.PI) / 180,
+            height: opts.destination.height,
+          };
+        }
+      },
+      flyTo(opts) {
+        this.setView(opts);
+      },
+      positionCartographic: {
+        longitude: (-117.99833 * Math.PI) / 180,
+        latitude: (33.66028 * Math.PI) / 180,
+        height: CESIUM_GLOBE_HEIGHT_M,
+      },
+    },
+  };
+  const Cesium = {
+    Math: { PI_OVER_TWO: Math.PI / 2 },
+    Cartesian3: {
+      fromDegrees(lon, lat, height) {
+        return { lon, lat, height };
+      },
+    },
+  };
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+    viewer,
+    cesium: Cesium,
+    requestLocation: async () => ({ ok: false, reason: 'unavailable' }),
+  });
+  await mode._set3DScalePreset('city');
+  await mode.setMode('argos-2d');
+  mode._presenter.simulateView(-118.4, 34.05, 12);
+  setViews.length = 0;
+  await mode.setMode('cesium-3d');
+  assert.equal(setViews.length, 1);
+  assert.equal(setViews[0].destination.lon, -118.4);
+  assert.equal(setViews[0].destination.lat, 34.05);
+  assert.equal(setViews[0].destination.height, CESIUM_CITY_HEIGHT_M);
+  mode.destroy();
+});
+
+test('R22: Home while satellite tracking clears tracking then flies city scale', async () => {
+  const setViews = [];
+  const paramsCalls = [];
+  const documentRef = fakeDocument();
+  const viewer = {
+    trackedEntity: { id: 'sat-25544' },
+    camera: {
+      cancelFlight() {},
+      setView(opts) {
+        setViews.push(opts);
+      },
+      flyTo(opts) {
+        setViews.push(opts);
+      },
+      positionCartographic: {
+        longitude: 0,
+        latitude: 0,
+        height: CESIUM_GLOBE_HEIGHT_M,
+      },
+    },
+  };
+  const dataManager = {
+    layers: new Map([
+      [
+        'satellites',
+        {
+          module: {
+            getParams: () => ({ selectedSatTrackingId: 25544 }),
+            getTrackedInfo: () => ({ noradId: 25544 }),
+          },
+        },
+      ],
+    ]),
+    isEnabled: () => true,
+    setEnabled: async () => {},
+    setLayerParams: async (id, params) => {
+      paramsCalls.push([id, params]);
+      viewer.trackedEntity = undefined;
+    },
+    subscribe: () => () => {},
+  };
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+    viewer,
+    cesium: {
+      Math: { PI_OVER_TWO: Math.PI / 2 },
+      Cartesian3: {
+        fromDegrees(lon, lat, height) {
+          return { lon, lat, height };
+        },
+      },
+    },
+    dataManager,
+    requestLocation: async () => ({ ok: true, lon: 2.35, lat: 48.85 }),
+  });
+  setViews.length = 0;
+  await mode._goHome();
+  assert.equal(paramsCalls[0][0], 'satellites');
+  assert.equal(paramsCalls[0][1].selectedSatTrackingId, null);
+  assert.equal(viewer.trackedEntity, undefined);
+  assert.equal(setViews.at(-1).destination.height, CESIUM_CITY_HEIGHT_M);
+  assert.equal(setViews.at(-1).destination.lon, 2.35);
+  mode.destroy();
+});
+
+test('R22: deviceLocation helpers validate and map failure reasons', async () => {
+  assert.equal(isValidWgs84(-117.9, 33.7), true);
+  assert.equal(isValidWgs84(200, 0), false);
+  assert.equal(isValidWgs84(0, 95), false);
+  assert.match(locationFailureMessage('denied'), /denied/i);
+  assert.match(locationFailureMessage('timeout'), /timed out/i);
+  const denied = await requestDeviceLocation({
+    geolocation: {
+      getCurrentPosition(_ok, err) {
+        err({ code: 1 });
+      },
+    },
+  });
+  assert.deepEqual(denied, { ok: false, reason: 'denied' });
+  const ok = await requestDeviceLocation({
+    geolocation: {
+      getCurrentPosition(success) {
+        success({ coords: { longitude: -1.5, latitude: 52.1, accuracy: 20 } });
+      },
+    },
+  });
+  assert.equal(ok.ok, true);
+  assert.equal(ok.lon, -1.5);
+  assert.equal(ok.lat, 52.1);
+  const missing = await requestDeviceLocation({ geolocation: null });
+  assert.equal(missing.reason, 'unavailable');
 });

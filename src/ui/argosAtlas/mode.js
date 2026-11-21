@@ -19,15 +19,31 @@ import {
   setBasemapBanner,
   setBasemapToggle,
   setSatelliteControls,
+  setScalePresetsVisible,
 } from './shell.js';
 import { searchLocal } from './localSearch.js';
 import {
+  requestDeviceLocation,
+  locationFailureMessage,
+  isValidWgs84,
+  SHARED_2D_LOCAL_ZOOM,
+  CESIUM_GLOBE_HEIGHT_M,
+  CESIUM_REGION_HEIGHT_M,
+  CESIUM_CITY_HEIGHT_M,
+} from './deviceLocation.js';
+import {
   DEFAULT_MAP_CENTER,
-  DEFAULT_MAP_ZOOM,
   BASEMAP_MODE_DARK,
   BASEMAP_MODE_SATELLITE,
   BASEMAP_MODE_STORAGE_KEY,
 } from '../../maps/maplibre2d/style.js';
+
+export {
+  SHARED_2D_LOCAL_ZOOM,
+  CESIUM_GLOBE_HEIGHT_M,
+  CESIUM_REGION_HEIGHT_M,
+  CESIUM_CITY_HEIGHT_M,
+};
 
 async function ensureMapLibreCss() {
   try {
@@ -73,6 +89,9 @@ export class ArgosAtlasMode {
     autoAttach = true,
     cesium = null,
     dataManager = null,
+    requestLocation = requestDeviceLocation,
+    /** When true, deep-link / share restore owns the camera — skip startup geo. */
+    hasShareState = false,
   } = {}) {
     this._viewer = viewer;
     this._cesium = cesium;
@@ -96,11 +115,25 @@ export class ArgosAtlasMode {
     this._filtersFocusReturn = null;
     this._detailFocusReturn = null;
     this._onShellKeyDown = (event) => this._handleShellKeyDown(event);
-    /** @type {{ lon: number, lat: number, zoom: number } | null} */
+    /** @type {{ lon: number, lat: number, zoom: number, bearing?: number, pitch?: number } | null} */
     this._handoffView = null;
+    /** Shared Dark/Satellite camera — one navigational map, two styles. */
+    this._shared2DView = null;
+    /** Last user-selected 3D camera (height + focus) for later mode returns. */
+    this._saved3DView = null;
+    this._entered3DOnce = false;
+    /** @type {'startup'|'user'|'deep-link'|'home'|'search'} */
+    this._navAuthority = hasShareState ? 'deep-link' : 'startup';
+    /** @type {{ lon: number, lat: number } | null} */
+    this._deviceFix = null;
+    this._requestLocation = requestLocation;
+    this._suppressNavAuthority = false;
+    this._navGuardBound = false;
     this._cameraTransitionGen = 0;
     this._dataManager = null;
     this._satUnsub = null;
+    /** @type {'globe'|'region'|'city'|null} */
+    this._active3DScale = null;
 
     if (autoAttach) documentRef.body.appendChild(this._shell.root);
     bindArgosShellActions(this._shell.root, {
@@ -112,6 +145,10 @@ export class ArgosAtlasMode {
       'basemap-dark': () => void this._setBasemapMode(BASEMAP_MODE_DARK),
       'basemap-satellite': () =>
         void this._setBasemapMode(BASEMAP_MODE_SATELLITE),
+      home: () => void this._goHome(),
+      'scale-globe': () => void this._set3DScalePreset('globe'),
+      'scale-region': () => void this._set3DScalePreset('region'),
+      'scale-city': () => void this._set3DScalePreset('city'),
       'sat-toggle': () => void this._toggleSatellites(),
       'sat-orbits': (_e, el) =>
         void this._setSatelliteParams({ showOrbits: Boolean(el?.checked) }),
@@ -242,7 +279,18 @@ export class ArgosAtlasMode {
     // Preserve geographical focus when leaving 3D (unless Cesium tracking owns the camera).
     if (this._mode === 'cesium-3d' && !this._isSatelliteCameraOwned()) {
       const from3d = this._capture3DView();
-      if (from3d) this._handoffView = from3d;
+      if (from3d) {
+        this._saved3DView = from3d;
+        // Geographic focus for shared 2D — restore local 2D zoom, not 3D scale.
+        this._shared2DView = {
+          lon: from3d.lon,
+          lat: from3d.lat,
+          zoom: this._shared2DView?.zoom ?? SHARED_2D_LOCAL_ZOOM,
+          bearing: this._shared2DView?.bearing ?? 0,
+          pitch: this._shared2DView?.pitch ?? 0,
+        };
+        this._handoffView = { ...this._shared2DView };
+      }
     }
     await ensureMapLibreCss();
     if (gen !== this._cameraTransitionGen || this._destroyed) return;
@@ -256,6 +304,7 @@ export class ArgosAtlasMode {
     this._document.documentElement?.classList?.add?.('argos-default-2d');
     this._document.body.classList.add('argos-atlas-active');
     this._document.body.classList.remove('argos-atlas-3d');
+    setScalePresetsVisible(this._shell, false);
     this._showCesium(false);
     this._syncSatelliteControls();
     if (this._modeToggle) {
@@ -295,18 +344,20 @@ export class ArgosAtlasMode {
     try {
       const basemapMode = this._readStoredBasemapMode();
       setBasemapToggle(this._shell, basemapMode);
-      const handoff = this._handoffView;
-      // Fresh visit opens over Huntington Beach — not the DEMO aircraft corridor.
-      // Mode switches reuse the last shared geographical focus.
+      const handoff = this._handoffView || this._shared2DView;
+      // Fresh visit: DEFAULT (HB) until device location arrives; mode switches
+      // reuse the shared Dark/Satellite navigational camera.
       await this._presenter.mount({
         center: handoff ? [handoff.lon, handoff.lat] : [...DEFAULT_MAP_CENTER],
-        zoom: handoff?.zoom ?? DEFAULT_MAP_ZOOM,
-        bearing: 0,
-        pitch: 0,
+        zoom: handoff?.zoom ?? SHARED_2D_LOCAL_ZOOM,
+        bearing: handoff?.bearing ?? 0,
+        pitch: handoff?.pitch ?? 0,
         basemapMode,
       });
       if (gen !== this._cameraTransitionGen || this._destroyed) return;
       this._presenter.resize?.();
+      this._bindPresenterNavGuard();
+      this._scheduleStartupGeolocation(gen);
       // QA / diagnostics only — not a feed owner.
       if (typeof globalThis !== 'undefined') {
         globalThis.__argosMap = this._presenter.map || null;
@@ -338,7 +389,10 @@ export class ArgosAtlasMode {
     // Capture 2D focus before tearing down MapLibre.
     if (this._mode === 'argos-2d') {
       const from2d = this._capture2DView();
-      if (from2d) this._handoffView = from2d;
+      if (from2d) {
+        this._handoffView = from2d;
+        this._shared2DView = from2d;
+      }
     }
     this._mode = 'cesium-3d';
     setBasemapToggle(this._shell, 'cesium-3d');
@@ -348,6 +402,7 @@ export class ArgosAtlasMode {
     this._document.documentElement?.classList?.remove?.('argos-default-2d');
     this._document.body.classList.add('argos-atlas-active', 'argos-atlas-3d');
     this._document.body.classList.remove('argos-atlas-booting');
+    setScalePresetsVisible(this._shell, true);
     this._applyInitialFilterState();
     this._showCesium(true);
     if (this._modeToggle) {
@@ -358,6 +413,7 @@ export class ArgosAtlasMode {
     }
     setBasemapBanner(this._shell, 'ready');
     // Tear down MapLibre handlers; do not create/destroy feed owners.
+    this._navGuardBound = false;
     if (this._presenter) {
       this._presenter.destroy();
       this._presenter = null;
@@ -366,11 +422,68 @@ export class ArgosAtlasMode {
     if (typeof globalThis !== 'undefined') globalThis.__argosMap = null;
     this._startCesiumCoords();
     this._syncSatelliteControls();
-    // Ordinary 2D→3D transitions preserve focus. Direct ?view=3d startup leaves
-    // the incumbent Cesium boot camera (share restore / flyToAustin) alone.
-    if (!initial && this._handoffView) {
-      this._apply3DHandoff(this._handoffView, gen);
+
+    const focus = this._resolveGeographicFocus();
+    // First 3D entry: whole-Earth oriented toward focus. Later entries restore
+    // the user-selected 3D scale at the current geographic focus.
+    if (!this._entered3DOnce || initial) {
+      this._entered3DOnce = true;
+      this._apply3DScale('globe', focus, gen, { duration: 0, save: true });
+      this._scheduleStartupGeolocation(gen);
+    } else if (
+      this._saved3DView &&
+      Number.isFinite(this._saved3DView.heightM)
+    ) {
+      this._apply3DCamera(
+        {
+          lon: focus.lon,
+          lat: focus.lat,
+          heightM: this._saved3DView.heightM,
+        },
+        gen,
+        { duration: 0 },
+      );
+    } else if (focus) {
+      this._apply3DScale('globe', focus, gen, { duration: 0, save: true });
     }
+  }
+
+  _resolveGeographicFocus() {
+    if (
+      this._handoffView &&
+      isValidWgs84(this._handoffView.lon, this._handoffView.lat)
+    ) {
+      return {
+        lon: this._handoffView.lon,
+        lat: this._handoffView.lat,
+        zoom: this._handoffView.zoom,
+      };
+    }
+    if (
+      this._shared2DView &&
+      isValidWgs84(this._shared2DView.lon, this._shared2DView.lat)
+    ) {
+      return {
+        lon: this._shared2DView.lon,
+        lat: this._shared2DView.lat,
+        zoom: this._shared2DView.zoom,
+      };
+    }
+    if (
+      this._deviceFix &&
+      isValidWgs84(this._deviceFix.lon, this._deviceFix.lat)
+    ) {
+      return {
+        lon: this._deviceFix.lon,
+        lat: this._deviceFix.lat,
+        zoom: SHARED_2D_LOCAL_ZOOM,
+      };
+    }
+    return {
+      lon: DEFAULT_MAP_CENTER[0],
+      lat: DEFAULT_MAP_CENTER[1],
+      zoom: SHARED_2D_LOCAL_ZOOM,
+    };
   }
 
   _capture2DView() {
@@ -379,12 +492,16 @@ export class ArgosAtlasMode {
     const c = map.getCenter();
     const lon = Number(c?.lng);
     const lat = Number(c?.lat);
-    const zoom = Number(map.getZoom?.() ?? DEFAULT_MAP_ZOOM);
+    const zoom = Number(map.getZoom?.() ?? SHARED_2D_LOCAL_ZOOM);
+    const bearing = Number(map.getBearing?.() ?? 0);
+    const pitch = Number(map.getPitch?.() ?? 0);
     if (!Number.isFinite(lon) || !Number.isFinite(lat)) return null;
     return {
       lon,
       lat,
-      zoom: Number.isFinite(zoom) ? zoom : DEFAULT_MAP_ZOOM,
+      zoom: Number.isFinite(zoom) ? zoom : SHARED_2D_LOCAL_ZOOM,
+      bearing: Number.isFinite(bearing) ? bearing : 0,
+      pitch: Number.isFinite(pitch) ? pitch : 0,
     };
   }
 
@@ -395,7 +512,12 @@ export class ArgosAtlasMode {
     const lon = (Number(carto.longitude) * 180) / Math.PI;
     const height = Number(carto.height);
     if (!Number.isFinite(lat) || !Number.isFinite(lon)) return null;
-    return { lon, lat, zoom: zoomFromHeight(height) };
+    return {
+      lon,
+      lat,
+      heightM: Number.isFinite(height) ? height : CESIUM_GLOBE_HEIGHT_M,
+      zoom: zoomFromHeight(height),
+    };
   }
 
   _isSatelliteCameraOwned() {
@@ -410,23 +532,232 @@ export class ArgosAtlasMode {
     }
   }
 
-  _apply3DHandoff(view, gen) {
+  _heightForScale(scale) {
+    if (scale === 'region') return CESIUM_REGION_HEIGHT_M;
+    if (scale === 'city') return CESIUM_CITY_HEIGHT_M;
+    return CESIUM_GLOBE_HEIGHT_M;
+  }
+
+  _apply3DCamera(view, gen, { duration = 0 } = {}) {
     if (!view || gen !== this._cameraTransitionGen || this._destroyed) return;
     if (this._isSatelliteCameraOwned()) return;
     const viewer = this._viewer;
     const Cesium = this._cesium || globalThis.Cesium;
     if (!viewer?.camera || !Cesium?.Cartesian3?.fromDegrees) return;
+    if (!isValidWgs84(view.lon, view.lat)) return;
+    const heightM = Number.isFinite(view.heightM)
+      ? view.heightM
+      : heightFromZoom(view.zoom);
     this._cancelCesiumFlight();
+    const destination = Cesium.Cartesian3.fromDegrees(
+      Number(view.lon),
+      Number(view.lat),
+      heightM,
+    );
+    const orientation = {
+      heading: 0,
+      pitch: Cesium.Math?.PI_OVER_TWO ? -Cesium.Math.PI_OVER_TWO : -Math.PI / 2,
+      roll: 0,
+    };
     try {
-      viewer.camera.setView({
-        destination: Cesium.Cartesian3.fromDegrees(
-          Number(view.lon),
-          Number(view.lat),
-          heightFromZoom(view.zoom),
-        ),
-      });
+      if (duration > 0 && typeof viewer.camera.flyTo === 'function') {
+        viewer.camera.flyTo({ destination, orientation, duration });
+      } else {
+        viewer.camera.setView({ destination, orientation });
+      }
+      this._saved3DView = {
+        lon: Number(view.lon),
+        lat: Number(view.lat),
+        heightM,
+        zoom: zoomFromHeight(heightM),
+      };
     } catch {
       /* ignore navigation failures */
+    }
+  }
+
+  /** @deprecated Prefer _apply3DCamera / _apply3DScale — kept for zoom-matched handoff tests. */
+  _apply3DHandoff(view, gen) {
+    if (!view) return;
+    const heightM = Number.isFinite(view.heightM)
+      ? view.heightM
+      : heightFromZoom(view.zoom);
+    this._apply3DCamera({ lon: view.lon, lat: view.lat, heightM }, gen, {
+      duration: 0,
+    });
+  }
+
+  _apply3DScale(scale, focus, gen, { duration = 1.4, save = true } = {}) {
+    const heightM = this._heightForScale(scale);
+    this._active3DScale = scale;
+    this._syncScalePresetButtons(scale);
+    this._apply3DCamera(
+      {
+        lon: focus?.lon ?? DEFAULT_MAP_CENTER[0],
+        lat: focus?.lat ?? DEFAULT_MAP_CENTER[1],
+        heightM,
+      },
+      gen,
+      { duration },
+    );
+    if (save && this._saved3DView) {
+      this._saved3DView = { ...this._saved3DView, heightM, scale };
+    }
+  }
+
+  _syncScalePresetButtons(active) {
+    const root = this._shell.root;
+    if (!root?.querySelectorAll) return;
+    for (const action of ['scale-globe', 'scale-region', 'scale-city']) {
+      const btn = root.querySelector(`[data-argos-action="${action}"]`);
+      if (!btn) continue;
+      const kind = action.replace('scale-', '');
+      const on = kind === active;
+      btn.classList?.toggle?.('is-active', on);
+      btn.setAttribute?.('aria-pressed', on ? 'true' : 'false');
+    }
+  }
+
+  async _set3DScalePreset(scale) {
+    if (this._mode !== 'cesium-3d' || this._destroyed) return;
+    const gen = ++this._cameraTransitionGen;
+    await this._relinquishSatelliteTracking();
+    if (gen !== this._cameraTransitionGen || this._destroyed) return;
+    this._navAuthority = 'user';
+    const focus = this._resolveGeographicFocus();
+    // Prefer current camera lon/lat when available so presets orbit the live focus.
+    const live = this._capture3DView();
+    const target = live ? { lon: live.lon, lat: live.lat } : focus;
+    this._apply3DScale(scale, target, gen, { duration: 1.4, save: true });
+  }
+
+  async _relinquishSatelliteTracking() {
+    if (this._satelliteLayerAvailable()) {
+      try {
+        await this._dataManager.setLayerParams(
+          'satellites',
+          { selectedSatTrackingId: null },
+          { origin: 'user' },
+        );
+      } catch {
+        /* ignore */
+      }
+    }
+    try {
+      if (this._viewer) this._viewer.trackedEntity = undefined;
+    } catch {
+      /* ignore */
+    }
+    this._syncSatelliteControls();
+  }
+
+  async _goHome() {
+    if (this._destroyed) return;
+    const gen = ++this._cameraTransitionGen;
+    await this._relinquishSatelliteTracking();
+    if (gen !== this._cameraTransitionGen || this._destroyed) return;
+    const result = await this._requestLocation();
+    if (gen !== this._cameraTransitionGen || this._destroyed) return;
+    if (!result?.ok) {
+      this._toast(locationFailureMessage(result?.reason || 'unavailable'));
+      return;
+    }
+    this._deviceFix = { lon: result.lon, lat: result.lat };
+    this._navAuthority = 'home';
+    const view2d = {
+      lon: result.lon,
+      lat: result.lat,
+      zoom: SHARED_2D_LOCAL_ZOOM,
+      bearing: 0,
+      pitch: 0,
+    };
+    this._shared2DView = view2d;
+    this._handoffView = view2d;
+    if (this._mode === 'argos-2d') {
+      this._suppressNavAuthority = true;
+      this._presenter?.flyTo?.({
+        lon: result.lon,
+        lat: result.lat,
+        zoom: SHARED_2D_LOCAL_ZOOM,
+        duration: 900,
+      });
+      setTimeout(() => {
+        this._suppressNavAuthority = false;
+      }, 1000);
+      return;
+    }
+    // 3D Home: useful local scale (City). Globe preset returns to whole-Earth.
+    this._apply3DScale('city', { lon: result.lon, lat: result.lat }, gen, {
+      duration: 1.6,
+      save: true,
+    });
+  }
+
+  _bindPresenterNavGuard() {
+    const map = this._presenter?.map;
+    if (!map?.on || this._navGuardBound) return;
+    this._navGuardBound = true;
+    const markUser = () => {
+      if (this._suppressNavAuthority) return;
+      if (this._navAuthority === 'startup') this._navAuthority = 'user';
+    };
+    try {
+      map.on('dragend', markUser);
+      map.on('zoomend', markUser);
+      map.on('rotateend', markUser);
+      map.on('pitchend', markUser);
+    } catch {
+      /* FakePresenter / non-MapLibre */
+    }
+  }
+
+  _scheduleStartupGeolocation(gen) {
+    if (this._navAuthority !== 'startup') return;
+    if (this._deviceFix) {
+      this._applyStartupDeviceFix(gen);
+      return;
+    }
+    void (async () => {
+      const result = await this._requestLocation();
+      if (this._destroyed || gen !== this._cameraTransitionGen) return;
+      if (this._navAuthority !== 'startup') return;
+      if (!result?.ok) return;
+      this._deviceFix = { lon: result.lon, lat: result.lat };
+      this._applyStartupDeviceFix(gen);
+    })();
+  }
+
+  _applyStartupDeviceFix(gen) {
+    if (!this._deviceFix || this._navAuthority !== 'startup') return;
+    if (gen !== this._cameraTransitionGen || this._destroyed) return;
+    const { lon, lat } = this._deviceFix;
+    const view2d = {
+      lon,
+      lat,
+      zoom: SHARED_2D_LOCAL_ZOOM,
+      bearing: 0,
+      pitch: 0,
+    };
+    this._shared2DView = view2d;
+    this._handoffView = view2d;
+    if (this._mode === 'argos-2d' && this._presenter?.flyTo) {
+      this._suppressNavAuthority = true;
+      this._presenter.flyTo({
+        lon,
+        lat,
+        zoom: SHARED_2D_LOCAL_ZOOM,
+        duration: 0,
+      });
+      setTimeout(() => {
+        this._suppressNavAuthority = false;
+      }, 50);
+      return;
+    }
+    if (this._mode === 'cesium-3d' && this._active3DScale === 'globe') {
+      this._apply3DScale('globe', { lon, lat }, gen, {
+        duration: 0,
+        save: true,
+      });
     }
   }
 
@@ -720,6 +1051,16 @@ export class ArgosAtlasMode {
   _selectSearchResult(index) {
     const item = this._searchResults[index];
     if (!item) return;
+    this._navAuthority = 'search';
+    const view2d = {
+      lon: Number(item.lon),
+      lat: Number(item.lat),
+      zoom: Number(item.zoom) || 8,
+      bearing: 0,
+      pitch: 0,
+    };
+    this._shared2DView = view2d;
+    this._handoffView = view2d;
     if (this._mode === 'cesium-3d') {
       this._flyCesiumTo(item.lon, item.lat, item.zoom ?? 8);
     } else {
@@ -739,29 +1080,23 @@ export class ArgosAtlasMode {
 
   /** Route local search hits through the incumbent Cesium camera when in 3D. */
   _flyCesiumTo(lon, lat, zoom = 8) {
-    const viewer = this._viewer;
-    const Cesium = this._cesium || globalThis.Cesium;
-    if (!viewer?.camera || !Cesium?.Cartesian3?.fromDegrees) return;
-    if (this._isSatelliteCameraOwned()) return;
-    this._cancelCesiumFlight();
-    const height = heightFromZoom(zoom);
-    try {
-      viewer.camera.flyTo({
-        destination: Cesium.Cartesian3.fromDegrees(
-          Number(lon),
-          Number(lat),
-          height,
-        ),
-        duration: 1.6,
-      });
-      this._handoffView = {
+    const gen = this._cameraTransitionGen;
+    this._apply3DCamera(
+      {
         lon: Number(lon),
         lat: Number(lat),
-        zoom: Number(zoom) || 8,
-      };
-    } catch {
-      /* ignore navigation failures */
-    }
+        heightM: heightFromZoom(zoom),
+      },
+      gen,
+      { duration: 1.6 },
+    );
+    this._handoffView = {
+      lon: Number(lon),
+      lat: Number(lat),
+      zoom: Number(zoom) || 8,
+      bearing: 0,
+      pitch: 0,
+    };
   }
 
   _closeSearchPanel({ clearInput = false } = {}) {

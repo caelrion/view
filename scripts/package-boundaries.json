@@ -2038,6 +2038,7 @@
       "src/maps/maplibre2d/presenter.js",
       "src/ui/argosAtlas/shell.js",
       "src/ui/argosAtlas/mode.js",
+      "src/ui/argosAtlas/deviceLocation.js",
       "src/ui/argosAtlas/localSearch.js",
       "src/ui/styles/argos-atlas.css"
     ],
