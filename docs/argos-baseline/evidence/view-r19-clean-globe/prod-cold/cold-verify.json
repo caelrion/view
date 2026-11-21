@@ -1,0 +1,56 @@
+{
+  "coordinate": "CAELRION_VIEW_R19_CLEAN_GLOBE_AND_2D_DETAIL_CONTINUITY_R01",
+  "outcome": "R19_SOURCE_AND_PRODUCTION_COLD_VERIFIED",
+  "production_cold_verified": true,
+  "disposition": "A",
+  "owner": "Incumbent View frontend/Cursor custodian",
+  "source_baseline": "f4190ee4e9ee8c540817f6f2c06533e0b93ac281",
+  "feature_head": "6293feebd64f60de996e3965f34a06a59e7ad801",
+  "feature_tree": "72347c3b41b8a18a3072e780108f841b5690cb01",
+  "merged_main": "f4262e1eb3c712aac8fa0f34f3f5f824c067773b",
+  "merged_tree": "72347c3b41b8a18a3072e780108f841b5690cb01",
+  "pr": "https://github.com/caelrion/view/pull/8",
+  "ci_run": "https://github.com/caelrion/view/actions/runs/44848362357",
+  "ci_conclusion": "success",
+  "ci_jobs": ["Node 24.14.0", "Node 26.x", "Windows onboarding"],
+  "served_js": "assets/index-CALBmHvr.js",
+  "served_js_sha256": "05a77ffcee02f940b20a0eb8f8b0ebf30f0891a3ed670810490aec61914f238e",
+  "served_css": "assets/index-Cqq4ijZd.css",
+  "served_css_sha256": "0c23b2f30b18399f92da5121b20ca5ab57542b6309f5c56b18f8a0f000ddcac1",
+  "rollback": "/opt/caelrion/view-releases/r18-before-r19-f4190ee-20261121T011314Z",
+  "public_url": "https://view.caelrion.com/",
+  "naip": {
+    "filename": "caelrion-la-aerial-r01-cc7ee43c04ab.pmtiles",
+    "sha256": "cc7ee43c04abd98fc6ffe11af50789beed23cc89963cca9701887e8184b83dff",
+    "bytes": 65411958,
+    "http_range": "206 bytes 0-15/65411958",
+    "bounds": {
+      "west": -118.42,
+      "south": 33.98,
+      "east": -118.08,
+      "north": 34.18
+    }
+  },
+  "checks": {
+    "no_cesium_logo_3d": true,
+    "caelrion_no_cesium_ion_class": true,
+    "credit_esri_accessible": true,
+    "credit_no_cesium_ion_text": true,
+    "no_ion_network_hits": true,
+    "naip_pmtiles_requests": true,
+    "eox_overview_requests": true,
+    "camera_handoff_2d_to_3d_la": true,
+    "camera_handoff_3d_to_2d_la": true,
+    "layers_satellites_row": true,
+    "satellites_3d_only_when_2d": true,
+    "shared_header_preserved": true,
+    "pmtiles_range_206": true
+  },
+  "local_commands": {
+    "format_check": 0,
+    "check_boundaries": 0,
+    "focused_r19_and_creditAttribution": 0,
+    "vite_build_node24": 0,
+    "ci": 0
+  }
+}

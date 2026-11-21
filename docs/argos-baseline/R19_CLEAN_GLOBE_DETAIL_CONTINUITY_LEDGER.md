@@ -34,4 +34,10 @@ No new engine/backend/tile server/credentials/billing. No wholesale hide of `#ce
 
 ## Release afterstate
 
-Recorded after merge + static deploy + cold verify (see `evidence/view-r19-clean-globe/prod-cold/`).
+- **Disposition:** `A — R19_SOURCE_AND_PRODUCTION_COLD_VERIFIED`
+- **Merged main:** `f4262e1eb3c712aac8fa0f34f3f5f824c067773b`
+- **PR:** https://github.com/caelrion/view/pull/8
+- **CI:** https://github.com/caelrion/view/actions/runs/44848362357 (Node 24 / Node 26 / Windows — success)
+- **Served:** `assets/index-CALBmHvr.js` · `assets/index-Cqq4ijZd.css`
+- **Rollback:** `/opt/caelrion/view-releases/r18-before-r19-f4190ee-20261121T011314Z`
+- **Cold verify:** `docs/argos-baseline/evidence/view-r19-clean-globe/prod-cold/cold-verify.json`
