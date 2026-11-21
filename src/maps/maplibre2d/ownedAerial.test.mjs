@@ -41,6 +41,52 @@ test('P0: R17-P1 dark flavor subdues roads; city labels are not gold', () => {
   assert.ok(f.major !== f.minor_a);
 });
 
+test('R20: Satellite road palette is muted; R17 Dark palette is unchanged', () => {
+  const aerial = createAerialOverlayFlavor();
+  assert.deepEqual(
+    {
+      highway: aerial.highway,
+      major: aerial.major,
+      minor: aerial.minor_a,
+      minor_b: aerial.minor_b,
+      link: aerial.link,
+      other: aerial.other,
+      road_label_major: aerial.roads_label_major,
+      road_label_minor: aerial.roads_label_minor,
+    },
+    {
+      highway: '#819398',
+      major: '#697A80',
+      minor: '#53656C',
+      minor_b: '#53656C',
+      link: '#697A80',
+      other: '#53656C',
+      road_label_major: '#C5CFD3',
+      road_label_minor: '#AEBDC2',
+    },
+  );
+  // Prevent near-white photography overlays from returning in later refactors.
+  for (const color of [
+    aerial.highway,
+    aerial.major,
+    aerial.minor_a,
+    aerial.minor_b,
+    aerial.link,
+    aerial.other,
+  ]) {
+    assert.match(color, /^#[0-9A-F]{6}$/i);
+    assert.ok(
+      Math.max(...[1, 3, 5].map((i) => parseInt(color.slice(i, i + 2), 16))) <
+        0xa0,
+      `Satellite line color ${color} is too bright`,
+    );
+  }
+  const dark = createArgosDarkFlavor();
+  assert.equal(dark.highway, '#47575B');
+  assert.equal(dark.major, '#374448');
+  assert.equal(dark.minor_a, '#2B363A');
+});
+
 test('P0: owned dark style still uses same-origin PMTiles + glyphs', () => {
   const style = createOwnedBasemapStyle();
   assert.equal(style.name, 'caelrion-owned-protomaps-dark');
