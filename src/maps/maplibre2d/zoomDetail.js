@@ -9,9 +9,9 @@
  *
  * Mutates paint copies only — does not replace Protomaps layer definitions.
  *
- * R26 Satellite selective gold + R04 neutral street visibility:
- *   Gold: highway + trunk (+ freeway/trunk ramps)
- *   Neutral readable: primary, then secondary
+ * R26 selective gold + R04 neutral streets + R27 gold softening:
+ *   Gold: highway + trunk (+ freeway/trunk ramps) — softer, less luminous
+ *   Neutral readable: primary, then secondary (quieter at wide zoom)
  *   Subtle: tertiary + residential/service
  * See applySatelliteSelectiveGoldRoads.
  */
@@ -210,7 +210,7 @@ function renameMajorClone(id, token) {
 }
 
 /**
- * R26/R04 — Gold on highway+trunk; restore readable neutral primary/secondary.
+ * R26/R04/R27 — Soft gold on highway+trunk; readable neutral primary/secondary.
  *
  * @param {object[]} layers
  * @param {{ residentialColor?: string, primaryColor?: string, secondaryColor?: string }} [opts]
@@ -243,34 +243,56 @@ export function applySatelliteSelectiveGoldRoads(
   ];
   const notLink = ['!has', 'is_link'];
 
-  /** Soft-gold trunk only. */
-  const majorLine = opacityExpr([8, 0, 10, 0.3, 11.5, 0.5, 13, 0.62, 15, 0.72]);
-  const majorCasing = opacityExpr([9, 0, 11, 0.15, 13, 0.35, 15, 0.45]);
-  const goldLinkLine = opacityExpr([12.5, 0, 13.5, 0.35, 15, 0.6, 16, 0.7]);
+  // R27: gold stays clear but less luminous than R26 full-bright stops.
+  const highwayLine = opacityExpr([
+    5, 0.04, 7, 0.28, 9, 0.72, 11, 0.88, 13, 0.9,
+  ]);
+  const highwayCasing = opacityExpr([5, 0, 7, 0.1, 9, 0.4, 11, 0.7, 13, 0.75]);
+  const majorLine = opacityExpr([
+    8, 0, 10, 0.24, 11.5, 0.42, 13, 0.52, 15, 0.6,
+  ]);
+  const majorCasing = opacityExpr([9, 0, 11, 0.1, 13, 0.26, 15, 0.34]);
+  const goldLinkLine = opacityExpr([12.5, 0, 13.5, 0.28, 15, 0.48, 16, 0.58]);
 
-  // R04: distinct neutral tiers — not a shared near-invisible 5% curve.
-  // City zoom (~11–12) must stay readable on night Satellite without gold.
+  // R04 tiers + R27 quieter wide zoom (streets stay readable by z12).
   const primaryLine = opacityExpr([
-    9, 0, 10, 0.35, 11, 0.55, 12, 0.68, 13.5, 0.78, 15, 0.85,
+    9, 0, 10, 0.22, 11, 0.4, 12, 0.58, 13.5, 0.7, 15, 0.78,
   ]);
-  const primaryCasing = opacityExpr([10, 0, 12, 0.18, 14, 0.32, 16, 0.4]);
+  const primaryCasing = opacityExpr([10, 0, 12, 0.14, 14, 0.26, 16, 0.34]);
   const secondaryLine = opacityExpr([
-    10, 0, 11, 0.28, 12, 0.48, 13.5, 0.58, 15, 0.68,
+    10, 0, 11, 0.18, 12, 0.38, 13.5, 0.5, 15, 0.6,
   ]);
-  const secondaryCasing = opacityExpr([11, 0, 13, 0.14, 15, 0.24, 16, 0.3]);
+  const secondaryCasing = opacityExpr([11, 0, 13, 0.1, 15, 0.2, 16, 0.26]);
   const tertiaryLine = opacityExpr([
-    10.5, 0, 12, 0.18, 13.5, 0.28, 15, 0.36, 16, 0.42,
+    10.5, 0, 12, 0.14, 13.5, 0.24, 15, 0.32, 16, 0.38,
   ]);
-  const tertiaryCasing = opacityExpr([12, 0, 14, 0.1, 16, 0.16]);
-  const localLinkLine = opacityExpr([11, 0, 12.5, 0.28, 14, 0.4, 16, 0.48]);
+  const tertiaryCasing = opacityExpr([12, 0, 14, 0.08, 16, 0.14]);
+  const localLinkLine = opacityExpr([11, 0, 12.5, 0.22, 14, 0.34, 16, 0.42]);
 
-  const primaryLabel = opacityExpr([11, 0, 12, 0.4, 13.5, 0.7, 15, 0.85]);
-  const secondaryLabel = opacityExpr([12, 0, 13, 0.35, 14.5, 0.55, 16, 0.7]);
+  const primaryLabel = opacityExpr([11, 0, 12, 0.32, 13.5, 0.62, 15, 0.78]);
+  const secondaryLabel = opacityExpr([12, 0, 13, 0.28, 14.5, 0.48, 16, 0.62]);
 
   const out = [];
   for (const layer of layers) {
     const id = String(layer?.id || '');
     const type = layer?.type;
+
+    // R27: soften highway opacity (color comes from aerial flavor).
+    if (
+      type === 'line' &&
+      /^(roads_highway|roads_bridges_highway|roads_tunnels_highway)/.test(id)
+    ) {
+      const isCasing = /casing|_casing/.test(id);
+      out.push({
+        ...layer,
+        paint: withOpacity(
+          layer.paint || {},
+          'line-opacity',
+          isCasing ? highwayCasing : highwayLine,
+        ),
+      });
+      continue;
+    }
 
     // Narrow gold majors to trunk; emit neutral primary/secondary/tertiary.
     if (

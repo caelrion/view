@@ -90,14 +90,14 @@ export function isInNaipCoverage(lon, lat) {
   );
 }
 /**
- * R21/R26 Satellite road hierarchy (Mario visual target):
- *   highways → warm gold emphasis
- *   trunk/primary arterials → softer gold (R26; not all Protomaps major_road)
+ * R21/R26/R27 Satellite road hierarchy (Mario visual target):
+ *   highways → warm gold emphasis (R27: softened, less luminous)
+ *   trunk arterials → softer gold (R26; not all Protomaps major_road)
  *   secondary/tertiary/local → faint off-white (never gold)
  * Dark-mode palette stays in createArgosDarkFlavor(); this flavor is Satellite-only.
  */
-export const SATELLITE_HIGHWAY_GOLD = '#E5C56B';
-export const SATELLITE_MAJOR_GOLD = '#D6BE82';
+export const SATELLITE_HIGHWAY_GOLD = '#D2B56A';
+export const SATELLITE_MAJOR_GOLD = '#BFA876';
 /** Cool off-white — kept distinct from gold so residential never reads as highlight. */
 export const SATELLITE_RESIDENTIAL = '#C8D0D4';
 
@@ -139,7 +139,7 @@ export function createAerialOverlayFlavor() {
     state_label: '#B8C6CE',
     state_label_halo: halo,
     country_label: '#F7FAFC',
-    roads_label_major: '#E8D9A8',
+    roads_label_major: '#D2C48E',
     roads_label_major_halo: goldHalo,
     roads_label_minor: '#D8DEE2',
     roads_label_minor_halo: halo,

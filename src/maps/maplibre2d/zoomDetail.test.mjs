@@ -88,31 +88,31 @@ test('R21: satellite restraint caps residential; leaves highway/major alone', ()
   assert.equal(next[3].paint['text-opacity'][0], 'interpolate');
 });
 
-test('R26/R04: gold trunk; neutral primary/secondary readable; tertiary subtle', () => {
+test('R26/R04/R27: soft gold trunk; neutrals readable; wide-zoom quieter', () => {
   const layers = applySatelliteSelectiveGoldRoads([
     {
       id: 'roads_highway',
       type: 'line',
       filter: ['==', 'kind', 'highway'],
-      paint: { 'line-color': '#E5C56B' },
+      paint: { 'line-color': '#D2B56A' },
     },
     {
       id: 'roads_major',
       type: 'line',
       filter: ['==', 'kind', 'major_road'],
-      paint: { 'line-color': '#D6BE82' },
+      paint: { 'line-color': '#BFA876' },
     },
     {
       id: 'roads_link',
       type: 'line',
       filter: ['has', 'is_link'],
-      paint: { 'line-color': '#D6BE82' },
+      paint: { 'line-color': '#BFA876' },
     },
     {
       id: 'roads_labels_major',
       type: 'symbol',
       filter: ['in', 'kind', 'highway', 'major_road'],
-      paint: { 'text-color': '#E8D9A8' },
+      paint: { 'text-color': '#D2C48E' },
     },
   ]);
   const ids = layers.map((l) => l.id);
@@ -126,13 +126,14 @@ test('R26/R04: gold trunk; neutral primary/secondary readable; tertiary subtle',
   assert.ok(ids.includes('roads_labels_primary'));
   assert.ok(ids.includes('roads_labels_secondary'));
 
+  const highway = layers.find((l) => l.id === 'roads_highway');
   const major = layers.find((l) => l.id === 'roads_major');
   const primary = layers.find((l) => l.id === 'roads_primary');
   const secondary = layers.find((l) => l.id === 'roads_secondary');
   const tertiary = layers.find((l) => l.id === 'roads_tertiary');
   const labels = layers.find((l) => l.id === 'roads_labels_major');
 
-  assert.equal(major.paint['line-color'], '#D6BE82');
+  assert.equal(major.paint['line-color'], '#BFA876');
   assert.equal(primary.paint['line-color'], SATELLITE_PRIMARY_NEUTRAL);
   assert.equal(secondary.paint['line-color'], SATELLITE_SECONDARY_NEUTRAL);
   assert.equal(tertiary.paint['line-color'], '#C8D0D4');
@@ -143,14 +144,24 @@ test('R26/R04: gold trunk; neutral primary/secondary readable; tertiary subtle',
   assert.ok(JSON.stringify(tertiary.filter).includes('tertiary'));
   assert.ok(JSON.stringify(labels.filter).includes('trunk'));
 
+  // R27: highway opacity soft-capped (not full 1.0).
+  const h13 = opacityAtZoom(highway.paint['line-opacity'], 13);
+  assert.ok(h13 <= 0.92 && h13 >= 0.75, `highway z13 opacity ${h13}`);
+
   // City zoom (~12): primary > secondary > tertiary; none near-invisible.
   const p12 = opacityAtZoom(primary.paint['line-opacity'], 12);
   const s12 = opacityAtZoom(secondary.paint['line-opacity'], 12);
   const t12 = opacityAtZoom(tertiary.paint['line-opacity'], 12);
-  assert.ok(p12 >= 0.6, `primary z12 opacity ${p12}`);
-  assert.ok(s12 >= 0.4, `secondary z12 opacity ${s12}`);
-  assert.ok(t12 >= 0.15, `tertiary z12 opacity ${t12}`);
+  assert.ok(p12 >= 0.5, `primary z12 opacity ${p12}`);
+  assert.ok(s12 >= 0.3, `secondary z12 opacity ${s12}`);
+  assert.ok(t12 >= 0.12, `tertiary z12 opacity ${t12}`);
   assert.ok(p12 > s12 && s12 > t12);
+
+  // Wide zoom quieter than city zoom, but not wiped.
+  const p10 = opacityAtZoom(primary.paint['line-opacity'], 10);
+  const s11 = opacityAtZoom(secondary.paint['line-opacity'], 11);
+  assert.ok(p10 > 0 && p10 < p12, `primary z10 ${p10} < z12 ${p12}`);
+  assert.ok(s11 > 0 && s11 < s12, `secondary z11 ${s11} < z12 ${s12}`);
 
   // Hostile: demoted classes must not remain on the gold major filter.
   for (const d of SATELLITE_DEMOTE_MAJOR_KIND_DETAILS) {
