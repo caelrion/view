@@ -1,0 +1,35 @@
+{
+  "coordinate": "CAELRION_VIEW_R21_SATELLITE_MAJOR_ROAD_YELLOW_HIERARCHY_R01",
+  "outcome": "R21_SOURCE_AND_PRODUCTION_COLD_VERIFIED",
+  "production_cold_verified": true,
+  "deployed_commit": "e6ad1fe3e24721e1951dfdfc9e1c461da8a9f52a",
+  "deployed_tree": "1536cf38a869e5c9f9087337b9aec6eeb8df7094",
+  "feature_head": "5e1250e4f14e715db63e8112e3651163acfe3ad8",
+  "pr": "https://github.com/caelrion/view/pull/10",
+  "ci_run": "https://github.com/caelrion/view/actions/runs/44852700531",
+  "ci_conclusion": "success",
+  "served_js": "assets/index-C5fh67Sh.js",
+  "served_js_sha256": "c4149e38689480e78959fe875cde591d0f50860378f7cf25371a57909a2368ab",
+  "served_css": "assets/index-Cqq4ijZd.css",
+  "served_css_sha256": "0c23b2f30b18399f92da5121b20ca5ab57542b6309f5c56b18f8a0f000ddcac1",
+  "rollback": "/opt/caelrion/view-releases/r20-before-r21-B61aid0H-20261121T015602Z",
+  "live_colors": {
+    "highway": "#E5C56B",
+    "major": "#D6BE82",
+    "residential": "#C8D0D4",
+    "residential_max_opacity": 0.32
+  },
+  "checks": {
+    "gold_highway_major": true,
+    "residential_not_gold": true,
+    "dark_unchanged": true,
+    "no_cesium_ion_logo": true,
+    "progressive_zoom_preserved": true
+  },
+  "screenshots": [
+    "hb-satellite-z12.png",
+    "la-satellite-z14.png",
+    "la-satellite-z95-regional.png"
+  ],
+  "mario_visual_acceptance": "pending_separate_product_decision"
+}
