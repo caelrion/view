@@ -78,8 +78,8 @@ test('R21: Satellite gold hierarchy; residential off-white; Dark unchanged', () 
   assert.ok(secondary);
   assert.ok(tertiary);
   assert.equal(major.paint['line-color'], '#D6BE82');
-  assert.equal(primary.paint['line-color'], '#D0D6DB');
-  assert.equal(secondary.paint['line-color'], '#B7C0C7');
+  assert.equal(primary.paint['line-color'], '#E4E9ED');
+  assert.equal(secondary.paint['line-color'], '#C5CDD3');
   assert.equal(tertiary.paint['line-color'], '#C8D0D4');
   assert.ok(JSON.stringify(major.filter).includes('trunk'));
   assert.equal(JSON.stringify(major.filter).includes('primary'), false);
