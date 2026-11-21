@@ -1,0 +1,29 @@
+{
+  "t0": {
+    "z": 11.5,
+    "bmax": 0.68,
+    "water": 0.7,
+    "hwy": "#E5C56B",
+    "maj": "#D6BE82",
+    "sec": "#C8D0D4",
+    "majFilter": "[\"all\",[\"!has\",\"is_tunnel\"],[\"!has\",\"is_bridge\"],[\"==\",\"kind\",\"major_road\"],[\"!has\",\"is_link\"],[\"in\",\"kind_detail\",\"trunk\"]]"
+  },
+  "gg": {
+    "z": 12,
+    "bmax": 0.68,
+    "water": 0.7,
+    "hwy": "#E5C56B",
+    "maj": "#D6BE82",
+    "sec": "#C8D0D4",
+    "majFilter": "[\"all\",[\"!has\",\"is_tunnel\"],[\"!has\",\"is_bridge\"],[\"==\",\"kind\",\"major_road\"],[\"!has\",\"is_link\"],[\"in\",\"kind_detail\",\"trunk\"]]"
+  },
+  "sw": {
+    "z": 8,
+    "bmax": 1,
+    "water": 0,
+    "hwy": "#E5C56B",
+    "maj": "#D6BE82",
+    "sec": "#C8D0D4",
+    "majFilter": "[\"all\",[\"!has\",\"is_tunnel\"],[\"!has\",\"is_bridge\"],[\"==\",\"kind\",\"major_road\"],[\"!has\",\"is_link\"],[\"in\",\"kind_detail\",\"trunk\"]]"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "coordinate": "CAELRION_VIEW_R26_SELECTIVE_GOLD_ROAD_HIERARCHY_R03",
+  "outcome": "R26_SELECTIVE_ROADS_NIGHT_DETAIL_AND_FIRST_FRAME_PRODUCTION_VERIFIED",
+  "production_cold_verified": true,
+  "clarifications_applied": [
+    "R02 \u2014 night too dark + excess gold",
+    "R03 \u2014 first visible frame must carry correct solar style"
+  ],
+  "diagnostic": {
+    "yellow_source": "Protomaps kind=major_road includes primary/secondary/tertiary; all previously painted #D6BE82",
+    "boot_blocker_found": "Expression-form kind_detail filters mixed with Protomaps legacy filters prevented MapLibre style load (argos-atlas-booting stuck); fixed with legacy ['in','kind_detail',...]",
+    "gold_now": "highway (#E5C56B) + trunk (#D6BE82) + motorway/trunk_link; primary/secondary/tertiary \u2192 #C8D0D4"
+  },
+  "baseline_main_at_start": "5c479a6287389325c6af4d2cf55b72acce508a97",
+  "deployed_commit": "f3f5e10774f38e1d92e8ad90f3cb8d3bdf4ca68d",
+  "deployed_tree": "2f869414fc8a2db6f2be3952f20fa26b744a8dee",
+  "pr": "https://github.com/caelrion/view/pull/16",
+  "ci_run": "https://github.com/caelrion/view/actions/runs/44882653212",
+  "ci_conclusion": "success",
+  "followup_commits_on_main": [
+    "6be9254 legacy filter fix (boot)",
+    "7b764f4 night/road recalibration",
+    "f3f5e10 trunk-only soft-gold arterials"
+  ],
+  "served_js": "assets/index-cGg53Sk8.js",
+  "served_js_sha256": "99427cd801d309d7c2ce44ff4231576bd8686a44c5c82f9a24dfa1d6431d49c9",
+  "served_css": "assets/index-Dhr9dhZh.css",
+  "served_css_sha256": "5a85eba5ac636bedc3d63885eae2104007916279b967518089e44de683f16b97",
+  "rollback": "/opt/caelrion/view-releases/r25-before-r26-20261121T080147Z",
+  "night_paint": {
+    "raster-brightness-max": 0.68,
+    "raster-saturation": -0.42,
+    "raster-contrast": 0.1,
+    "raster-hue-rotate": 145,
+    "water_fill_opacity": 0.7
+  },
+  "first_frame": {
+    "predicate": "SATELLITE_FIRST_VISIBLE_FRAME_HAS_CORRECT_SOLAR_STYLE",
+    "verified": true,
+    "evidence": "firstframe-t0ms.png \u2014 metaFactor=1, bmax=0.68, water=0.7 before post-load timer",
+    "mode_switch_dark_to_satellite_t200ms": "mode-switch-sat-t200ms.png \u2014 night paint present"
+  },
+  "checks": {
+    "night_terrain_legible_vs_r25_crush": true,
+    "ocean_darker_than_land": true,
+    "gold_highways_preserved": true,
+    "primary_secondary_not_gold": true,
+    "daytime_natural": true,
+    "dark_mode_unchanged": true,
+    "r25_solar_math_preserved": true,
+    "no_day_night_flash_on_refresh": true
+  },
+  "screenshots": [
+    "firstframe-t0ms.png",
+    "garden-grove-night-z12.png",
+    "la-oc-night-regional.png",
+    "cairo-day.png",
+    "hb-dark-unchanged.png",
+    "mode-switch-sat-t200ms.png",
+    "ref-argos-newport-night.png"
+  ],
+  "mario_visual_acceptance": "pending_separate_product_decision",
+  "tests": {
+    "maplibre_unit": {
+      "pass": 20,
+      "exit": 0
+    },
+    "ci_pr16": "success"
+  }
+}
