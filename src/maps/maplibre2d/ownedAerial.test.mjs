@@ -126,7 +126,7 @@ test('P0: Satellite style streams EOx + GIBS + NAIP LA detail (no Esri planet)',
   const eoxIdx = style.layers.findIndex((l) => l.id === 'eox-cloudless-raster');
   assert.ok(waterIdx > eoxIdx);
   assert.ok(waterIdx < roadIdx);
-  assert.equal(style.layers[waterIdx].paint['fill-color'], '#081522');
+  assert.equal(style.layers[waterIdx].paint['fill-color'], '#050E18');
   assert.equal(style.layers[waterIdx].paint['fill-opacity'], 0);
 });
 

@@ -11,8 +11,11 @@ export const SATELLITE_RASTER_LAYER_IDS = Object.freeze([
   'naip-la-raster',
 ]);
 
-/** Nighttime ocean tint — Argos reference near-black navy. */
-export const SATELLITE_NIGHT_WATER_COLOR = '#081522';
+/**
+ * Nighttime ocean tint — Argos near-black navy
+ * (`argos.png`, `SouthAmerica-Night.png`).
+ */
+export const SATELLITE_NIGHT_WATER_COLOR = '#050E18';
 
 export const SATELLITE_NIGHT_WATER_LAYER_ID = 'satellite-night-water';
 
@@ -22,6 +25,19 @@ export const SOLAR_DAY_ELEV_DEG = 0;
 export const SOLAR_CIVIL_ELEV_DEG = -6;
 /** Full night (° nautical). */
 export const SOLAR_NIGHT_ELEV_DEG = -12;
+
+/**
+ * R02 visual targets — wide day/night separation (Argos continental samples).
+ * Day stays natural; night is cinematic blue-charcoal with aggressive water.
+ */
+export const NIGHT_RASTER_BRIGHTNESS_MIN = 0.05;
+export const NIGHT_RASTER_BRIGHTNESS_MAX = 0.26;
+export const NIGHT_RASTER_SATURATION = -0.95;
+export const NIGHT_RASTER_CONTRAST = 0.42;
+export const NIGHT_RASTER_HUE_ROTATE_DEG = 205;
+export const NIGHT_WATER_TINT_OPACITY = 0.92;
+/** Fraction of full night reached by end of civil twilight (−6°). */
+export const CIVIL_TWILIGHT_NIGHT_FRACTION = 0.55;
 
 const D2R = Math.PI / 180;
 const R2D = 180 / Math.PI;
@@ -88,39 +104,43 @@ export function nightFactorFromSolarElevation(elevDeg) {
   if (e >= SOLAR_DAY_ELEV_DEG) return 0;
   if (e <= SOLAR_NIGHT_ELEV_DEG) return 1;
   if (e >= SOLAR_CIVIL_ELEV_DEG) {
-    // 0 → −6°: gentle dusk
+    // 0 → −6°: dusk builds quickly so day/night reads at a glance
     return (
       ((SOLAR_DAY_ELEV_DEG - e) / (SOLAR_DAY_ELEV_DEG - SOLAR_CIVIL_ELEV_DEG)) *
-      0.35
+      CIVIL_TWILIGHT_NIGHT_FRACTION
     );
   }
   // −6° → −12°: deepen to full night
   const t =
     (SOLAR_CIVIL_ELEV_DEG - e) / (SOLAR_CIVIL_ELEV_DEG - SOLAR_NIGHT_ELEV_DEG);
-  return 0.35 + t * 0.65;
+  return (
+    CIVIL_TWILIGHT_NIGHT_FRACTION + t * (1 - CIVIL_TWILIGHT_NIGHT_FRACTION)
+  );
 }
 
 /**
  * MapLibre raster paint for a night factor (does not touch raster-opacity).
- * Calibrated toward Argos blue-charcoal land while keeping photo structure.
+ * R02: dramatic blue-charcoal night vs natural day; land stays textured.
  * @param {number} nightFactor
  */
 export function rasterPaintForNightFactor(nightFactor) {
   const f = clamp01(nightFactor);
   return {
-    'raster-brightness-min': lerp(0, 0.04, f),
-    'raster-brightness-max': lerp(1, 0.4, f),
-    'raster-saturation': lerp(0, -0.85, f),
-    'raster-contrast': lerp(0, 0.22, f),
+    'raster-brightness-min': lerp(0, NIGHT_RASTER_BRIGHTNESS_MIN, f),
+    'raster-brightness-max': lerp(1, NIGHT_RASTER_BRIGHTNESS_MAX, f),
+    'raster-saturation': lerp(0, NIGHT_RASTER_SATURATION, f),
+    'raster-contrast': lerp(0, NIGHT_RASTER_CONTRAST, f),
+    // Cool shift toward Argos blue-charcoal without a global CSS filter.
+    'raster-hue-rotate': lerp(0, NIGHT_RASTER_HUE_ROTATE_DEG, f),
   };
 }
 
 /**
- * Water fill opacity — stronger than land darkening so ocean reads near-black.
+ * Water fill opacity — aggressive vs land so ocean reads near-black navy.
  * @param {number} nightFactor
  */
 export function waterTintOpacityForNightFactor(nightFactor) {
-  return lerp(0, 0.78, clamp01(nightFactor));
+  return lerp(0, NIGHT_WATER_TINT_OPACITY, clamp01(nightFactor));
 }
 
 /**

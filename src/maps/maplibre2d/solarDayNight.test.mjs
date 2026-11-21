@@ -71,15 +71,23 @@ test('R25: twilight factor is smooth and monotonic', () => {
   assert.equal(samples.at(-1), 1);
 });
 
-test('R25: night raster paint desaturates and dims; water darker than land effect', () => {
+test('R25/R02: night raster is dramatically darker than day; water more opaque than land crush', () => {
   const day = rasterPaintForNightFactor(0);
   const night = rasterPaintForNightFactor(1);
   assert.equal(day['raster-saturation'], 0);
   assert.equal(day['raster-brightness-max'], 1);
-  assert.ok(night['raster-saturation'] < -0.5);
-  assert.ok(night['raster-brightness-max'] < 0.55);
+  assert.equal(day['raster-hue-rotate'], 0);
+  // Wide day/night separation — not a mild dim.
+  assert.ok(night['raster-saturation'] <= -0.9);
+  assert.ok(night['raster-brightness-max'] <= 0.3);
+  assert.ok(night['raster-contrast'] >= 0.35);
+  assert.ok(night['raster-hue-rotate'] >= 180);
+  assert.ok(
+    day['raster-brightness-max'] - night['raster-brightness-max'] >= 0.65,
+    'day/night brightness gap must be obvious at a glance',
+  );
   assert.equal(waterTintOpacityForNightFactor(0), 0);
-  assert.ok(waterTintOpacityForNightFactor(1) > 0.6);
+  assert.ok(waterTintOpacityForNightFactor(1) >= 0.88);
   assert.ok(
     waterTintOpacityForNightFactor(1) > 1 - night['raster-brightness-max'],
   );
