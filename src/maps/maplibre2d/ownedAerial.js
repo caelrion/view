@@ -10,7 +10,10 @@
  */
 import { layers } from '@protomaps/basemaps';
 import { OWNED_PMTILES_PATH, createArgosDarkFlavor } from './ownedBasemap.js';
-import { applyProgressiveRoadDetail } from './zoomDetail.js';
+import {
+  applyProgressiveRoadDetail,
+  applySatelliteResidentialRestraint,
+} from './zoomDetail.js';
 
 /** EOxCloudless 2016 — Web Mercator WMTS (TileMatrix/TileRow/TileCol = z/y/x). */
 export const EOX_CLOUDLESS_2016_TILE_URL =
@@ -79,24 +82,49 @@ export function isInNaipCoverage(lon, lat) {
     lat <= NAIP_LA_BOUNDS.north
   );
 }
+/**
+ * R21 Satellite road hierarchy (Mario visual target):
+ *   highways → warm gold emphasis
+ *   major arterials → softer gold
+ *   residential/minor → faint off-white (never gold)
+ * Dark-mode palette stays in createArgosDarkFlavor(); this flavor is Satellite-only.
+ */
+export const SATELLITE_HIGHWAY_GOLD = '#E5C56B';
+export const SATELLITE_MAJOR_GOLD = '#D6BE82';
+/** Cool off-white — kept distinct from gold so residential never reads as highlight. */
+export const SATELLITE_RESIDENTIAL = '#C8D0D4';
+
 /** Light overlay flavor for roads/labels on photographic imagery. */
 export function createAerialOverlayFlavor() {
   const base = createArgosDarkFlavor();
   const halo = 'rgba(23, 32, 39, 0.85)';
+  const goldHalo = 'rgba(28, 22, 10, 0.78)';
   return {
     ...base,
     background: '#171D23',
     earth: '#20272D',
     water: '#102D40',
     buildings: 'rgba(48, 58, 64, 0.15)',
-    // R20: Let satellite photography dominate; road hierarchy stays visible,
-    // but the near-white R19 street/highway web must not wash out imagery.
-    highway: '#819398',
-    major: '#697A80',
-    minor_a: '#53656C',
-    minor_b: '#53656C',
-    link: '#697A80',
-    other: '#53656C',
+    highway: SATELLITE_HIGHWAY_GOLD,
+    major: SATELLITE_MAJOR_GOLD,
+    // Residential / service / other: thin off-white — gold is reserved for
+    // highway + major arterials (and their bridge/tunnel counterparts).
+    minor_a: SATELLITE_RESIDENTIAL,
+    minor_b: SATELLITE_RESIDENTIAL,
+    link: SATELLITE_MAJOR_GOLD,
+    other: SATELLITE_RESIDENTIAL,
+    minor_service: SATELLITE_RESIDENTIAL,
+    pier: SATELLITE_RESIDENTIAL,
+    tunnel_other: SATELLITE_RESIDENTIAL,
+    tunnel_minor: SATELLITE_RESIDENTIAL,
+    tunnel_link: SATELLITE_MAJOR_GOLD,
+    tunnel_major: SATELLITE_MAJOR_GOLD,
+    tunnel_highway: SATELLITE_HIGHWAY_GOLD,
+    bridges_other: SATELLITE_RESIDENTIAL,
+    bridges_minor: SATELLITE_RESIDENTIAL,
+    bridges_link: SATELLITE_MAJOR_GOLD,
+    bridges_major: SATELLITE_MAJOR_GOLD,
+    bridges_highway: SATELLITE_HIGHWAY_GOLD,
     city_label: '#F7FAFC',
     city_label_halo: halo,
     subplace_label: '#E5EBEF',
@@ -104,11 +132,11 @@ export function createAerialOverlayFlavor() {
     state_label: '#B8C6CE',
     state_label_halo: halo,
     country_label: '#F7FAFC',
-    roads_label_major: '#C5CFD3',
-    roads_label_major_halo: halo,
-    roads_label_minor: '#AEBDC2',
+    roads_label_major: '#E8D9A8',
+    roads_label_major_halo: goldHalo,
+    roads_label_minor: '#D8DEE2',
     roads_label_minor_halo: halo,
-    address_label: '#AEBDC2',
+    address_label: '#D8DEE2',
     address_label_halo: halo,
     boundaries: 'rgba(232, 236, 240, 0.55)',
   };
@@ -142,9 +170,11 @@ export function createOwnedAerialStyle({
   const sourceUrl = vectorUrl.startsWith('pmtiles://')
     ? vectorUrl
     : `pmtiles://${vectorUrl}`;
-  const overlay = applyProgressiveRoadDetail(
-    selectAerialOverlayLayers(
-      layers('protomaps', createAerialOverlayFlavor(), { lang: 'en' }),
+  const overlay = applySatelliteResidentialRestraint(
+    applyProgressiveRoadDetail(
+      selectAerialOverlayLayers(
+        layers('protomaps', createAerialOverlayFlavor(), { lang: 'en' }),
+      ),
     ),
   );
   const naipUrl = OWNED_AERIAL_PMTILES_PATH.startsWith('pmtiles://')

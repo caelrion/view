@@ -5,18 +5,21 @@
  *   z ≤ 7   minor roads/labels off; highways nearly off
  *   z 8–10  highways/majors fade in; minors still quiet
  *   z 10–12 majors readable; minors begin
- *   z ≥ 12  full street detail
+ *   z ≥ 12  street detail (Satellite then restrains residential — R21)
  *
  * Mutates paint copies only — does not replace Protomaps layer definitions.
  */
 
+/** Residential / service / pier — never highway ramps (`roads_link`). */
 const MINOR_ROAD =
-  /^(roads_minor|roads_other|roads_link|roads_tunnel_other|roads_tunnel_minor|roads_bridges_other|roads_bridges_minor|roads_pier)/;
+  /^(roads_minor|roads_other|roads_minor_service|roads_tunnels_other|roads_tunnels_minor|roads_bridges_other|roads_bridges_minor|roads_pier)/;
+/** Arterials + motorway/highway link ramps. */
 const MAJOR_ROAD =
-  /^(roads_major|roads_bridges_major|roads_bridges_link|roads_tunnel_major|roads_tunnel_link)/;
+  /^(roads_major|roads_link|roads_bridges_major|roads_bridges_link|roads_tunnels_major|roads_tunnels_link)/;
 const HIGHWAY_ROAD =
-  /^(roads_highway|roads_bridges_highway|roads_tunnel_highway)/;
-const ROAD_LABEL = /^(roads_label_|address_label|roads_shields|roads_oneway)/;
+  /^(roads_highway|roads_bridges_highway|roads_tunnels_highway)/;
+const ROAD_LABEL =
+  /^(roads_labels_|roads_label_|address_label|roads_shields|roads_oneway)/;
 
 function opacityExpr(stops) {
   return ['interpolate', ['linear'], ['zoom'], ...stops];
@@ -40,6 +43,7 @@ export function applyProgressiveRoadDetail(layers) {
 
     let expr = null;
     if (MINOR_ROAD.test(id)) {
+      // Dark mode: minors can reach full opacity at street scale.
       expr = opacityExpr([7, 0, 9, 0, 10.5, 0.35, 12, 1, 13, 1]);
     } else if (MAJOR_ROAD.test(id)) {
       expr = opacityExpr([6, 0, 8, 0.25, 9.5, 0.7, 11, 1, 12, 1]);
@@ -68,5 +72,55 @@ export function applyProgressiveRoadDetail(layers) {
       nextPaint['icon-opacity'] = expr;
     }
     return { ...layer, paint: nextPaint };
+  });
+}
+
+/**
+ * R21 Satellite-only: keep residential streets as faint detail so gold
+ * highway/major emphasis reads. Does not touch highway or major arterials.
+ * Must run after applyProgressiveRoadDetail on Satellite overlays only.
+ *
+ * @param {object[]} layers
+ * @returns {object[]}
+ */
+export function applySatelliteResidentialRestraint(layers) {
+  if (!Array.isArray(layers)) return layers;
+  // Cap: never a dense opaque street grid over photography.
+  const minorLine = opacityExpr([
+    9, 0, 11, 0.08, 12.5, 0.18, 14, 0.28, 16, 0.32,
+  ]);
+  const minorLabel = opacityExpr([12.5, 0, 14, 0.28, 16, 0.4]);
+  return layers.map((layer) => {
+    const id = String(layer?.id || '');
+    const type = layer?.type;
+    if (!id || (type !== 'line' && type !== 'symbol')) return layer;
+    if (HIGHWAY_ROAD.test(id) || MAJOR_ROAD.test(id)) return layer;
+    if (type === 'line' && MINOR_ROAD.test(id)) {
+      // Skip heavy casings on residential — keep photography readable.
+      if (/casing|_casing/.test(id)) {
+        return {
+          ...layer,
+          paint: withOpacity(
+            layer.paint || {},
+            'line-opacity',
+            opacityExpr([12, 0, 14, 0.1, 16, 0.16]),
+          ),
+        };
+      }
+      return {
+        ...layer,
+        paint: withOpacity(layer.paint || {}, 'line-opacity', minorLine),
+      };
+    }
+    if (
+      type === 'symbol' &&
+      /roads_labels_minor|address_label|roads_oneway/.test(id)
+    ) {
+      return {
+        ...layer,
+        paint: withOpacity(layer.paint || {}, 'text-opacity', minorLabel),
+      };
+    }
+    return layer;
   });
 }
