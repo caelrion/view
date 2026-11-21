@@ -66,8 +66,8 @@ export const SATELLITE_GOLD_LINK_KIND_DETAILS = Object.freeze([
 ]);
 
 /** Neutral colors — cool off-white family, never gold. */
-export const SATELLITE_PRIMARY_NEUTRAL = '#D0D6DB';
-export const SATELLITE_SECONDARY_NEUTRAL = '#B7C0C7';
+export const SATELLITE_PRIMARY_NEUTRAL = '#E4E9ED';
+export const SATELLITE_SECONDARY_NEUTRAL = '#C5CDD3';
 export const SATELLITE_TERTIARY_NEUTRAL = '#C8D0D4';
 
 function opacityExpr(stops) {
@@ -137,9 +137,9 @@ export function applySatelliteResidentialRestraint(layers) {
   if (!Array.isArray(layers)) return layers;
   // Subtle but useful at street scale — not the prior 5% city-zoom wipe.
   const minorLine = opacityExpr([
-    10, 0, 11.5, 0.12, 13, 0.2, 14.5, 0.28, 16, 0.34,
+    10, 0, 11.5, 0.16, 13, 0.26, 14.5, 0.34, 16, 0.4,
   ]);
-  const minorLabel = opacityExpr([12.5, 0, 14, 0.28, 16, 0.4]);
+  const minorLabel = opacityExpr([12.5, 0, 14, 0.32, 16, 0.45]);
   return layers.map((layer) => {
     const id = String(layer?.id || '');
     const type = layer?.type;
@@ -249,19 +249,20 @@ export function applySatelliteSelectiveGoldRoads(
   const goldLinkLine = opacityExpr([12.5, 0, 13.5, 0.35, 15, 0.6, 16, 0.7]);
 
   // R04: distinct neutral tiers — not a shared near-invisible 5% curve.
+  // City zoom (~11–12) must stay readable on night Satellite without gold.
   const primaryLine = opacityExpr([
-    9, 0, 10.5, 0.28, 11.5, 0.48, 13, 0.62, 15, 0.72,
+    9, 0, 10, 0.35, 11, 0.55, 12, 0.68, 13.5, 0.78, 15, 0.85,
   ]);
-  const primaryCasing = opacityExpr([10, 0, 12, 0.12, 14, 0.28, 16, 0.35]);
+  const primaryCasing = opacityExpr([10, 0, 12, 0.18, 14, 0.32, 16, 0.4]);
   const secondaryLine = opacityExpr([
-    10, 0, 11, 0.18, 12, 0.32, 13.5, 0.45, 15, 0.55,
+    10, 0, 11, 0.28, 12, 0.48, 13.5, 0.58, 15, 0.68,
   ]);
-  const secondaryCasing = opacityExpr([11, 0, 13, 0.1, 15, 0.2, 16, 0.26]);
+  const secondaryCasing = opacityExpr([11, 0, 13, 0.14, 15, 0.24, 16, 0.3]);
   const tertiaryLine = opacityExpr([
-    10.5, 0, 12, 0.12, 13.5, 0.2, 15, 0.28, 16, 0.34,
+    10.5, 0, 12, 0.18, 13.5, 0.28, 15, 0.36, 16, 0.42,
   ]);
-  const tertiaryCasing = opacityExpr([12, 0, 14, 0.08, 16, 0.14]);
-  const localLinkLine = opacityExpr([11, 0, 12.5, 0.2, 14, 0.32, 16, 0.4]);
+  const tertiaryCasing = opacityExpr([12, 0, 14, 0.1, 16, 0.16]);
+  const localLinkLine = opacityExpr([11, 0, 12.5, 0.28, 14, 0.4, 16, 0.48]);
 
   const primaryLabel = opacityExpr([11, 0, 12, 0.4, 13.5, 0.7, 15, 0.85]);
   const secondaryLabel = opacityExpr([12, 0, 13, 0.35, 14.5, 0.55, 16, 0.7]);

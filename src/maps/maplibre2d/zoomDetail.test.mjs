@@ -147,9 +147,9 @@ test('R26/R04: gold trunk; neutral primary/secondary readable; tertiary subtle',
   const p12 = opacityAtZoom(primary.paint['line-opacity'], 12);
   const s12 = opacityAtZoom(secondary.paint['line-opacity'], 12);
   const t12 = opacityAtZoom(tertiary.paint['line-opacity'], 12);
-  assert.ok(p12 >= 0.4, `primary z12 opacity ${p12}`);
-  assert.ok(s12 >= 0.25, `secondary z12 opacity ${s12}`);
-  assert.ok(t12 >= 0.1, `tertiary z12 opacity ${t12}`);
+  assert.ok(p12 >= 0.6, `primary z12 opacity ${p12}`);
+  assert.ok(s12 >= 0.4, `secondary z12 opacity ${s12}`);
+  assert.ok(t12 >= 0.15, `tertiary z12 opacity ${t12}`);
   assert.ok(p12 > s12 && s12 > t12);
 
   // Hostile: demoted classes must not remain on the gold major filter.
