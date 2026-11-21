@@ -1,0 +1,66 @@
+{
+  "coordinate": "CAELRION_VIEW_R25_SOLAR_SATELLITE_DAY_NIGHT_AND_WATER_CONTRAST_R01",
+  "clarification": "CAELRION_VIEW_R25_SOLAR_SATELLITE_DAY_NIGHT_AND_WATER_CONTRAST_R02",
+  "outcome": "R25_SOLAR_SATELLITE_NIGHT_MODE_PRODUCTION_COLD_VERIFIED",
+  "production_cold_verified": true,
+  "r02_direction_change": "Strengthened night raster crush (brightness-max 0.26, saturation -0.95, contrast 0.42, hue-rotate 205°) and water tint opacity 0.92 / #050E18 so day vs night reads at a glance against Mario Argos samples (argos.png, SouthAmerica-Night, Africa-Day terminator, Asia-Day, Australia-Day).",
+  "baseline_main_at_start": "dd3f0ce19b4cbd7c7a26ad2a5ed185a48bfa2996",
+  "baseline_tree_at_start": "dd69ed0c47f900e3293a2c232cd5c87289b6c56a",
+  "deployed_commit": "69290f3322b5bfeada0e94c38e2e309feff9a228",
+  "deployed_tree": "6a1c9e537034cbecb86ced71133b2634d8f69466",
+  "feature_tip": "9e0c6ba7187377ab840dbf0577d5572c78a0917a",
+  "pr": "https://github.com/caelrion/view/pull/15",
+  "ci_run": "https://github.com/caelrion/view/actions/runs/44880677654",
+  "ci_conclusion": "success",
+  "install_target": "/opt/caelrion/core/view/dist",
+  "caddy_root": "/srv/view/dist (bind: /opt/caelrion/core → /srv)",
+  "served_js": "assets/index-BSXB_b7v.js",
+  "served_js_sha256": "bf3fca4ffeaf4164787e07b1adc1c679a295e445443ceda2f9d109b396938b5d",
+  "served_css": "assets/index-Dhr9dhZh.css",
+  "served_css_sha256": "5a85eba5ac636bedc3d63885eae2104007916279b967518089e44de683f16b97",
+  "public_js_sha256_matches_dist": true,
+  "rollback": "/opt/caelrion/view-releases/r22-before-r25-20261121T073706Z",
+  "tests": {
+    "solarDayNight_and_ownedAerial": { "command": "node --test src/maps/maplibre2d/solarDayNight.test.mjs src/maps/maplibre2d/ownedAerial.test.mjs", "exit": 0, "pass": 16 },
+    "check_boundaries": { "command": "npm run check:boundaries", "exit": 0 },
+    "ci_matrix": { "Node_24.14.0": "pass", "Node_26.x": "pass", "Windows_onboarding": "pass" }
+  },
+  "paint_probe_at_utc_2026-11-21T07:46Z": {
+    "hb_night": { "raster-brightness-max": 0.26, "raster-saturation": -0.95, "water_fill_opacity": 0.92 },
+    "cairo_day": { "raster-brightness-max": 1, "raster-saturation": 0, "water_fill_opacity": 0 },
+    "atlantic_twilight": { "raster-brightness-max": 0.4026, "water_fill_opacity": 0.7427 },
+    "satellite_dark_satellite_continuity_zoom": 11.5
+  },
+  "checks": {
+    "daytime_natural_imagery": true,
+    "twilight_partial_dim": true,
+    "night_blue_charcoal_dramatic": true,
+    "ocean_darker_than_land": true,
+    "r21_gold_highway_colors_in_bundle": true,
+    "dark_mode_unchanged_grey_roads": true,
+    "no_global_css_filter": true,
+    "no_backend_solar_requests": true,
+    "mode_switch_camera_continuity": true
+  },
+  "screenshots": [
+    "caelrion-hb-satellite-night.png",
+    "caelrion-newport-harbour-night.png",
+    "caelrion-oc-satellite-night-regional.png",
+    "caelrion-cairo-satellite-day.png",
+    "caelrion-sydney-satellite-day.png",
+    "caelrion-samerica-satellite-night.png",
+    "caelrion-atlantic-satellite-twilight.png",
+    "caelrion-hb-dark-unchanged.png",
+    "ref-argos-newport-night.png",
+    "ref-southamerica-night.png",
+    "ref-africa-day-terminator.png",
+    "ref-asia-day.png",
+    "ref-australia-day.png"
+  ],
+  "reference_captures_source": "/opt/caelrion/core/docs/captures/",
+  "mario_visual_acceptance": "pending_separate_product_decision",
+  "known_limitations": [
+    "Night land reads cool charcoal/grey via raster hue-rotate+desat rather than a separate night-lights imagery provider (not authorized).",
+    "Water tint reuses Protomaps water polygons; inland lakes follow that coverage — not a new hydro dataset."
+  ]
+}

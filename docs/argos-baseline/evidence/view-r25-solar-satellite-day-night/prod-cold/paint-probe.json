@@ -1,0 +1,338 @@
+[
+  {
+    "name": "caelrion-hb-satellite-night.png",
+    "ok": true,
+    "lon": -117.9983,
+    "lat": 33.6603,
+    "z": 12,
+    "paints": {
+      "eox-cloudless-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "gibs-blue-marble-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "naip-la-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "satellite-night-water": {
+        "bmax": null,
+        "sat": null,
+        "contrast": null,
+        "hue": null,
+        "fillOp": 0.92,
+        "fillColor": "#050E18"
+      }
+    }
+  },
+  {
+    "name": "caelrion-oc-satellite-night-regional.png",
+    "ok": true,
+    "lon": -117.9,
+    "lat": 33.7,
+    "z": 9.2,
+    "paints": {
+      "eox-cloudless-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "gibs-blue-marble-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "naip-la-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "satellite-night-water": {
+        "bmax": null,
+        "sat": null,
+        "contrast": null,
+        "hue": null,
+        "fillOp": 0.92,
+        "fillColor": "#050E18"
+      }
+    }
+  },
+  {
+    "name": "caelrion-newport-harbour-night.png",
+    "ok": true,
+    "lon": -117.92,
+    "lat": 33.61,
+    "z": 13.2,
+    "paints": {
+      "eox-cloudless-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "gibs-blue-marble-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "naip-la-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "satellite-night-water": {
+        "bmax": null,
+        "sat": null,
+        "contrast": null,
+        "hue": null,
+        "fillOp": 0.92,
+        "fillColor": "#050E18"
+      }
+    }
+  },
+  {
+    "name": "caelrion-cairo-satellite-day.png",
+    "ok": true,
+    "lon": 31.2357,
+    "lat": 30.0444,
+    "z": 8.2,
+    "paints": {
+      "eox-cloudless-raster": {
+        "bmax": 1,
+        "sat": 0,
+        "contrast": 0,
+        "hue": 0,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "gibs-blue-marble-raster": {
+        "bmax": 1,
+        "sat": 0,
+        "contrast": 0,
+        "hue": 0,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "naip-la-raster": {
+        "bmax": 1,
+        "sat": 0,
+        "contrast": 0,
+        "hue": 0,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "satellite-night-water": {
+        "bmax": null,
+        "sat": null,
+        "contrast": null,
+        "hue": null,
+        "fillOp": 0,
+        "fillColor": "#050E18"
+      }
+    }
+  },
+  {
+    "name": "caelrion-sydney-satellite-day.png",
+    "ok": true,
+    "lon": 151.2093,
+    "lat": -33.8688,
+    "z": 8,
+    "paints": {
+      "eox-cloudless-raster": {
+        "bmax": 1,
+        "sat": 0,
+        "contrast": 0,
+        "hue": 0,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "gibs-blue-marble-raster": {
+        "bmax": 1,
+        "sat": 0,
+        "contrast": 0,
+        "hue": 0,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "naip-la-raster": {
+        "bmax": 1,
+        "sat": 0,
+        "contrast": 0,
+        "hue": 0,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "satellite-night-water": {
+        "bmax": null,
+        "sat": null,
+        "contrast": null,
+        "hue": null,
+        "fillOp": 0,
+        "fillColor": "#050E18"
+      }
+    }
+  },
+  {
+    "name": "caelrion-samerica-satellite-night.png",
+    "ok": true,
+    "lon": -60,
+    "lat": -15,
+    "z": 3,
+    "paints": {
+      "eox-cloudless-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "gibs-blue-marble-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "naip-la-raster": {
+        "bmax": 0.26,
+        "sat": -0.95,
+        "contrast": 0.42,
+        "hue": 205,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "satellite-night-water": {
+        "bmax": null,
+        "sat": null,
+        "contrast": null,
+        "hue": null,
+        "fillOp": 0.92,
+        "fillColor": "#050E18"
+      }
+    }
+  },
+  {
+    "name": "caelrion-atlantic-satellite-twilight.png",
+    "ok": true,
+    "lon": -28,
+    "lat": 35,
+    "z": 3.2,
+    "paints": {
+      "eox-cloudless-raster": {
+        "bmax": 0.4026312890249856,
+        "sat": -0.7668922640895455,
+        "contrast": 0.3390471062290622,
+        "hue": 165.4872780403756,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "gibs-blue-marble-raster": {
+        "bmax": 0.4026312890249856,
+        "sat": -0.7668922640895455,
+        "contrast": 0.3390471062290622,
+        "hue": 165.4872780403756,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "naip-la-raster": {
+        "bmax": 0.4026312890249856,
+        "sat": -0.7668922640895455,
+        "contrast": 0.3390471062290622,
+        "hue": 165.4872780403756,
+        "fillOp": null,
+        "fillColor": null
+      },
+      "satellite-night-water": {
+        "bmax": null,
+        "sat": null,
+        "contrast": null,
+        "hue": null,
+        "fillOp": 0.7426746136446125,
+        "fillColor": "#050E18"
+      }
+    }
+  },
+  {
+    "continuity": {
+      "mid": {
+        "ok": true,
+        "lon": -117.9983,
+        "lat": 33.6603,
+        "z": 11.5,
+        "paints": {
+          "eox-cloudless-raster": {
+            "bmax": 0.26,
+            "sat": -0.95,
+            "contrast": 0.42,
+            "hue": 205,
+            "fillOp": null,
+            "fillColor": null
+          },
+          "gibs-blue-marble-raster": {
+            "bmax": 0.26,
+            "sat": -0.95,
+            "contrast": 0.42,
+            "hue": 205,
+            "fillOp": null,
+            "fillColor": null
+          },
+          "naip-la-raster": {
+            "bmax": 0.26,
+            "sat": -0.95,
+            "contrast": 0.42,
+            "hue": 205,
+            "fillOp": null,
+            "fillColor": null
+          },
+          "satellite-night-water": {
+            "bmax": null,
+            "sat": null,
+            "contrast": null,
+            "hue": null,
+            "fillOp": 0.92,
+            "fillColor": "#050E18"
+          }
+        }
+      },
+      "after": {
+        "lon": -117.9983,
+        "lat": 33.6603,
+        "z": 11.5
+      }
+    }
+  }
+]
