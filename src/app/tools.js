@@ -28,8 +28,12 @@ export function createApplicationTools({
   defer,
 }) {
   const { viewer, tileset, mapStackController, operations } = scene;
-  const { styleManager, weatherEffects, cockpitCloudEffects } = controls;
+  const { styleManager, weatherEffects, cockpitCloudEffects, argosAtlasMode } =
+    controls;
   const { dataManager } = data;
+  // R19-3: shared Layers menu bridges to the incumbent satellites owner —
+  // no second poller, registry, or toolbar.
+  argosAtlasMode?.attachDataManager?.(dataManager);
   const sceneDirector = new SceneDirector(viewer, styleManager, dataManager, {
     dataPacks: sceneDataPacks,
     isMapStackAvailable: (id) =>

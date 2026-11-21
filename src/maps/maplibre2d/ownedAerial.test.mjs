@@ -48,11 +48,12 @@ test('P0: owned dark style still uses same-origin PMTiles + glyphs', () => {
   assert.ok(!style.sources['esri-world-imagery']);
 });
 
-test('P0: Satellite style streams EOx + GIBS (no Esri, no local planet)', () => {
+test('P0: Satellite style streams EOx + GIBS + NAIP LA detail (no Esri planet)', () => {
   const style = createOwnedAerialStyle();
   assert.equal(style.name, 'caelrion-streamed-eox-satellite');
   assert.ok(style.sources['eox-cloudless-2016']);
   assert.ok(style.sources['gibs-blue-marble']);
+  assert.ok(style.sources['naip-la']);
   assert.equal(style.sources['eox-cloudless-2016'].type, 'raster');
   assert.equal(
     style.sources['eox-cloudless-2016'].tiles[0],
@@ -62,15 +63,17 @@ test('P0: Satellite style streams EOx + GIBS (no Esri, no local planet)', () => 
     style.sources['gibs-blue-marble'].tiles[0],
     GIBS_BLUE_MARBLE_TILE_URL,
   );
-  assert.ok(!style.sources['caelrion-aerial']);
+  assert.match(style.sources['naip-la'].url, /pmtiles:\/\/.*la-aerial/);
   assert.ok(!style.sources['esri-world-imagery']);
   assert.match(EOX_CLOUDLESS_2016_TILE_URL, /s2cloudless_3857/);
   assert.match(EOX_CLOUDLESS_2016_TILE_URL, /\{z\}\/\{y\}\/\{x\}/);
   assert.match(MAP_ATTRIBUTION_HTML_AERIAL, /EOX|Sentinel-2 cloudless/);
   assert.match(MAP_ATTRIBUTION_HTML_AERIAL, /Blue Marble|NASA/);
+  assert.match(MAP_ATTRIBUTION_HTML_AERIAL, /NAIP/i);
   assert.doesNotMatch(MAP_ATTRIBUTION_HTML_AERIAL, /Esri World Imagery/i);
   assert.ok(style.layers.some((l) => l.id === 'eox-cloudless-raster'));
   assert.ok(style.layers.some((l) => l.id === 'gibs-blue-marble-raster'));
+  assert.ok(style.layers.some((l) => l.id === 'naip-la-raster'));
   assert.ok(style.layers.some((l) => String(l.id).startsWith('roads_')));
 });
 
@@ -81,7 +84,7 @@ test('P0: aerial overlay filter drops opaque land fills', () => {
   assert.ok(kept.every((l) => l.id !== 'earth' && l.id !== 'water'));
 });
 
-test('P0: streamed coverage ready worldwide; limited only past EOx max zoom', () => {
+test('P0: streamed coverage ready worldwide; limited past EOx unless NAIP LA', () => {
   assert.equal(
     aerialCoverageState({ lon: -117.99833, lat: 33.66028, zoom: 11.5 }),
     'ready',
@@ -94,6 +97,7 @@ test('P0: streamed coverage ready worldwide; limited only past EOx max zoom', ()
     aerialCoverageState({ lon: 139.65, lat: 35.67, zoom: 9 }),
     'ready',
   );
+  // Huntington Beach is outside the verified NAIP footprint.
   assert.equal(
     aerialCoverageState({
       lon: -117.99833,
@@ -102,6 +106,27 @@ test('P0: streamed coverage ready worldwide; limited only past EOx max zoom', ()
     }),
     'limited-coverage',
   );
+  // Downtown LA inside NAIP remains ready past EOx max.
+  assert.equal(
+    aerialCoverageState({
+      lon: -118.2437,
+      lat: 34.0522,
+      zoom: EOX_MAX_ZOOM + 2,
+    }),
+    'ready',
+  );
   assert.equal(BASEMAP_MODE_DARK, 'dark-vector');
   assert.equal(BASEMAP_MODE_SATELLITE, 'owned-aerial');
+});
+
+test('R19-2: dark style road layers carry progressive opacity', () => {
+  const style = createOwnedBasemapStyle();
+  const minor = style.layers.find((l) => l.id === 'roads_minor');
+  const highway = style.layers.find((l) =>
+    String(l.id).startsWith('roads_highway'),
+  );
+  assert.ok(minor?.paint?.['line-opacity']);
+  assert.ok(Array.isArray(minor.paint['line-opacity']));
+  assert.equal(minor.paint['line-opacity'][0], 'interpolate');
+  assert.ok(highway?.paint?.['line-opacity']);
 });

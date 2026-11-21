@@ -8,6 +8,7 @@
 import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
 import { layers, namedFlavor } from '@protomaps/basemaps';
+import { applyProgressiveRoadDetail } from './zoomDetail.js';
 
 /** Huntington Beach, California default camera (MapLibre [lon, lat]). */
 export const DEFAULT_MAP_CENTER = Object.freeze([-117.99833, 33.66028]);
@@ -161,7 +162,9 @@ export function createOwnedBasemapStyle({
         maxzoom: 15,
       },
     },
-    layers: layers('protomaps', createArgosDarkFlavor(), { lang: 'en' }),
+    layers: applyProgressiveRoadDetail(
+      layers('protomaps', createArgosDarkFlavor(), { lang: 'en' }),
+    ),
   };
 }
 

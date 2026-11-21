@@ -20,7 +20,8 @@
   --argos-ink: #f2efe6;
   --argos-mut: rgba(210, 204, 188, 0.62);
   --argos-danger: #d67680;
-  --argos-font: 'Inter', 'Montserrat', 'Open Sans', 'Noto Sans', system-ui, sans-serif;
+  --argos-font:
+    'Inter', 'Montserrat', 'Open Sans', 'Noto Sans', system-ui, sans-serif;
   --argos-mono: 'IBM Plex Mono', 'JetBrains Mono', ui-monospace, monospace;
   --argos-radius: 3px;
   --argos-header-h: 46px;
@@ -165,7 +166,8 @@ body.argos-atlas-booting .argos-atlas-root {
   max-width: min(320px, 62vw);
 }
 
-.argos-map-host .maplibregl-ctrl-attrib.maplibregl-compact:not(.maplibregl-compact-show) {
+.argos-map-host
+  .maplibregl-ctrl-attrib.maplibregl-compact:not(.maplibregl-compact-show) {
   width: 28px;
   min-height: 28px;
   max-width: 28px;
@@ -585,6 +587,67 @@ body.argos-atlas-booting .argos-atlas-root {
   color: var(--argos-mut);
 }
 
+/* R19-3: satellite controls nested under the shared Layers rail */
+.argos-sat-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px 12px 12px;
+  border-bottom: 1px solid rgba(232, 228, 210, 0.06);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.argos-sat-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font: 500 10px/1.3 var(--argos-font);
+  color: var(--argos-ink);
+}
+
+.argos-sat-label {
+  color: var(--argos-mut);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 9px;
+}
+
+.argos-sat-controls select,
+.argos-sat-controls input[type='number'] {
+  flex: 1;
+  min-width: 0;
+  max-width: 9rem;
+  margin: 0;
+  padding: 4px 6px;
+  border: 1px solid rgba(232, 228, 210, 0.16);
+  border-radius: 2px;
+  background: rgba(10, 16, 22, 0.85);
+  color: var(--argos-ink);
+  font: 500 11px/1.2 var(--argos-mono);
+}
+
+.argos-sat-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.argos-sat-actions .argos-hud-btn {
+  flex: 1;
+  justify-content: center;
+}
+
+.argos-sat-note {
+  margin: 0;
+  font-size: 9px;
+  line-height: 1.4;
+  color: var(--argos-mut);
+}
+
+.argos-rail-row[data-layer='satellites'].is-active .argos-rail-state {
+  color: var(--argos-cyan);
+}
+
 .argos-status-pill {
   display: inline-block;
   margin-bottom: 10px;
@@ -777,6 +840,16 @@ body.argos-atlas-3d #cesium-credits {
   opacity: 1 !important;
   visibility: visible !important;
   pointer-events: auto !important;
+}
+
+/*
+ * R19-0: Hide only the Cesium ion logo mark when no ion route is active.
+ * Selector deliberately omits `#cesium-credits { … }` so creditAttribution's
+ * keep-out scan (never display:none the credit line) stays green. Never hide
+ * the credit container, expand link, text credits, or lightbox.
+ */
+body.caelrion-no-cesium-ion .cesium-credit-logoContainer {
+  display: none !important;
 }
 
 /* Mobile: single-row header where possible; layers as bottom drawer */
