@@ -1,7 +1,6 @@
 import * as Cesium from 'cesium';
 import { catalogControlServices } from './catalog.js';
 import { StyleManager } from '../ui/composition.js';
-import { flyToAustin } from '../camera.js';
 import { initCockpitCloudEffects } from '../cockpitCloudEffects.js';
 import {
   ArgosAtlasMode,
@@ -53,16 +52,16 @@ export function createApplicationControls({
     preferArgos2D,
     aircraftProjection: null,
     cesium: Cesium,
+    hasShareState: Boolean(styleManager.hasShareState),
   });
   defer(() => argosAtlasMode.destroy());
 
-  // Skip Cesium fly-to while flat 2D owns the viewport — avoids globe flash
-  // and wasted camera work under the MapLibre shell.
+  // R22: ArgosAtlasMode owns first-entry whole-Earth camera (and Home).
+  // Do not flyToAustin — that fought the shared globe/startup focus.
   if (preferArgos2D) {
     loaderStatus.textContent = 'Dark map ready';
   } else if (!styleManager.hasShareState) {
     loaderStatus.textContent = 'Caelrion View 3D ready';
-    defer(flyToAustin(viewer));
   } else {
     loaderStatus.textContent = 'Restoring shared view...';
   }

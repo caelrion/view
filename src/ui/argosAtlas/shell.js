@@ -46,6 +46,14 @@ export function createArgosAtlasShell(documentRef = document) {
         ></ul>
       </div>
       <div class="argos-hud-right">
+        <div class="argos-scale-presets" role="group" aria-label="3D zoom presets" data-argos-scale-presets hidden>
+          <button type="button" class="argos-hud-btn argos-scale-btn" data-argos-action="scale-globe" title="Whole Earth">Globe</button>
+          <button type="button" class="argos-hud-btn argos-scale-btn" data-argos-action="scale-region" title="Regional view">Region</button>
+          <button type="button" class="argos-hud-btn argos-scale-btn" data-argos-action="scale-city" title="City view">City</button>
+        </div>
+        <button type="button" class="argos-hud-btn argos-home-btn" data-argos-action="home" title="Return to my current location" aria-label="Home — my location">
+          <span aria-hidden="true">⌂</span><span class="argos-hud-btn-label">Home</span>
+        </button>
         <div class="argos-basemap-toggle" role="group" aria-label="Map presentation">
           <button type="button" class="argos-hud-btn argos-basemap-btn" data-argos-action="basemap-dark" data-basemap="dark-vector" aria-pressed="false" title="Dark vector basemap">Dark</button>
           <button type="button" class="argos-hud-btn argos-basemap-btn is-active" data-argos-action="basemap-satellite" data-basemap="owned-aerial" aria-pressed="true" title="Worldwide streamed Sentinel-2 cloudless imagery">Satellite</button>
@@ -186,7 +194,20 @@ export function createArgosAtlasShell(documentRef = document) {
     basemapSatelliteBtn: root.querySelector(
       '[data-argos-action="basemap-satellite"]',
     ),
+    homeBtn: root.querySelector('[data-argos-action="home"]'),
+    scalePresets: root.querySelector('[data-argos-scale-presets]'),
   };
+}
+
+/**
+ * Show Globe / Region / City presets only while Cesium 3D owns the viewport.
+ * @param {ReturnType<typeof createArgosAtlasShell>} shell
+ * @param {boolean} visible
+ */
+export function setScalePresetsVisible(shell, visible) {
+  const el = shell.scalePresets;
+  if (!el) return;
+  el.hidden = !visible;
 }
 
 /**
