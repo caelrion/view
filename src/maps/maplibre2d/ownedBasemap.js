@@ -1,9 +1,12 @@
 /**
- * Caelrion-owned Protomaps/PMTiles 2D basemap (R15).
+ * Caelrion-owned Protomaps/PMTiles 2D basemap (R15 → R28).
  *
  * Default MapLibre presentation is same-origin PMTiles + self-hosted glyphs/sprites.
  * Does not use Esri World Imagery or MapTiler. Large archive is a deploy artifact —
  * not committed to git.
+ *
+ * R28: California statewide detail (z8–15) + global overview (z0–7).
+ * R15 SoCal-only archive preserved immutable as caelrion-basemap-r01-*.
  */
 import maplibregl from 'maplibre-gl';
 import { Protocol } from 'pmtiles';
@@ -14,7 +17,21 @@ import { applyProgressiveRoadDetail } from './zoomDetail.js';
 export const DEFAULT_MAP_CENTER = Object.freeze([-117.99833, 33.66028]);
 export const DEFAULT_MAP_ZOOM = 11.5;
 
-/** Southern California high-detail coverage (z8–z15). */
+/**
+ * California high-detail coverage (z8–z15), with modest border buffer.
+ * Bbox used for extract: [-125.0, 32.0, -113.5, 42.5].
+ */
+export const CALIFORNIA_DETAIL_BOUNDS = Object.freeze({
+  west: -125.0,
+  south: 32.0,
+  east: -113.5,
+  north: 42.5,
+});
+
+/**
+ * @deprecated R28 — use CALIFORNIA_DETAIL_BOUNDS. Kept as the prior SoCal
+ * footprint for evidence/docs; coverage checks use California.
+ */
 export const SOCAL_DETAIL_BOUNDS = Object.freeze({
   west: -121.5,
   south: 32.4,
@@ -22,18 +39,19 @@ export const SOCAL_DETAIL_BOUNDS = Object.freeze({
   north: 35.9,
 });
 
-/** Zooms above this outside SoCal report limited-coverage (not offline). */
+/** Zooms above this outside California report limited-coverage (not offline). */
 export const OWNED_GLOBAL_MAX_ZOOM = 7;
 
 /**
  * Immutable deploy artifact identity (bytes live outside git).
  * File: /assets/maps/<filename> on the static host.
+ * R01 SoCal archive remains on disk; R28 installs r02 statewide.
  */
 export const OWNED_BASEMAP_ARTIFACT = Object.freeze({
-  id: 'caelrion-basemap-r01',
-  filename: 'caelrion-basemap-r01-822f068466c7.pmtiles',
-  sha256: '822f068466c79112046e1ccbc4e93c306110d208a535d746a19bc84aed729d55',
-  bytes: 790349026,
+  id: 'caelrion-basemap-r02',
+  filename: 'caelrion-basemap-r02-b0c934a219c8.pmtiles',
+  sha256: 'b0c934a219c857aa389a635b09162bbd74131347dfed1e7378965ec45eb9515a',
+  bytes: 1793865770,
   source_build: 'https://build.protomaps.com/20261118.pmtiles',
   source_etag: 'f80d23ebf8f97045b56ad0bc73b8ec76-521',
   source_osm_time: '2026-11-18T04:00:00Z',
@@ -41,9 +59,14 @@ export const OWNED_BASEMAP_ARTIFACT = Object.freeze({
   version_label: '4.15.2',
   zooms: {
     global: '0-7',
-    socal_detail: '8-15',
+    california_detail: '8-15',
   },
-  socal_bbox: [-121.5, 32.4, -114.0, 35.9],
+  california_bbox: [-125.0, 32.0, -113.5, 42.5],
+  /** Prior SoCal detail bbox (R15) — superseded for coverage, archive preserved. */
+  socal_bbox_r01: [-121.5, 32.4, -114.0, 35.9],
+  supersedes: 'caelrion-basemap-r01-822f068466c7.pmtiles',
+  superseded_sha256:
+    '822f068466c79112046e1ccbc4e93c306110d208a535d746a19bc84aed729d55',
 });
 
 export const OWNED_PMTILES_PATH = `/assets/maps/${OWNED_BASEMAP_ARTIFACT.filename}`;
@@ -184,9 +207,17 @@ export function isPmtilesProtocolRegistered() {
 }
 
 /** @param {number} lon @param {number} lat */
-export function isInSocalDetailBounds(lon, lat) {
-  const b = SOCAL_DETAIL_BOUNDS;
+export function isInCaliforniaDetailBounds(lon, lat) {
+  const b = CALIFORNIA_DETAIL_BOUNDS;
   return lon >= b.west && lon <= b.east && lat >= b.south && lat <= b.north;
+}
+
+/**
+ * @deprecated R28 — alias of isInCaliforniaDetailBounds.
+ * @param {number} lon @param {number} lat
+ */
+export function isInSocalDetailBounds(lon, lat) {
+  return isInCaliforniaDetailBounds(lon, lat);
 }
 
 /**
@@ -202,7 +233,7 @@ export function ownedCoverageState({ lon, lat, zoom }) {
     return 'ready';
   }
   if (zoom <= OWNED_GLOBAL_MAX_ZOOM) return 'ready';
-  if (isInSocalDetailBounds(lon, lat)) return 'ready';
+  if (isInCaliforniaDetailBounds(lon, lat)) return 'ready';
   return 'limited-coverage';
 }
 

@@ -14,6 +14,7 @@ import {
   applyProgressiveRoadDetail,
   applySatelliteResidentialRestraint,
   applySatelliteSelectiveGoldRoads,
+  SATELLITE_PRIMARY_NEUTRAL,
 } from './zoomDetail.js';
 import {
   createSatelliteNightWaterLayer,
@@ -90,13 +91,14 @@ export function isInNaipCoverage(lon, lat) {
   );
 }
 /**
- * R21/R26/R27 Satellite road hierarchy (Mario visual target):
- *   highways → warm gold emphasis (R27: softened, less luminous)
- *   trunk arterials → softer gold (R26; not all Protomaps major_road)
- *   secondary/tertiary/local → faint off-white (never gold)
+ * R21–R28 Satellite road hierarchy (Mario visual target):
+ *   highways → soft gold emphasis (R27 soften; R28 highway-only)
+ *   trunk/primary arterials → neutral off-white (not gold)
+ *   secondary/tertiary/local → faint off-white
  * Dark-mode palette stays in createArgosDarkFlavor(); this flavor is Satellite-only.
  */
 export const SATELLITE_HIGHWAY_GOLD = '#D2B56A';
+/** @deprecated R28 — trunk is no longer gold; kept for rollback/docs. */
 export const SATELLITE_MAJOR_GOLD = '#BFA876';
 /** Cool off-white — kept distinct from gold so residential never reads as highlight. */
 export const SATELLITE_RESIDENTIAL = '#C8D0D4';
@@ -113,24 +115,23 @@ export function createAerialOverlayFlavor() {
     water: '#102D40',
     buildings: 'rgba(48, 58, 64, 0.15)',
     highway: SATELLITE_HIGHWAY_GOLD,
-    major: SATELLITE_MAJOR_GOLD,
-    // Residential / service / other: thin off-white — gold is reserved for
-    // highway + major arterials (and their bridge/tunnel counterparts).
+    // R28: trunk/major paint starts neutral; selective gold keeps highway only.
+    major: SATELLITE_PRIMARY_NEUTRAL,
     minor_a: SATELLITE_RESIDENTIAL,
     minor_b: SATELLITE_RESIDENTIAL,
-    link: SATELLITE_MAJOR_GOLD,
+    link: SATELLITE_HIGHWAY_GOLD,
     other: SATELLITE_RESIDENTIAL,
     minor_service: SATELLITE_RESIDENTIAL,
     pier: SATELLITE_RESIDENTIAL,
     tunnel_other: SATELLITE_RESIDENTIAL,
     tunnel_minor: SATELLITE_RESIDENTIAL,
-    tunnel_link: SATELLITE_MAJOR_GOLD,
-    tunnel_major: SATELLITE_MAJOR_GOLD,
+    tunnel_link: SATELLITE_HIGHWAY_GOLD,
+    tunnel_major: SATELLITE_PRIMARY_NEUTRAL,
     tunnel_highway: SATELLITE_HIGHWAY_GOLD,
     bridges_other: SATELLITE_RESIDENTIAL,
     bridges_minor: SATELLITE_RESIDENTIAL,
-    bridges_link: SATELLITE_MAJOR_GOLD,
-    bridges_major: SATELLITE_MAJOR_GOLD,
+    bridges_link: SATELLITE_HIGHWAY_GOLD,
+    bridges_major: SATELLITE_PRIMARY_NEUTRAL,
     bridges_highway: SATELLITE_HIGHWAY_GOLD,
     city_label: '#F7FAFC',
     city_label_halo: halo,

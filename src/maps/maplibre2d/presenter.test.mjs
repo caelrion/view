@@ -25,7 +25,8 @@ test('P0: R15 owned basemap style and LA defaults are declared', () => {
   );
   assert.deepEqual([...DEFAULT_MAP_CENTER], [-117.99833, 33.66028]);
   assert.equal(DEFAULT_MAP_ZOOM, 11.5);
-  assert.equal(OWNED_BASEMAP_ARTIFACT.bytes, 790349026);
+  assert.equal(OWNED_BASEMAP_ARTIFACT.bytes, 1793865770);
+  assert.equal(OWNED_BASEMAP_ARTIFACT.id, 'caelrion-basemap-r02');
 });
 
 test('H2: offline stub style is a valid MapLibre style object', () => {
