@@ -6,7 +6,30 @@ import {
   applySatelliteSelectiveGoldRoads,
   SATELLITE_GOLD_MAJOR_KIND_DETAILS,
   SATELLITE_DEMOTE_MAJOR_KIND_DETAILS,
+  SATELLITE_NEUTRAL_PRIMARY_KIND_DETAILS,
+  SATELLITE_PRIMARY_NEUTRAL,
+  SATELLITE_SECONDARY_NEUTRAL,
 } from './zoomDetail.js';
+
+function opacityAtZoom(expr, zoom) {
+  // ['interpolate','linear',['zoom'], z0,o0, z1,o1, ...]
+  assert.equal(expr[0], 'interpolate');
+  const stops = [];
+  for (let i = 3; i < expr.length; i += 2) {
+    stops.push({ z: expr[i], o: expr[i + 1] });
+  }
+  if (zoom <= stops[0].z) return stops[0].o;
+  if (zoom >= stops.at(-1).z) return stops.at(-1).o;
+  for (let i = 1; i < stops.length; i++) {
+    if (zoom <= stops[i].z) {
+      const a = stops[i - 1];
+      const b = stops[i];
+      const t = (zoom - a.z) / (b.z - a.z);
+      return a.o + t * (b.o - a.o);
+    }
+  }
+  return stops.at(-1).o;
+}
 
 test('R19-2: progressive opacity wraps minor/major/highway/label layers', () => {
   const layers = applyProgressiveRoadDetail([
@@ -51,7 +74,8 @@ test('R21: satellite restraint caps residential; leaves highway/major alone', ()
   ]);
   const next = applySatelliteResidentialRestraint(base);
   const minorStops = next[0].paint['line-opacity'];
-  assert.ok(minorStops[minorStops.length - 1] <= 0.22);
+  assert.ok(minorStops[minorStops.length - 1] <= 0.4);
+  assert.ok(opacityAtZoom(minorStops, 12) >= 0.1);
   // Highway / link (major class) keep progressive highway/major curves.
   assert.deepEqual(
     next[1].paint['line-opacity'],
@@ -64,7 +88,7 @@ test('R21: satellite restraint caps residential; leaves highway/major alone', ()
   assert.equal(next[3].paint['text-opacity'][0], 'interpolate');
 });
 
-test('R26: selective gold keeps trunk; demotes primary/secondary; preserves highway', () => {
+test('R26/R04: gold trunk; neutral primary/secondary readable; tertiary subtle', () => {
   const layers = applySatelliteSelectiveGoldRoads([
     {
       id: 'roads_highway',
@@ -94,25 +118,40 @@ test('R26: selective gold keeps trunk; demotes primary/secondary; preserves high
   const ids = layers.map((l) => l.id);
   assert.ok(ids.includes('roads_highway'));
   assert.ok(ids.includes('roads_major'));
+  assert.ok(ids.includes('roads_primary'));
   assert.ok(ids.includes('roads_secondary'));
+  assert.ok(ids.includes('roads_tertiary'));
   assert.ok(ids.includes('roads_link'));
   assert.ok(ids.includes('roads_link_local'));
+  assert.ok(ids.includes('roads_labels_primary'));
+  assert.ok(ids.includes('roads_labels_secondary'));
 
   const major = layers.find((l) => l.id === 'roads_major');
+  const primary = layers.find((l) => l.id === 'roads_primary');
   const secondary = layers.find((l) => l.id === 'roads_secondary');
-  const link = layers.find((l) => l.id === 'roads_link');
-  const linkLocal = layers.find((l) => l.id === 'roads_link_local');
+  const tertiary = layers.find((l) => l.id === 'roads_tertiary');
   const labels = layers.find((l) => l.id === 'roads_labels_major');
 
   assert.equal(major.paint['line-color'], '#D6BE82');
-  assert.equal(secondary.paint['line-color'], '#C8D0D4');
-  assert.equal(linkLocal.paint['line-color'], '#C8D0D4');
+  assert.equal(primary.paint['line-color'], SATELLITE_PRIMARY_NEUTRAL);
+  assert.equal(secondary.paint['line-color'], SATELLITE_SECONDARY_NEUTRAL);
+  assert.equal(tertiary.paint['line-color'], '#C8D0D4');
   assert.ok(JSON.stringify(major.filter).includes('trunk'));
   assert.equal(JSON.stringify(major.filter).includes('primary'), false);
-  assert.ok(JSON.stringify(secondary.filter).includes('primary'));
+  assert.ok(JSON.stringify(primary.filter).includes('primary'));
   assert.ok(JSON.stringify(secondary.filter).includes('secondary'));
-  assert.ok(JSON.stringify(link.filter).includes('motorway_link'));
+  assert.ok(JSON.stringify(tertiary.filter).includes('tertiary'));
   assert.ok(JSON.stringify(labels.filter).includes('trunk'));
+
+  // City zoom (~12): primary > secondary > tertiary; none near-invisible.
+  const p12 = opacityAtZoom(primary.paint['line-opacity'], 12);
+  const s12 = opacityAtZoom(secondary.paint['line-opacity'], 12);
+  const t12 = opacityAtZoom(tertiary.paint['line-opacity'], 12);
+  assert.ok(p12 >= 0.4, `primary z12 opacity ${p12}`);
+  assert.ok(s12 >= 0.25, `secondary z12 opacity ${s12}`);
+  assert.ok(t12 >= 0.1, `tertiary z12 opacity ${t12}`);
+  assert.ok(p12 > s12 && s12 > t12);
+
   // Hostile: demoted classes must not remain on the gold major filter.
   for (const d of SATELLITE_DEMOTE_MAJOR_KIND_DETAILS) {
     assert.equal(
@@ -121,4 +160,5 @@ test('R26: selective gold keeps trunk; demotes primary/secondary; preserves high
       `${d} must not be gold-major`,
     );
   }
+  assert.deepEqual([...SATELLITE_NEUTRAL_PRIMARY_KIND_DETAILS], ['primary']);
 });
