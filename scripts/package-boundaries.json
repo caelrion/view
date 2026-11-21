@@ -2034,6 +2034,7 @@
       "src/maps/maplibre2d/style.js",
       "src/maps/maplibre2d/ownedBasemap.js",
       "src/maps/maplibre2d/ownedAerial.js",
+      "src/maps/maplibre2d/zoomDetail.js",
       "src/maps/maplibre2d/presenter.js",
       "src/ui/argosAtlas/shell.js",
       "src/ui/argosAtlas/mode.js",

@@ -71,6 +71,36 @@ export function createArgosAtlasShell(documentRef = document) {
             <span class="argos-rail-state">DEMO</span>
           </span>
         </button>
+        <button type="button" class="argos-rail-row" data-argos-action="sat-toggle" aria-pressed="false" data-layer="satellites">
+          <span class="argos-rail-icon" aria-hidden="true">🛰</span>
+          <span class="argos-rail-label">Satellites</span>
+          <span class="argos-rail-meta">
+            <span class="argos-layer-count" data-argos-sat-count>—</span>
+            <span class="argos-rail-state" data-argos-sat-state>3D</span>
+          </span>
+        </button>
+        <div class="argos-sat-controls" data-argos-sat-controls hidden>
+          <label class="argos-sat-row">
+            <input type="checkbox" data-argos-action="sat-orbits" data-argos-sat-orbits />
+            <span>Orbital paths</span>
+          </label>
+          <label class="argos-sat-row">
+            <span class="argos-sat-label">Catalog</span>
+            <select data-argos-action="sat-catalog" data-argos-sat-catalog aria-label="Satellite catalog">
+              <option value="core">Core</option>
+              <option value="dense">Dense</option>
+            </select>
+          </label>
+          <label class="argos-sat-row">
+            <span class="argos-sat-label">NORAD</span>
+            <input type="number" inputmode="numeric" min="1" step="1" placeholder="e.g. 25544" data-argos-sat-norad aria-label="NORAD catalog number" />
+          </label>
+          <div class="argos-sat-actions">
+            <button type="button" class="argos-hud-btn" data-argos-action="sat-follow">Follow</button>
+            <button type="button" class="argos-hud-btn" data-argos-action="sat-stop">Stop</button>
+          </div>
+          <p class="argos-sat-note">CelesTrak TLE · SGP4 orbital estimates — not live telemetry. Available in 3D only.</p>
+        </div>
         <button type="button" class="argos-rail-row is-disabled" disabled aria-disabled="true" data-layer="ships">
           <span class="argos-rail-icon" aria-hidden="true">⚓</span>
           <span class="argos-rail-label">Ships</span>
@@ -96,7 +126,7 @@ export function createArgosAtlasShell(documentRef = document) {
           </span>
         </button>
       </nav>
-      <p class="argos-cp-note">DEMO counts only when local fixtures exist. No fabricated live totals. Ships/cameras await admitted backends.</p>
+      <p class="argos-cp-note">DEMO counts only when local fixtures exist. No fabricated live totals. Ships/cameras await admitted backends. Satellites reuse the incumbent CelesTrak/SGP4 layer — no second poller.</p>
     </aside>
 
     <aside id="argos-detail-panel" class="argos-detail-panel" hidden aria-live="polite">
@@ -143,6 +173,13 @@ export function createArgosAtlasShell(documentRef = document) {
     aircraftCountEl: root.querySelector('[data-argos-aircraft-count]'),
     basemapBanner: root.querySelector('[data-argos-basemap-banner]'),
     aircraftToggle: root.querySelector('[data-argos-action="toggle-aircraft"]'),
+    satToggle: root.querySelector('[data-argos-action="sat-toggle"]'),
+    satControls: root.querySelector('[data-argos-sat-controls]'),
+    satOrbits: root.querySelector('[data-argos-sat-orbits]'),
+    satCatalog: root.querySelector('[data-argos-sat-catalog]'),
+    satNorad: root.querySelector('[data-argos-sat-norad]'),
+    satCountEl: root.querySelector('[data-argos-sat-count]'),
+    satStateEl: root.querySelector('[data-argos-sat-state]'),
     searchInput: root.querySelector('#argos-search-input'),
     searchResults: root.querySelector('#argos-search-results'),
     basemapDarkBtn: root.querySelector('[data-argos-action="basemap-dark"]'),
@@ -176,9 +213,77 @@ export function bindArgosShellActions(root, handlers) {
   root.addEventListener('click', (event) => {
     const btn = event.target.closest?.('[data-argos-action]');
     if (!btn || btn.disabled) return;
+    // Checkbox/select use the change path so click does not double-fire.
+    if (btn.matches?.('input[type="checkbox"], select, input[type="number"]'))
+      return;
     const action = btn.getAttribute('data-argos-action');
     handlers[action]?.(event, btn);
   });
+  root.addEventListener('change', (event) => {
+    const el = event.target.closest?.('[data-argos-action]');
+    if (!el || el.disabled) return;
+    const action = el.getAttribute('data-argos-action');
+    handlers[action]?.(event, el);
+  });
+}
+
+/**
+ * Sync shared Layers satellite controls from the incumbent DataLayerManager.
+ * Controls are disabled in 2D (Cesium-only rendering) or when the layer is absent.
+ * @param {ReturnType<typeof createArgosAtlasShell>} shell
+ * @param {{
+ *   available?: boolean,
+ *   rendererOk?: boolean,
+ *   enabled?: boolean,
+ *   showOrbits?: boolean,
+ *   catalog?: 'core'|'dense',
+ *   trackedNorad?: number|null,
+ *   label?: string,
+ * }} state
+ */
+export function setSatelliteControls(shell, state = {}) {
+  const available = Boolean(state.available);
+  const rendererOk = state.rendererOk !== false;
+  const operable = available && rendererOk;
+  const enabled = Boolean(state.enabled) && operable;
+  const btn = shell.satToggle;
+  const panel = shell.satControls;
+  if (btn) {
+    btn.disabled = !operable;
+    btn.setAttribute('aria-disabled', operable ? 'false' : 'true');
+    btn.classList.toggle('is-disabled', !operable);
+    btn.classList.toggle('is-active', enabled);
+    btn.setAttribute('aria-pressed', enabled ? 'true' : 'false');
+  }
+  if (shell.satStateEl) {
+    shell.satStateEl.textContent = !available
+      ? 'UNAVAILABLE'
+      : !rendererOk
+        ? '3D ONLY'
+        : enabled
+          ? 'ON'
+          : 'OFF';
+  }
+  if (shell.satCountEl) {
+    shell.satCountEl.textContent = state.trackedNorad
+      ? String(state.trackedNorad)
+      : enabled
+        ? '·'
+        : '—';
+  }
+  if (panel) {
+    panel.hidden = !enabled;
+    panel.querySelectorAll('input, select, button').forEach((el) => {
+      el.disabled = !enabled;
+    });
+  }
+  if (shell.satOrbits) shell.satOrbits.checked = Boolean(state.showOrbits);
+  if (shell.satCatalog && state.catalog) {
+    shell.satCatalog.value = state.catalog === 'dense' ? 'dense' : 'core';
+  }
+  if (shell.satNorad && state.trackedNorad != null && !shell.satNorad.value) {
+    shell.satNorad.value = String(state.trackedNorad);
+  }
 }
 
 export function renderAircraftDetail(shell, record) {

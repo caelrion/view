@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { ArgosAtlasMode, preferArgos2DFromLocation } from './mode.js';
-import { formatUtcCoords, setBasemapBanner } from './shell.js';
+import {
+  ArgosAtlasMode,
+  preferArgos2DFromLocation,
+  heightFromZoom,
+  zoomFromHeight,
+} from './mode.js';
+import {
+  formatUtcCoords,
+  setBasemapBanner,
+  setSatelliteControls,
+} from './shell.js';
 import { DEMO_AIRCRAFT_FIXTURE } from '../../presentation/demoAircraftFixture.js';
 import {
   DEFAULT_MAP_CENTER,
@@ -205,6 +214,42 @@ function fakeDocument() {
             },
           };
           aircraftToggle.setAttribute = () => {};
+          const satToggle = documentRef.createElement('button');
+          satToggle.setAttribute('data-argos-action', 'sat-toggle');
+          satToggle.disabled = false;
+          satToggle.classList = {
+            _v: new Set(),
+            toggle(v, force) {
+              if (force === true) this._v.add(v);
+              else if (force === false) this._v.delete(v);
+              else if (this._v.has(v)) this._v.delete(v);
+              else this._v.add(v);
+            },
+            contains(v) {
+              return this._v.has(v);
+            },
+          };
+          const satState = documentRef.createElement('span');
+          satState.setAttribute('data-argos-sat-state', '');
+          satState.textContent = '3D';
+          const satCount = documentRef.createElement('span');
+          satCount.setAttribute('data-argos-sat-count', '');
+          satCount.textContent = '—';
+          const satControls = documentRef.createElement('div');
+          satControls.setAttribute('data-argos-sat-controls', '');
+          satControls.hidden = true;
+          satControls.querySelectorAll = () => [];
+          const satOrbits = documentRef.createElement('input');
+          satOrbits.setAttribute('data-argos-sat-orbits', '');
+          satOrbits.setAttribute('data-argos-action', 'sat-orbits');
+          satOrbits.checked = true;
+          const satCatalog = documentRef.createElement('select');
+          satCatalog.setAttribute('data-argos-sat-catalog', '');
+          satCatalog.setAttribute('data-argos-action', 'sat-catalog');
+          satCatalog.value = 'core';
+          const satNorad = documentRef.createElement('input');
+          satNorad.setAttribute('data-argos-sat-norad', '');
+          satNorad.value = '';
           const searchInput = documentRef.createElement('input');
           searchInput.id = 'argos-search-input';
           searchInput.value = '';
@@ -232,6 +277,13 @@ function fakeDocument() {
             toast,
             count,
             aircraftToggle,
+            satToggle,
+            satControls,
+            satOrbits,
+            satCatalog,
+            satNorad,
+            satState,
+            satCount,
             searchInput,
             searchResults,
           ];
@@ -247,6 +299,13 @@ function fakeDocument() {
             if (sel === '[data-argos-basemap-banner]') return banner;
             if (sel === '[data-argos-action="toggle-aircraft"]')
               return aircraftToggle;
+            if (sel === '[data-argos-action="sat-toggle"]') return satToggle;
+            if (sel === '[data-argos-sat-controls]') return satControls;
+            if (sel === '[data-argos-sat-orbits]') return satOrbits;
+            if (sel === '[data-argos-sat-catalog]') return satCatalog;
+            if (sel === '[data-argos-sat-norad]') return satNorad;
+            if (sel === '[data-argos-sat-count]') return satCount;
+            if (sel === '[data-argos-sat-state]') return satState;
             if (sel.startsWith('[data-argos-detail')) {
               return { textContent: '', dataset: {} };
             }
@@ -286,16 +345,26 @@ class FakePresenter {
     this.cameraMoves = 0;
     this.map = {
       getCenter: () => ({
-        lat: this.mountOpts?.center?.[1] ?? DEFAULT_MAP_CENTER[1],
-        lng: this.mountOpts?.center?.[0] ?? DEFAULT_MAP_CENTER[0],
+        lat: this._centerLat ?? this.mountOpts?.center?.[1] ?? DEFAULT_MAP_CENTER[1],
+        lng: this._centerLon ?? this.mountOpts?.center?.[0] ?? DEFAULT_MAP_CENTER[0],
       }),
+      getZoom: () => this._zoom ?? this.mountOpts?.zoom ?? DEFAULT_MAP_ZOOM,
     };
   }
   async mount(opts = {}) {
     this.mountOpts = opts;
+    this._centerLon = opts.center?.[0];
+    this._centerLat = opts.center?.[1];
+    this._zoom = opts.zoom;
     this.mounted += 1;
     this.onBasemapState?.('ready');
     return this.map;
+  }
+  /** Test helper: simulate operator pan/zoom after mount. */
+  simulateView(lon, lat, zoom) {
+    this._centerLon = lon;
+    this._centerLat = lat;
+    this._zoom = zoom;
   }
   setAircraft(record, { moveCamera = false } = {}) {
     this.aircraft = record;
@@ -437,6 +506,165 @@ test('R17: mount opens over Huntington Beach; fixture load does not move camera'
   assert.equal(mode._presenter.aircraft.id, DEMO_AIRCRAFT_FIXTURE.id);
   assert.equal(mode._presenter.aircraft.lat, DEMO_AIRCRAFT_FIXTURE.lat);
   assert.equal(mode._presenter.aircraft.lon, DEMO_AIRCRAFT_FIXTURE.lon);
+  mode.destroy();
+});
+
+test('R19-3: zoom↔height helpers are comparable', () => {
+  const z = 11.5;
+  const h = heightFromZoom(z);
+  assert.ok(h > 400);
+  const back = zoomFromHeight(h);
+  assert.ok(Math.abs(back - z) < 0.05);
+});
+
+test('R19-3: 2D→3D→2D preserves geographical handoff focus', async () => {
+  const setViews = [];
+  const documentRef = fakeDocument();
+  const viewer = {
+    trackedEntity: null,
+    camera: {
+      cancelFlight() {
+        this.cancelled = true;
+      },
+      setView(opts) {
+        setViews.push(opts);
+      },
+      flyTo() {},
+      positionCartographic: {
+        longitude: (-118.25 * Math.PI) / 180,
+        latitude: (34.05 * Math.PI) / 180,
+        height: heightFromZoom(13),
+      },
+    },
+  };
+  const Cesium = {
+    Cartesian3: {
+      fromDegrees(lon, lat, height) {
+        return { lon, lat, height };
+      },
+    },
+  };
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+    viewer,
+    cesium: Cesium,
+  });
+  await mode.setMode('argos-2d');
+  mode._presenter.simulateView(-118.25, 34.05, 13);
+  await mode.setMode('cesium-3d');
+  assert.equal(mode._handoffView.lon, -118.25);
+  assert.equal(mode._handoffView.lat, 34.05);
+  assert.equal(mode._handoffView.zoom, 13);
+  assert.equal(setViews.length, 1);
+  assert.equal(setViews[0].destination.lon, -118.25);
+  assert.equal(setViews[0].destination.lat, 34.05);
+  await mode.setMode('argos-2d');
+  assert.deepEqual(mode._presenter.mountOpts.center, [-118.25, 34.05]);
+  assert.ok(Math.abs(mode._presenter.mountOpts.zoom - 13) < 0.05);
+  mode.destroy();
+});
+
+test('R19-3: tracked Cesium camera ownership skips handoff apply', async () => {
+  const setViews = [];
+  const documentRef = fakeDocument();
+  const viewer = {
+    trackedEntity: { id: 'sat-25544' },
+    camera: {
+      cancelFlight() {},
+      setView(opts) {
+        setViews.push(opts);
+      },
+      positionCartographic: null,
+    },
+  };
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+    viewer,
+    cesium: {
+      Cartesian3: {
+        fromDegrees(lon, lat, height) {
+          return { lon, lat, height };
+        },
+      },
+    },
+  });
+  await mode.setMode('argos-2d');
+  mode._presenter.simulateView(-117.9, 33.7, 12);
+  await mode.setMode('cesium-3d');
+  assert.equal(setViews.length, 0);
+  mode.destroy();
+});
+
+test('R19-3: Layers satellite controls bridge DataLayerManager without a second poller', async () => {
+  const documentRef = fakeDocument();
+  const calls = [];
+  const layerMod = {
+    getParams: () => ({
+      catalog: 'core',
+      showPoints: true,
+      showOrbits: true,
+      selectedSatTrackingId: null,
+    }),
+    getTrackedInfo: () => null,
+  };
+  const dataManager = {
+    layers: new Map([['satellites', { module: layerMod }]]),
+    isEnabled: () => false,
+    setEnabled: async (id, enabled, opts) => {
+      calls.push(['setEnabled', id, enabled, opts?.origin]);
+      dataManager._enabled = enabled;
+    },
+    setLayerParams: async (id, params, opts) => {
+      calls.push(['setLayerParams', id, params, opts?.origin]);
+    },
+    subscribe: () => () => {},
+    _enabled: false,
+  };
+  dataManager.isEnabled = () => dataManager._enabled;
+
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+    dataManager,
+  });
+  assert.equal(mode._shell.satToggle.disabled, false);
+  assert.match(mode._shell.satStateEl.textContent, /OFF|ON/);
+  await mode._toggleSatellites();
+  assert.deepEqual(calls[0], ['setEnabled', 'satellites', true, 'user']);
+  assert.equal(mode._shell.satControls.hidden, false);
+  await mode._setSatelliteParams({ showOrbits: false });
+  assert.equal(calls[1][0], 'setLayerParams');
+  assert.equal(calls[1][2].showOrbits, false);
+  await mode.setMode('argos-2d');
+  assert.equal(mode._shell.satToggle.disabled, true);
+  assert.equal(mode._shell.satStateEl.textContent, '3D ONLY');
+  assert.equal(mode.pollOwners, 0);
+  mode.destroy();
+});
+
+test('R19-3: setSatelliteControls marks missing layer unavailable', () => {
+  const documentRef = fakeDocument();
+  const mode = new ArgosAtlasMode({
+    documentRef,
+    Presenter: FakePresenter,
+    autoAttach: true,
+    preferArgos2D: false,
+  });
+  setSatelliteControls(mode._shell, {
+    available: false,
+    rendererOk: true,
+    enabled: false,
+  });
+  assert.equal(mode._shell.satToggle.disabled, true);
+  assert.equal(mode._shell.satStateEl.textContent, 'UNAVAILABLE');
   mode.destroy();
 });
 

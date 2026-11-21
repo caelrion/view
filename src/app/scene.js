@@ -67,6 +67,11 @@ export async function createApplicationScene({
     cesiumToken,
   });
   const tileset = photoreal.tileset;
+  // R19-0: Cesium ion logo only when an ion-backed route is actually active.
+  // Keyless Esri / Google-direct stacks must not display CESIUM ion branding.
+  const ionRouteActive = photoreal.route === 'google-ion';
+  document.body.classList.toggle('caelrion-no-cesium-ion', !ionRouteActive);
+  defer(() => document.body.classList.remove('caelrion-no-cesium-ion'));
   // A provider can finish after cancellation; retain ownership of its result.
   defer(() => {
     if (tileset && !tileset.isDestroyed()) {

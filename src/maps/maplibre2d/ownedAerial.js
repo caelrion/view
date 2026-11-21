@@ -1,16 +1,16 @@
 /**
- * R17 streamed worldwide photographic basemap (MapLibre 2D "Satellite").
+ * R17/R19 streamed worldwide photographic basemap (MapLibre 2D "Satellite").
  *
  * Primary: EOxCloudless 2016 (CC BY 4.0) — on-demand WMTS, no local planet cache.
  * Low zoom: NASA GIBS Blue Marble Next Generation.
+ * Close zoom inside verified LA NAIP footprint: owned USDA NAIP PMTiles (R16/R19-1).
  * Labels/roads: owned Protomaps PMTiles overlays (SoCal detail + global overview).
- * Outside SoCal high-detail, overlays overzoom owned z0–7; dark mode uses OpenFreeMap
- * for street detail (see presenter coverage path).
  *
  * Does not download, mosaic, or host a worldwide imagery archive on the droplet.
  */
 import { layers } from '@protomaps/basemaps';
 import { OWNED_PMTILES_PATH, createArgosDarkFlavor } from './ownedBasemap.js';
+import { applyProgressiveRoadDetail } from './zoomDetail.js';
 
 /** EOxCloudless 2016 — Web Mercator WMTS (TileMatrix/TileRow/TileCol = z/y/x). */
 export const EOX_CLOUDLESS_2016_TILE_URL =
@@ -25,19 +25,32 @@ export const EOX_MAX_ZOOM = 14;
 export const GIBS_MAX_ZOOM = 8;
 
 /**
- * R16 LA NAIP archive is retained on disk for rollback/custody only.
- * R17 Satellite mode does not use it as the default photographic source.
+ * R16 LA NAIP archive — R19-1 close-zoom detail inside verified LA footprint.
+ * Worldwide overview remains EOx/GIBS; NAIP is not a planet substitute.
  */
 export const OWNED_AERIAL_ARTIFACT = Object.freeze({
   id: 'caelrion-la-aerial-r01',
   filename: 'caelrion-la-aerial-r01-cc7ee43c04ab.pmtiles',
   sha256: 'cc7ee43c04abd98fc6ffe11af50789beed23cc89963cca9701887e8184b83dff',
   bytes: 65411958,
-  status: 'superseded-as-default-by-r17-streamed-eox',
-  note: 'Retained deploy artifact; not the R17 Satellite primary source',
+  status: 'r19-close-zoom-detail',
+  provenance: 'USDA NAIP via Microsoft Planetary Computer STAC (naip)',
+  licence: 'Public Domain (USDA FSA NAIP / U.S. Government work)',
+  acquisition: '2022-05 California 60 cm (processed GSD ~2.4 m)',
+  minzoom: 10,
+  maxzoom: 16,
+  note: 'Close-zoom LA detail over EOx/GIBS worldwide overview',
 });
 
 export const OWNED_AERIAL_PMTILES_PATH = `/assets/maps/${OWNED_AERIAL_ARTIFACT.filename}`;
+
+/** Verified NAIP geographic footprint (W,S,E,N). */
+export const NAIP_LA_BOUNDS = Object.freeze({
+  west: -118.42,
+  south: 33.98,
+  east: -118.08,
+  north: 34.18,
+});
 
 /** @deprecated R17 — worldwide imagery has no local footprint gate. */
 export const AERIAL_COVERAGE_BOUNDS = Object.freeze({
@@ -52,8 +65,20 @@ export const MAP_ATTRIBUTION_HTML_AERIAL =
   '<a href="https://eox.at" target="_blank" rel="noopener">EOX IT Services GmbH</a> ' +
   '(Contains modified Copernicus Sentinel data 2016 &amp; 2017) · ' +
   '<a href="https://earthobservatory.nasa.gov/features/BlueMarble" target="_blank" rel="noopener">NASA Blue Marble</a> · ' +
+  'USDA NAIP (public domain) where covered · ' +
   '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> labels';
 
+/** @param {number} lon @param {number} lat */
+export function isInNaipCoverage(lon, lat) {
+  return (
+    Number.isFinite(lon) &&
+    Number.isFinite(lat) &&
+    lon >= NAIP_LA_BOUNDS.west &&
+    lon <= NAIP_LA_BOUNDS.east &&
+    lat >= NAIP_LA_BOUNDS.south &&
+    lat <= NAIP_LA_BOUNDS.north
+  );
+}
 /** Light overlay flavor for roads/labels on photographic imagery. */
 export function createAerialOverlayFlavor() {
   const base = createArgosDarkFlavor();
@@ -115,9 +140,14 @@ export function createOwnedAerialStyle({
   const sourceUrl = vectorUrl.startsWith('pmtiles://')
     ? vectorUrl
     : `pmtiles://${vectorUrl}`;
-  const overlay = selectAerialOverlayLayers(
-    layers('protomaps', createAerialOverlayFlavor(), { lang: 'en' }),
+  const overlay = applyProgressiveRoadDetail(
+    selectAerialOverlayLayers(
+      layers('protomaps', createAerialOverlayFlavor(), { lang: 'en' }),
+    ),
   );
+  const naipUrl = OWNED_AERIAL_PMTILES_PATH.startsWith('pmtiles://')
+    ? OWNED_AERIAL_PMTILES_PATH
+    : `pmtiles://${OWNED_AERIAL_PMTILES_PATH}`;
   return {
     version: 8,
     name: 'caelrion-streamed-eox-satellite',
@@ -138,6 +168,20 @@ export function createOwnedAerialStyle({
         minzoom: EOX_MIN_ZOOM,
         maxzoom: EOX_MAX_ZOOM,
         attribution: 'Sentinel-2 cloudless by EOX IT Services GmbH (CC BY 4.0)',
+      },
+      'naip-la': {
+        type: 'raster',
+        url: naipUrl,
+        tileSize: 256,
+        minzoom: OWNED_AERIAL_ARTIFACT.minzoom,
+        maxzoom: OWNED_AERIAL_ARTIFACT.maxzoom,
+        attribution: 'USDA NAIP (public domain)',
+        bounds: [
+          NAIP_LA_BOUNDS.west,
+          NAIP_LA_BOUNDS.south,
+          NAIP_LA_BOUNDS.east,
+          NAIP_LA_BOUNDS.north,
+        ],
       },
       protomaps: {
         type: 'vector',
@@ -173,6 +217,27 @@ export function createOwnedAerialStyle({
           'raster-fade-duration': 0,
         },
       },
+      {
+        id: 'naip-la-raster',
+        type: 'raster',
+        source: 'naip-la',
+        minzoom: OWNED_AERIAL_ARTIFACT.minzoom,
+        maxzoom: OWNED_AERIAL_ARTIFACT.maxzoom + 1,
+        paint: {
+          'raster-opacity': [
+            'interpolate',
+            ['linear'],
+            ['zoom'],
+            9.5,
+            0,
+            10.2,
+            1,
+            16,
+            1,
+          ],
+          'raster-fade-duration': 0,
+        },
+      },
       ...overlay,
     ],
   };
@@ -188,7 +253,7 @@ export function isInAerialCoverage(lon, lat) {
 
 /**
  * Streamed worldwide imagery — ready whenever camera is valid.
- * High-zoom beyond EOx max reports limited-coverage (not offline).
+ * Beyond EOx max: ready inside verified NAIP footprint, else limited-coverage.
  * @returns {'ready'|'limited-coverage'}
  */
 export function aerialCoverageState({ lon, lat, zoom }) {
@@ -199,16 +264,20 @@ export function aerialCoverageState({ lon, lat, zoom }) {
   ) {
     return 'ready';
   }
-  if (zoom > EOX_MAX_ZOOM + 1.5) return 'limited-coverage';
+  if (zoom > EOX_MAX_ZOOM + 1.5) {
+    return isInNaipCoverage(lon, lat) ? 'ready' : 'limited-coverage';
+  }
   return 'ready';
 }
 
 export const OWNED_AERIAL_LICENSE = Object.freeze({
   claim:
-    'Streamed EOxCloudless 2016 (CC BY 4.0) + NASA GIBS Blue Marble overview',
-  data_license: 'CC BY 4.0 (EOX 2016); NASA imagery credit required',
+    'Streamed EOxCloudless 2016 (CC BY 4.0) + NASA GIBS overview + USDA NAIP LA detail',
+  data_license:
+    'CC BY 4.0 (EOX 2016); NASA imagery credit required; USDA NAIP public domain',
   labels: 'ODbL (OpenStreetMap contributors) via Protomaps / OpenFreeMap',
-  tile_runtime: 'HTTPS WMTS/XYZ on demand — not self-hosted planet imagery',
+  tile_runtime:
+    'HTTPS WMTS/XYZ on demand + same-origin NAIP PMTiles for LA close zoom',
   user_facing_name: 'Satellite',
   note: '2018–2025 EOx noncommercial layers are not used',
   not_used: [
@@ -220,7 +289,8 @@ export const OWNED_AERIAL_LICENSE = Object.freeze({
   ],
   eox_tile_url: EOX_CLOUDLESS_2016_TILE_URL,
   gibs_tile_url: GIBS_BLUE_MARBLE_TILE_URL,
-  legacy_naip_artifact: OWNED_AERIAL_ARTIFACT,
+  naip_artifact: OWNED_AERIAL_ARTIFACT,
+  naip_bounds: NAIP_LA_BOUNDS,
 });
 
 /** Persistable 2D basemap mode ids. */
