@@ -136,7 +136,32 @@ test('P0: Satellite style streams EOx + GIBS + NAIP LA detail (no Esri planet)',
   assert.ok(waterIdx > eoxIdx);
   assert.ok(waterIdx < roadIdx);
   assert.equal(style.layers[waterIdx].paint['fill-color'], '#050E18');
+  // Default (no center/factor) stays daylight water opacity.
   assert.equal(style.layers[waterIdx].paint['fill-opacity'], 0);
+});
+
+test('R26: first-frame Satellite style bakes night paint for known center', () => {
+  // California deep night UTC — same fixture family as solarDayNight tests.
+  const nightMs = Date.UTC(2026, 6, 2, 8, 0, 0);
+  const style = createOwnedAerialStyle({
+    center: [...DEFAULT_MAP_CENTER],
+    nowMs: nightMs,
+  });
+  assert.ok(style.metadata['caelrion:satellite-night-factor'] > 0.9);
+  const eox = style.layers.find((l) => l.id === 'eox-cloudless-raster');
+  assert.ok(eox.paint['raster-brightness-max'] < 0.7);
+  assert.ok(eox.paint['raster-saturation'] < -0.4);
+  const water = style.layers.find((l) => l.id === 'satellite-night-water');
+  assert.ok(water.paint['fill-opacity'] > 0.6);
+  // Daytime Cairo at same UTC stays natural.
+  const dayStyle = createOwnedAerialStyle({
+    center: [31.2357, 30.0444],
+    nowMs: nightMs,
+  });
+  assert.equal(dayStyle.metadata['caelrion:satellite-night-factor'], 0);
+  const dayEox = dayStyle.layers.find((l) => l.id === 'eox-cloudless-raster');
+  assert.equal(dayEox.paint['raster-brightness-max'], 1);
+  assert.equal(dayEox.paint['raster-saturation'], 0);
 });
 
 test('P0: aerial overlay filter drops opaque land fills', () => {

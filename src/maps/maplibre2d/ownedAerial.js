@@ -15,7 +15,12 @@ import {
   applySatelliteResidentialRestraint,
   applySatelliteSelectiveGoldRoads,
 } from './zoomDetail.js';
-import { createSatelliteNightWaterLayer } from './solarDayNight.js';
+import {
+  createSatelliteNightWaterLayer,
+  nightFactorForMapCenter,
+  rasterPaintForNightFactor,
+  waterTintOpacityForNightFactor,
+} from './solarDayNight.js';
 
 /** EOxCloudless 2016 — Web Mercator WMTS (TileMatrix/TileRow/TileCol = z/y/x). */
 export const EOX_CLOUDLESS_2016_TILE_URL =
@@ -163,15 +168,52 @@ export function selectAerialOverlayLayers(allLayers) {
 }
 
 /**
+ * Resolve night factor for Satellite style construction (R26 first-frame).
+ * Prefer an explicit factor; otherwise compute from known center + UTC.
+ * @param {{ nightFactor?: number, center?: [number, number]|{lon:number,lat:number}|null, nowMs?: number }} [opts]
+ */
+export function resolveSatelliteNightFactor({
+  nightFactor,
+  center = null,
+  nowMs = Date.now(),
+} = {}) {
+  if (Number.isFinite(Number(nightFactor))) {
+    return Math.max(0, Math.min(1, Number(nightFactor)));
+  }
+  let lon;
+  let lat;
+  if (Array.isArray(center) && center.length >= 2) {
+    lon = Number(center[0]);
+    lat = Number(center[1]);
+  } else if (center && typeof center === 'object') {
+    lon = Number(center.lon ?? center.lng);
+    lat = Number(center.lat);
+  }
+  if (Number.isFinite(lat) && Number.isFinite(lon)) {
+    return nightFactorForMapCenter({ lat, lon, nowMs });
+  }
+  return 0;
+}
+
+/**
  * MapLibre style: streamed EOx/GIBS imagery + owned vector overlays.
  * Imagery tiles are requested only for the visible viewport (MapLibre default).
+ *
+ * R26: bake solar raster/water paint into the style JSON so the first visible
+ * frame matches the startup center's day/night state (no post-load flash).
  */
 export function createOwnedAerialStyle({
   vectorUrl = OWNED_PMTILES_PATH,
+  nightFactor,
+  center = null,
+  nowMs = Date.now(),
 } = {}) {
   const sourceUrl = vectorUrl.startsWith('pmtiles://')
     ? vectorUrl
     : `pmtiles://${vectorUrl}`;
+  const factor = resolveSatelliteNightFactor({ nightFactor, center, nowMs });
+  const rasterDn = rasterPaintForNightFactor(factor);
+  const waterOpacity = waterTintOpacityForNightFactor(factor);
   // Progressive → residential restraint → R26 selective gold (trunk/primary only).
   const overlay = applySatelliteSelectiveGoldRoads(
     applySatelliteResidentialRestraint(
@@ -189,6 +231,9 @@ export function createOwnedAerialStyle({
   return {
     version: 8,
     name: 'caelrion-streamed-eox-satellite',
+    metadata: {
+      'caelrion:satellite-night-factor': factor,
+    },
     glyphs: '/assets/basemaps/fonts/{fontstack}/{range}.pbf',
     sprite: '/assets/basemaps/sprites/v4/dark',
     sources: {
@@ -243,6 +288,7 @@ export function createOwnedAerialStyle({
         paint: {
           'raster-opacity': 1,
           'raster-fade-duration': 0,
+          ...rasterDn,
         },
       },
       {
@@ -253,6 +299,7 @@ export function createOwnedAerialStyle({
         paint: {
           'raster-opacity': 1,
           'raster-fade-duration': 0,
+          ...rasterDn,
         },
       },
       {
@@ -274,10 +321,11 @@ export function createOwnedAerialStyle({
             1,
           ],
           'raster-fade-duration': 0,
+          ...rasterDn,
         },
       },
-      // R25: nighttime water tint (opacity driven by solar elevation in presenter).
-      createSatelliteNightWaterLayer(),
+      // R25/R26: water tint starts at the correct solar opacity (no post-load flash).
+      createSatelliteNightWaterLayer({ fillOpacity: waterOpacity }),
       ...overlay,
     ],
   };

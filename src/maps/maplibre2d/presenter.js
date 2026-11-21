@@ -132,9 +132,10 @@ export class MapLibre2DPresenter {
         : BASEMAP_MODE_SATELLITE;
     this._setBasemapState('loading');
     ensurePmtilesProtocol();
+    // R26: bake solar paint for the *known* startup center before first paint.
     const initialStyle =
       this._basemapMode === BASEMAP_MODE_SATELLITE
-        ? createOwnedAerialStyle()
+        ? this._createSatelliteStyleForCenter(center)
         : createOwnedBasemapStyle();
     const map = new maplibregl.Map({
       container: this._container,
@@ -323,7 +324,12 @@ export class MapLibre2DPresenter {
     try {
       ensurePmtilesProtocol();
       if (next === BASEMAP_MODE_SATELLITE) {
-        await this._setStyleAwaitLoad(createOwnedAerialStyle());
+        // R26: style already carries correct solar paint for the live center.
+        await this._setStyleAwaitLoad(
+          this._createSatelliteStyleForCenter(
+            center ? [center.lng, center.lat] : DEFAULT_MAP_CENTER,
+          ),
+        );
         this._styleMode = 'owned-aerial';
         this._installAttribution(MAP_ATTRIBUTION_HTML_AERIAL);
       } else {
@@ -422,11 +428,53 @@ export class MapLibre2DPresenter {
   /** Fly camera to a WGS84 point (local search / programmatic focus). */
   flyTo({ lon, lat, zoom = 8, duration = 900 } = {}) {
     if (!this._map || !Number.isFinite(lon) || !Number.isFinite(lat)) return;
+    // R26: update solar paint for the destination before the camera moves so
+    // startup geolocation cannot flash daytime-then-night over the new region.
+    if (
+      this._basemapMode === BASEMAP_MODE_SATELLITE &&
+      this._styleMode === 'owned-aerial'
+    ) {
+      const factor = nightFactorForMapCenter({ lat, lon, nowMs: Date.now() });
+      this._lastNightFactor = factor;
+      applySatelliteDayNightPaint(this._map, factor);
+    }
     this._map.flyTo({
       center: [lon, lat],
       zoom,
       duration,
       essential: true,
+    });
+  }
+
+  /**
+   * Build Satellite style with solar paint for a known center (first frame).
+   * @param {[number, number]|{lng?:number,lon?:number,lat?:number}|null} center
+   */
+  _createSatelliteStyleForCenter(center) {
+    let lon;
+    let lat;
+    if (Array.isArray(center) && center.length >= 2) {
+      lon = Number(center[0]);
+      lat = Number(center[1]);
+    } else if (center && typeof center === 'object') {
+      lon = Number(center.lon ?? center.lng);
+      lat = Number(center.lat);
+    } else {
+      lon = DEFAULT_MAP_CENTER[0];
+      lat = DEFAULT_MAP_CENTER[1];
+    }
+    const factor = nightFactorForMapCenter({
+      lat: Number.isFinite(lat) ? lat : DEFAULT_MAP_CENTER[1],
+      lon: Number.isFinite(lon) ? lon : DEFAULT_MAP_CENTER[0],
+      nowMs: Date.now(),
+    });
+    this._lastNightFactor = factor;
+    return createOwnedAerialStyle({
+      nightFactor: factor,
+      center: [
+        Number.isFinite(lon) ? lon : DEFAULT_MAP_CENTER[0],
+        Number.isFinite(lat) ? lat : DEFAULT_MAP_CENTER[1],
+      ],
     });
   }
 

@@ -146,9 +146,10 @@ export function waterTintOpacityForNightFactor(nightFactor) {
 
 /**
  * Style layer inserted under road/label overlays.
+ * @param {{ fillOpacity?: number }} [opts] initial opacity (R26 first-frame)
  * @returns {object}
  */
-export function createSatelliteNightWaterLayer() {
+export function createSatelliteNightWaterLayer({ fillOpacity = 0 } = {}) {
   return {
     id: SATELLITE_NIGHT_WATER_LAYER_ID,
     type: 'fill',
@@ -157,7 +158,7 @@ export function createSatelliteNightWaterLayer() {
     layout: { visibility: 'visible' },
     paint: {
       'fill-color': SATELLITE_NIGHT_WATER_COLOR,
-      'fill-opacity': 0,
+      'fill-opacity': clamp01(Number(fillOpacity) || 0),
       'fill-antialias': true,
     },
   };
