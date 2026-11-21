@@ -276,7 +276,7 @@ export const MAP_LICENSE_MANIFEST = Object.freeze({
   tiles: {
     provider: 'Caelrion-hosted Protomaps extract',
     runtime: 'pmtiles',
-    path_pattern: '/assets/maps/caelrion-basemap-r01-*.pmtiles',
+    path_pattern: '/assets/maps/caelrion-basemap-r02-*.pmtiles',
   },
   aerial_tiles: {
     provider: 'EOxCloudless 2016 (streamed) + NASA GIBS Blue Marble',

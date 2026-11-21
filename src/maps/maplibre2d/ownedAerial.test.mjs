@@ -44,10 +44,10 @@ test('P0: R17-P1 dark flavor subdues roads; city labels are not gold', () => {
 test('R21: Satellite gold hierarchy; residential off-white; Dark unchanged', () => {
   const aerial = createAerialOverlayFlavor();
   assert.equal(aerial.highway, '#D2B56A');
-  assert.equal(aerial.major, '#BFA876');
-  assert.equal(aerial.link, '#BFA876');
+  assert.equal(aerial.major, '#E4E9ED');
+  assert.equal(aerial.link, '#D2B56A');
   assert.equal(aerial.bridges_highway, '#D2B56A');
-  assert.equal(aerial.bridges_major, '#BFA876');
+  assert.equal(aerial.bridges_major, '#E4E9ED');
   assert.equal(aerial.tunnel_highway, '#D2B56A');
   // Residential never receives gold highlight.
   assert.equal(aerial.minor_a, '#C8D0D4');
@@ -56,7 +56,6 @@ test('R21: Satellite gold hierarchy; residential off-white; Dark unchanged', () 
   assert.equal(aerial.minor_service, '#C8D0D4');
   assert.equal(aerial.bridges_minor, '#C8D0D4');
   assert.notEqual(aerial.minor_a, aerial.highway);
-  assert.notEqual(aerial.minor_a, aerial.major);
   // Style applies satellite restraint so minors stay faint.
   const style = createOwnedAerialStyle();
   const minor = style.layers.find((l) => l.id === 'roads_minor');
@@ -68,7 +67,7 @@ test('R21: Satellite gold hierarchy; residential off-white; Dark unchanged', () 
   const lastOpacity = minorStops[minorStops.length - 1];
   assert.ok(typeof lastOpacity === 'number' && lastOpacity <= 0.4);
   assert.equal(highway?.paint?.['line-color'], '#D2B56A');
-  // R26/R04/R27: soft gold trunk; neutral primary/secondary; tertiary subtle.
+  // R28: highway-only gold; trunk+primary/secondary neutral.
   const major = style.layers.find((l) => l.id === 'roads_major');
   const primary = style.layers.find((l) => l.id === 'roads_primary');
   const secondary = style.layers.find((l) => l.id === 'roads_secondary');
@@ -77,7 +76,7 @@ test('R21: Satellite gold hierarchy; residential off-white; Dark unchanged', () 
   assert.ok(primary);
   assert.ok(secondary);
   assert.ok(tertiary);
-  assert.equal(major.paint['line-color'], '#BFA876');
+  assert.equal(major.paint['line-color'], '#E4E9ED');
   assert.equal(primary.paint['line-color'], '#E4E9ED');
   assert.equal(secondary.paint['line-color'], '#C5CDD3');
   assert.equal(tertiary.paint['line-color'], '#C8D0D4');

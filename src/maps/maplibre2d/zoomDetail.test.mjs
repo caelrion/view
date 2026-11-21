@@ -88,7 +88,7 @@ test('R21: satellite restraint caps residential; leaves highway/major alone', ()
   assert.equal(next[3].paint['text-opacity'][0], 'interpolate');
 });
 
-test('R26/R04/R27: soft gold trunk; neutrals readable; wide-zoom quieter', () => {
+test('R26–R28: highway-only gold; trunk/primary neutral; wide-zoom quieter', () => {
   const layers = applySatelliteSelectiveGoldRoads([
     {
       id: 'roads_highway',
@@ -106,7 +106,7 @@ test('R26/R04/R27: soft gold trunk; neutrals readable; wide-zoom quieter', () =>
       id: 'roads_link',
       type: 'line',
       filter: ['has', 'is_link'],
-      paint: { 'line-color': '#BFA876' },
+      paint: { 'line-color': '#D2B56A' },
     },
     {
       id: 'roads_labels_major',
@@ -125,6 +125,7 @@ test('R26/R04/R27: soft gold trunk; neutrals readable; wide-zoom quieter', () =>
   assert.ok(ids.includes('roads_link_local'));
   assert.ok(ids.includes('roads_labels_primary'));
   assert.ok(ids.includes('roads_labels_secondary'));
+  assert.ok(ids.includes('roads_labels_trunk'));
 
   const highway = layers.find((l) => l.id === 'roads_highway');
   const major = layers.find((l) => l.id === 'roads_major');
@@ -133,7 +134,8 @@ test('R26/R04/R27: soft gold trunk; neutrals readable; wide-zoom quieter', () =>
   const tertiary = layers.find((l) => l.id === 'roads_tertiary');
   const labels = layers.find((l) => l.id === 'roads_labels_major');
 
-  assert.equal(major.paint['line-color'], '#BFA876');
+  // R28: trunk is neutral primary family — not gold.
+  assert.equal(major.paint['line-color'], SATELLITE_PRIMARY_NEUTRAL);
   assert.equal(primary.paint['line-color'], SATELLITE_PRIMARY_NEUTRAL);
   assert.equal(secondary.paint['line-color'], SATELLITE_SECONDARY_NEUTRAL);
   assert.equal(tertiary.paint['line-color'], '#C8D0D4');
@@ -142,7 +144,9 @@ test('R26/R04/R27: soft gold trunk; neutrals readable; wide-zoom quieter', () =>
   assert.ok(JSON.stringify(primary.filter).includes('primary'));
   assert.ok(JSON.stringify(secondary.filter).includes('secondary'));
   assert.ok(JSON.stringify(tertiary.filter).includes('tertiary'));
-  assert.ok(JSON.stringify(labels.filter).includes('trunk'));
+  assert.equal(JSON.stringify(labels.filter).includes('trunk'), false);
+  assert.ok(JSON.stringify(labels.filter).includes('highway'));
+  assert.deepEqual([...SATELLITE_GOLD_MAJOR_KIND_DETAILS], []);
 
   // R27: highway opacity soft-capped (not full 1.0).
   const h13 = opacityAtZoom(highway.paint['line-opacity'], 13);

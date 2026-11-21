@@ -9,9 +9,9 @@
  *
  * Mutates paint copies only — does not replace Protomaps layer definitions.
  *
- * R26 selective gold + R04 neutral streets + R27 gold softening:
- *   Gold: highway + trunk (+ freeway/trunk ramps) — softer, less luminous
- *   Neutral readable: primary, then secondary (quieter at wide zoom)
+ * R26–R28 Satellite road hierarchy:
+ *   Gold: highway / freeway only (+ motorway_link) — R27 softened, R28 highway-only
+ *   Neutral: trunk + primary, then secondary (quieter at wide zoom)
  *   Subtle: tertiary + residential/service
  * See applySatelliteSelectiveGoldRoads.
  */
@@ -19,7 +19,7 @@
 /** Residential / service / pier — never demoted arterial clones. */
 const MINOR_ROAD =
   /^(roads_minor|roads_other|roads_minor_service|roads_tunnels_other|roads_tunnels_minor|roads_bridges_other|roads_bridges_minor|roads_pier|roads_tertiary|roads_bridges_tertiary|roads_tunnels_tertiary|roads_link_local|roads_bridges_link_local|roads_tunnels_link_local)/;
-/** True gold arterials (trunk) + qualifying highway/trunk ramps. */
+/** Arterials + gold freeway ramps (Satellite may demote trunk to neutral). */
 const MAJOR_ROAD =
   /^(roads_major|roads_link|roads_bridges_major|roads_bridges_link|roads_tunnels_major|roads_tunnels_link)/;
 const HIGHWAY_ROAD =
@@ -28,10 +28,14 @@ const ROAD_LABEL =
   /^(roads_labels_|roads_label_|address_label|roads_shields|roads_oneway)/;
 
 /**
- * OSM kind_detail values that keep Satellite soft-gold (Tier 2).
- * Primary/secondary stay neutral (R04) — not gold.
+ * OSM kind_detail values that keep Satellite soft-gold on major_road.
+ * R28: empty — Mario preference is highway/freeway gold only (kind=highway).
+ * Trunk is neutral with primary.
  */
-export const SATELLITE_GOLD_MAJOR_KIND_DETAILS = Object.freeze(['trunk']);
+export const SATELLITE_GOLD_MAJOR_KIND_DETAILS = Object.freeze([]);
+
+/** Trunk arterials — readable neutral (same family as primary). */
+export const SATELLITE_NEUTRAL_TRUNK_KIND_DETAILS = Object.freeze(['trunk']);
 
 /** Neutral primary arterials — readable, not gold. */
 export const SATELLITE_NEUTRAL_PRIMARY_KIND_DETAILS = Object.freeze([
@@ -49,9 +53,10 @@ export const SATELLITE_NEUTRAL_TERTIARY_KIND_DETAILS = Object.freeze([
 ]);
 
 /**
- * @deprecated R04 — use the NEUTRAL_* arrays. Kept as the union for tests.
+ * @deprecated R04/R28 — use the NEUTRAL_* arrays. Kept as the union for tests.
  */
 export const SATELLITE_DEMOTE_MAJOR_KIND_DETAILS = Object.freeze([
+  ...SATELLITE_NEUTRAL_TRUNK_KIND_DETAILS,
   ...SATELLITE_NEUTRAL_PRIMARY_KIND_DETAILS,
   ...SATELLITE_NEUTRAL_SECONDARY_KIND_DETAILS,
   ...SATELLITE_NEUTRAL_TERTIARY_KIND_DETAILS,
@@ -59,10 +64,10 @@ export const SATELLITE_DEMOTE_MAJOR_KIND_DETAILS = Object.freeze([
 
 /**
  * Link kind_detail values that keep soft gold for freeway continuity.
+ * R28: motorway_link only (trunk_link demoted with other local links).
  */
 export const SATELLITE_GOLD_LINK_KIND_DETAILS = Object.freeze([
   'motorway_link',
-  'trunk_link',
 ]);
 
 /** Neutral colors — cool off-white family, never gold. */
@@ -226,11 +231,11 @@ export function applySatelliteSelectiveGoldRoads(
 ) {
   if (!Array.isArray(layers)) return layers;
 
-  const goldMajor = kindDetailIn(SATELLITE_GOLD_MAJOR_KIND_DETAILS);
+  const trunkOnly = kindDetailIn(SATELLITE_NEUTRAL_TRUNK_KIND_DETAILS);
   const primaryOnly = kindDetailIn(SATELLITE_NEUTRAL_PRIMARY_KIND_DETAILS);
   const secondaryOnly = kindDetailIn(SATELLITE_NEUTRAL_SECONDARY_KIND_DETAILS);
   const tertiaryOnly = kindDetailIn(SATELLITE_NEUTRAL_TERTIARY_KIND_DETAILS);
-  // Freeway ramps (kind=highway) + trunk_link keep soft gold.
+  // Freeway ramps: kind=highway links + motorway_link keep soft gold.
   const goldLink = [
     'any',
     ['==', 'kind', 'highway'],
@@ -248,10 +253,6 @@ export function applySatelliteSelectiveGoldRoads(
     5, 0.04, 7, 0.28, 9, 0.72, 11, 0.88, 13, 0.9,
   ]);
   const highwayCasing = opacityExpr([5, 0, 7, 0.1, 9, 0.4, 11, 0.7, 13, 0.75]);
-  const majorLine = opacityExpr([
-    8, 0, 10, 0.24, 11.5, 0.42, 13, 0.52, 15, 0.6,
-  ]);
-  const majorCasing = opacityExpr([9, 0, 11, 0.1, 13, 0.26, 15, 0.34]);
   const goldLinkLine = opacityExpr([12.5, 0, 13.5, 0.28, 15, 0.48, 16, 0.58]);
 
   // R04 tiers + R27 quieter wide zoom (streets stay readable by z12).
@@ -294,21 +295,20 @@ export function applySatelliteSelectiveGoldRoads(
       continue;
     }
 
-    // Narrow gold majors to trunk; emit neutral primary/secondary/tertiary.
+    // R28: no gold on major_road — trunk is neutral primary family.
     if (
       type === 'line' &&
       /^(roads_major|roads_bridges_major|roads_tunnels_major)/.test(id)
     ) {
-      const narrowed = andFilter(andFilter(layer.filter, notLink), goldMajor);
       const isCasing = /casing|_casing/.test(id);
       out.push({
         ...layer,
-        filter: narrowed,
-        paint: withOpacity(
-          layer.paint || {},
-          'line-opacity',
-          isCasing ? majorCasing : majorLine,
-        ),
+        filter: andFilter(andFilter(layer.filter, notLink), trunkOnly),
+        paint: {
+          ...(layer.paint || {}),
+          'line-color': primaryColor,
+          'line-opacity': isCasing ? primaryCasing : primaryLine,
+        },
       });
 
       const tiers = [
@@ -362,7 +362,7 @@ export function applySatelliteSelectiveGoldRoads(
         paint: withOpacity(
           { ...(layer.paint || {}) },
           'line-opacity',
-          isCasing ? majorCasing : goldLinkLine,
+          isCasing ? highwayCasing : goldLinkLine,
         ),
       });
       const localId = `${id}_local`;
@@ -379,17 +379,27 @@ export function applySatelliteSelectiveGoldRoads(
       continue;
     }
 
-    // Gold labels: highway + trunk only.
+    // Gold labels: highway / freeway only (R28).
     if (type === 'symbol' && id === 'roads_labels_major') {
       out.push({
         ...layer,
-        filter: andFilter(layer.filter, [
-          'any',
-          ['==', 'kind', 'highway'],
-          kindDetailIn(SATELLITE_GOLD_MAJOR_KIND_DETAILS),
-        ]),
+        filter: andFilter(layer.filter, ['==', 'kind', 'highway']),
       });
-      // Restore neutral primary/secondary name labels (R04).
+      // Neutral trunk + primary/secondary name labels.
+      out.push(
+        cloneLayerWith(layer, {
+          id: 'roads_labels_trunk',
+          filter: andFilter(
+            ['==', 'kind', 'major_road'],
+            kindDetailIn(SATELLITE_NEUTRAL_TRUNK_KIND_DETAILS),
+          ),
+          paintPatch: {
+            'text-color': '#E2E7EB',
+            'text-halo-color': 'rgba(23, 32, 39, 0.75)',
+            'text-opacity': primaryLabel,
+          },
+        }),
+      );
       out.push(
         cloneLayerWith(layer, {
           id: 'roads_labels_primary',

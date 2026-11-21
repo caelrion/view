@@ -26,7 +26,7 @@ test('P0: R15/R16 primary dark style is owned Protomaps/PMTiles (no Esri default
   assert.equal(style.name, 'caelrion-owned-protomaps-dark');
   assert.ok(style.sources.protomaps);
   assert.match(style.sources.protomaps.url, /^pmtiles:\/\//);
-  assert.match(style.sources.protomaps.url, /caelrion-basemap-r01/);
+  assert.match(style.sources.protomaps.url, /caelrion-basemap-r02/);
   assert.match(style.glyphs, /^\/assets\/basemaps\/fonts\//);
   assert.match(style.sprite, /^\/assets\/basemaps\/sprites\/v4\/dark/);
   assert.ok(Array.isArray(style.layers));
@@ -69,6 +69,15 @@ test('P0: ownedCoverageState distinguishes ready vs limited-coverage', () => {
   );
   assert.equal(
     ownedCoverageState({ lon: -118.24, lat: 34.05, zoom: 5 }),
+    'ready',
+  );
+  // R28: Bay Area / Northern CA at city zoom are ready (statewide detail).
+  assert.equal(
+    ownedCoverageState({ lon: -122.4194, lat: 37.7749, zoom: 12 }),
+    'ready',
+  );
+  assert.equal(
+    ownedCoverageState({ lon: -122.3917, lat: 40.5865, zoom: 12 }),
     'ready',
   );
   assert.equal(
