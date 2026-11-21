@@ -1,0 +1,52 @@
+{
+  "coordinate": "CAELRION_VIEW_R20_MUTED_SATELLITE_ROAD_COLOR_LIVE_R01",
+  "outcome": "R20_PRODUCTION_RELEASE_EXECUTED_AND_COLD_VERIFIED",
+  "disposition": "A",
+  "production_cold_verified": true,
+  "owner": "Incumbent View frontend/Cursor host custodian",
+  "deployed_commit": "c6d31414d0ffb0110df69fa1cd2a268a21956187",
+  "deployed_tree": "75f225f21707d7be1fd76f9de23c86378617acf1",
+  "owned_aerial_blob": "227d422e0b1e9ea6493dffc52db9df665e002be0",
+  "pr": "https://github.com/caelrion/view/pull/9",
+  "ci_run": "https://github.com/caelrion/view/actions/runs/44850486110",
+  "ci_conclusion": "success",
+  "build": {
+    "node": "v24.22.3",
+    "npm_ci_exit": 0,
+    "npm_run_build_exit": 0
+  },
+  "install_target": "/opt/caelrion/core/view/dist",
+  "caddy_root": "/srv/view/dist (bind: /opt/caelrion/core → /srv)",
+  "served_js": "assets/index-B61aid0H.js",
+  "served_js_sha256": "45167cae1038ba643a186c95717dbe057a5eaca31f88924dc748b25e5114d7d2",
+  "served_css": "assets/index-Cqq4ijZd.css",
+  "served_css_sha256": "0c23b2f30b18399f92da5121b20ca5ab57542b6309f5c56b18f8a0f000ddcac1",
+  "rollback": "/opt/caelrion/view-releases/r19-before-r20-CALBmHvr-20261121T013940Z",
+  "rollback_js_sha256": "05a77ffcee02f940b20a0eb8f8b0ebf30f0891a3ed670810490aec61914f238e",
+  "public_url": "https://view.caelrion.com/",
+  "live_road_colors": {
+    "highway": "#819398",
+    "major": "#697A80",
+    "minor": "#53656C"
+  },
+  "checks": {
+    "satellite_roads_muted_not_near_white": true,
+    "major_distinguishable": true,
+    "minor_subdued": true,
+    "labels_legible": true,
+    "progressive_zoom_opacity_expressions_present": true,
+    "dark_r17_colors_unchanged": true,
+    "naip_source_present": true,
+    "eox_source_present": true,
+    "shared_header_3d": true,
+    "no_cesium_ion_logo": true,
+    "esri_attribution_accessible": true,
+    "layers_menu_present": true,
+    "camera_continuity_preserved": true
+  },
+  "screenshots": [
+    "la-satellite-z14.png",
+    "hb-satellite-z12.png"
+  ],
+  "remaining_visual_issues": "Mario final visual acceptance remains a separate product decision."
+}
