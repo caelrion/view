@@ -1,0 +1,43 @@
+{
+  "coordinate": "CAELRION_VIEW_R22_LOCATION_AWARE_STARTUP_HOME_AND_MAP_MODE_CONTINUITY_R01",
+  "outcome": "R22_LOCATION_GLOBE_HOME_AND_MAP_CONTINUITY_PRODUCTION_VERIFIED",
+  "production_cold_verified": true,
+  "baseline_main_at_start": "836961db8f81b334a9817129e45a79176c1425df",
+  "baseline_tree_at_start": "b23dd1a02b9c031c0cfe6adde825e4fc30d44525",
+  "deployed_commit": "61cc1c760c67571c7e986f031cf9fb06a3d3d8e1",
+  "deployed_tree": "9c86213d591f71906b083d6d8f15ee09c4ee3ab0",
+  "feature_head_r22": "0a913ac",
+  "prs": [
+    "https://github.com/caelrion/view/pull/11",
+    "https://github.com/caelrion/view/pull/12"
+  ],
+  "ci_runs": [
+    "https://github.com/caelrion/view/actions/runs/44877038631",
+    "https://github.com/caelrion/view/actions/runs/44877627122"
+  ],
+  "ci_conclusion": "success",
+  "served_js": "assets/index-DjtHpcbx.js",
+  "served_js_sha256": "aa7b9e03e3dcc4e843ab93778a42592f333bcd0bc053120d721fa921c017c7fd",
+  "served_css": "assets/index-CYWcwYVj.css",
+  "served_css_sha256": "bd913fed7041f9138c37625d61d9da37af8e3d363e55c2abf33cdfb28b1ddf11",
+  "rollback_before_r22": "/opt/caelrion/view-releases/r21-before-r22-index-C5fh67Sh-20261121T064953Z",
+  "rollback_before_esri_link_patch": "/opt/caelrion/view-releases/r22-before-no-esri-link-20261121T065757Z",
+  "checks": {
+    "dark_satellite_shared_zoom_11_5": true,
+    "dark_satellite_camera_continuity": true,
+    "home_control_present_all_modes": true,
+    "first_3d_whole_earth_globe": true,
+    "globe_region_city_presets": true,
+    "geolocation_hostiles_unit": true,
+    "live_browser_geolocation_permission_matrix": "not_fully_exercised_in_automation",
+    "no_powered_by_esri_link": true,
+    "esri_source_attribution_retained": true,
+    "r21_gold_highway_colors_in_bundle": true,
+    "no_cesium_credits_container_hidden": true
+  },
+  "cold_browser_notes": [
+    "Satellite→Dark→Satellite preserved lon/lat/zoom/bearing/pitch at 33.6999N 117.9477W z11.5",
+    "3D entry showed whole-Earth with Globe/Region/City + Home; Globe preset active at ~18e6 m share alt",
+    "Unit suite covered delayed geo supersession, Home denied toast, tracking relinquish, later 3D scale restore"
+  ]
+}
