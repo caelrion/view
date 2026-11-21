@@ -43,7 +43,7 @@ export {
   EOX_MAX_ZOOM,
 } from './ownedAerial.js';
 
-import { ESRI_ATTRIBUTION_HTML } from '../imagery.js';
+import { ESRI_SOURCE_ATTRIBUTION } from '../imagery.js';
 import {
   MAP_ATTRIBUTION_HTML_OWNED,
   OWNED_BASEMAP_LICENSE,
@@ -67,11 +67,10 @@ export const OPENFREEMAP_PLANET_URL = 'https://tiles.openfreemap.org/planet';
 export const ESRI_WORLD_IMAGERY_TILE_URL =
   'https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
 
-export const ESRI_IMAGERY_ATTRIBUTION_TEXT =
-  'Powered by Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community';
+export const ESRI_IMAGERY_ATTRIBUTION_TEXT = ESRI_SOURCE_ATTRIBUTION;
 
 export const MAP_ATTRIBUTION_HTML_SATELLITE =
-  `${ESRI_ATTRIBUTION_HTML} · ${ESRI_IMAGERY_ATTRIBUTION_TEXT} · ` +
+  `${ESRI_IMAGERY_ATTRIBUTION_TEXT} · ` +
   'Labels © <a href="https://openmaptiles.org/" target="_blank" rel="noopener">OpenMapTiles</a> · ' +
   '© <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>';
 
