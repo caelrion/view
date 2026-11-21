@@ -27,17 +27,17 @@ const ROAD_LABEL =
 
 /**
  * OSM kind_detail values that keep Satellite soft-gold (Tier 2).
- * Verified present on owned Protomaps `roads` layer.
+ * Verified on owned Protomaps `roads` layer. Primary is demoted in dense
+ * metro grids (OC) — Mario rejected primary+secondary as a glowing carpet.
+ * Trunk + highway retain the gold hierarchy.
  */
-export const SATELLITE_GOLD_MAJOR_KIND_DETAILS = Object.freeze([
-  'trunk',
-  'primary',
-]);
+export const SATELLITE_GOLD_MAJOR_KIND_DETAILS = Object.freeze(['trunk']);
 
 /**
  * Demoted former major_road classes — neutral residential treatment.
  */
 export const SATELLITE_DEMOTE_MAJOR_KIND_DETAILS = Object.freeze([
+  'primary',
   'secondary',
   'tertiary',
 ]);

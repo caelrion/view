@@ -64,7 +64,7 @@ test('R21: satellite restraint caps residential; leaves highway/major alone', ()
   assert.equal(next[3].paint['text-opacity'][0], 'interpolate');
 });
 
-test('R26: selective gold keeps trunk/primary; demotes secondary; preserves highway', () => {
+test('R26: selective gold keeps trunk; demotes primary/secondary; preserves highway', () => {
   const layers = applySatelliteSelectiveGoldRoads([
     {
       id: 'roads_highway',
@@ -108,10 +108,11 @@ test('R26: selective gold keeps trunk/primary; demotes secondary; preserves high
   assert.equal(secondary.paint['line-color'], '#C8D0D4');
   assert.equal(linkLocal.paint['line-color'], '#C8D0D4');
   assert.ok(JSON.stringify(major.filter).includes('trunk'));
-  assert.ok(JSON.stringify(major.filter).includes('primary'));
+  assert.equal(JSON.stringify(major.filter).includes('primary'), false);
+  assert.ok(JSON.stringify(secondary.filter).includes('primary'));
   assert.ok(JSON.stringify(secondary.filter).includes('secondary'));
   assert.ok(JSON.stringify(link.filter).includes('motorway_link'));
-  assert.ok(JSON.stringify(labels.filter).includes('primary'));
+  assert.ok(JSON.stringify(labels.filter).includes('trunk'));
   // Hostile: demoted classes must not remain on the gold major filter.
   for (const d of SATELLITE_DEMOTE_MAJOR_KIND_DETAILS) {
     assert.equal(
